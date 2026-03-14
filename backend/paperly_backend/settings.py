@@ -1,4 +1,5 @@
-﻿from pathlib import Path
+﻿import os
+from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -85,6 +86,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = os.path.join(STATICFILES_DIRS[0], 'staticfiles') 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # DRF baseline
