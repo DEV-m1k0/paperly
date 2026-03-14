@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — Смена пароля{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <a href="{% url 'auth' %}?mode=restore">Восстановление</a>
+    <span>/</span>
+    <span>Новый пароль</span>
+  </div>
+
+  <section class="auth-layout auth-layout--single">
+    <section class="auth-card">
+      <div class="tabs" role="tablist">
+        <button class="tab is-active" type="button">Новый пароль</button>
+      </div>
+
+      <form class="panel is-active" method="post" novalidate>
+        {% csrf_token %}
+        <h2>Задайте новый пароль</h2>
+        <p class="muted">После смены пароля используйте его для входа на странице авторизации.</p>
+
+        <label>Новый пароль
+          <input type="password" name="new_password1" required placeholder="Введите новый пароль">
+        </label>
+        {% for error in form.new_password1.errors %}
+        <p class="form-msg">{{ error }}</p>
+        {% endfor %}
+
+        <label>Повторите пароль
+          <input type="password" name="new_password2" required placeholder="Повторите новый пароль">
+        </label>
+        {% for error in form.new_password2.errors %}
+        <p class="form-msg">{{ error }}</p>
+        {% endfor %}
+
+        {% if form.non_field_errors %}
+          {% for error in form.non_field_errors %}
+          <p class="form-msg">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+
+        <button type="submit" class="btn btn--primary">Сохранить пароль</button>
+      </form>
+    </section>
+  </section>
+</main>
+{% endblock %}

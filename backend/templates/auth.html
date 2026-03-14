@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — Вход и регистрация{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+    <div class="breadcrumbs">
+      <a href="{% url 'home' %}">Главная</a>
+      <span>/</span>
+      <span>Вход / Регистрация</span>
+    </div>
+
+    <section class="auth-layout">
+      <article class="auth-aside">
+        <p class="eyebrow">Личный кабинет</p>
+        <h1>Управляйте заказами и избранным в одном месте</h1>
+        <ul>
+          <li><i class="bi bi-check2"></i> История и повтор заказа</li>
+          <li><i class="bi bi-check2"></i> Список избранных товаров</li>
+          <li><i class="bi bi-check2"></i> Адреса и данные получателя</li>
+          <li><i class="bi bi-check2"></i> Быстрое оформление заказов</li>
+        </ul>
+      </article>
+
+      <section class="auth-card">
+        <div class="tabs" role="tablist">
+          <button class="tab {% if active_tab == 'login' %}is-active{% endif %}" data-tab="login" role="tab" type="button">Вход</button>
+          <button class="tab {% if active_tab == 'register' %}is-active{% endif %}" data-tab="register" role="tab" type="button">Регистрация</button>
+          <button class="tab {% if active_tab == 'restore' %}is-active{% endif %}" data-tab="restore" role="tab" type="button">Восстановление</button>
+        </div>
+
+        <div class="panels">
+          <form class="panel {% if active_tab == 'login' %}is-active{% endif %}" id="login" method="post" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="action" value="login">
+            <input type="hidden" name="next" value="{{ next_url }}">
+            <h2>Вход в аккаунт</h2>
+            {% if login_form.non_field_errors %}
+              {% for error in login_form.non_field_errors %}
+              <p class="form-msg">{{ error }}</p>
+              {% endfor %}
+            {% endif %}
+            <label>Email
+              <input
+                type="email"
+                name="email"
+                required
+                placeholder="mail@example.com"
+                value="{{ login_form.data.email|default:'' }}"
+              >
+            </label>
+            {% for error in login_form.email.errors %}
+            <p class="form-msg">{{ error }}</p>
+            {% endfor %}
+            <label>Пароль
+              <input type="password" name="password" required minlength="6" placeholder="Введите пароль">
+            </label>
+            {% for error in login_form.password.errors %}
+            <p class="form-msg">{{ error }}</p>
+            {% endfor %}
+            <button type="submit" class="btn btn--primary">Войти</button>
+          </form>
+
+          <form class="panel {% if active_tab == 'register' %}is-active{% endif %}" id="register" method="post" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="action" value="register">
+            <input type="hidden" name="next" value="{{ next_url }}">
+            <h2>Создать аккаунт</h2>
+            <label>Имя и фамилия
+              <input
+                type="text"
+                name="full_name"
+                required
+                placeholder="Иван Иванов"
+                value="{{ register_form.data.full_name|default:'' }}"
+              >
+            </label>
+            {% for error in register_form.full_name.errors %}
+            <p class="form-msg">{{ error }}</p>
+            {% endfor %}
+            <label>Email
+              <input
+                type="email"
+                name="email"
+                required
+                placeholder="mail@example.com"
+                value="{{ register_form.data.email|default:'' }}"
+              >
+            </label>
+            {% for error in register_form.email.errors %}
+            <p class="form-msg">{{ error }}</p>
+            {% endfor %}
+            <label>Телефон
+              <input
+                type="tel"
+                name="phone"
+                required
+                placeholder="+7 (...) ...-..-.."
+                value="{{ register_form.data.phone|default:'' }}"
+              >
+            </label>
+            {% for error in register_form.phone.errors %}
+            <p class="form-msg">{{ error }}</p>
+            {% endfor %}
+            <label>Пароль
+              <input type="password" name="password1" required minlength="6" placeholder="Не менее 6 символов">
+            </label>
+            {% for error in register_form.password1.errors %}
+            <p class="form-msg">{{ error }}</p>
+            {% endfor %}
+            <label>Повторите пароль
+              <input type="password" name="password2" required minlength="6" placeholder="Повторите пароль">
+            </label>
+            {% for error in register_form.password2.errors %}
+            <p class="form-msg">{{ error }}</p>
+            {% endfor %}
+            <label class="checkbox">
+              <input type="checkbox" name="accept_terms" required {% if register_form.data.accept_terms %}checked{% endif %}>
+              Согласен с пользовательским соглашением
+            </label>
+            {% for error in register_form.accept_terms.errors %}
+            <p class="form-msg">{{ error }}</p>
+            {% endfor %}
+            <button type="submit" class="btn btn--primary">Зарегистрироваться</button>
+          </form>
+
+          <form class="panel {% if active_tab == 'restore' %}is-active{% endif %}" id="restore" method="post" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="action" value="restore">
+            <input type="hidden" name="next" value="{{ next_url }}">
+            <h2>Восстановление пароля</h2>
+            <p class="muted">Укажите email, и мы отправим ссылку для смены пароля.</p>
+            <label>Email
+              <input
+                type="email"
+                name="email"
+                required
+                placeholder="mail@example.com"
+                value="{{ restore_form.data.email|default:'' }}"
+              >
+            </label>
+            {% for error in restore_form.email.errors %}
+            <p class="form-msg">{{ error }}</p>
+            {% endfor %}
+            <button type="submit" class="btn btn--primary">Отправить ссылку</button>
+          </form>
+        </div>
+
+        <p class="help">Нужна помощь? Напишите на <a href="mailto:support@paperly.ru">support@paperly.ru</a></p>
+      </section>
+    </section>
+  </main>
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/auth.js' %}"></script>
+{% endblock %}

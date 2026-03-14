@@ -1,0 +1,57 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — Избранное{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/favorites.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+    <div class="breadcrumbs">
+      <a href="{% url 'home' %}">Главная</a>
+      <span>/</span>
+      <a href="{% url 'profile' %}">Профиль</a>
+      <span>/</span>
+      <span>Избранное</span>
+    </div>
+
+    <section class="layout">
+      <aside class="sidebar">
+        <p class="eyebrow">Личный кабинет</p>
+        <h1>Избранное</h1>
+        <ul>
+          {% with current=request.resolver_match.url_name %}
+          <li class="{% if current == 'profile' %}is-active{% endif %}"><a href="{% url 'profile' %}">Профиль</a></li>
+          <li class="{% if current == 'order_history' %}is-active{% endif %}"><a href="{% url 'order_history' %}">История заказов</a></li>
+          <li class="{% if current == 'favorites' %}is-active{% endif %}"><a href="{% url 'favorites' %}">Избранное</a></li>
+          {% endwith %}
+        </ul> {% if request.user.is_authenticated %}
+                <form class="logout-form" method="post" action="{% url 'logout' %}">
+                          {% csrf_token %}
+                          <button class="btn btn--ghost btn--logout" type="submit">
+                           <i class="bi bi-box-arrow-right"></i>
+                           <span>Выйти из аккаунта</span>
+                            </button></form>
+                                    {% endif %}
+                                 </aside>
+
+      <section class="content">
+        <div class="fav-grid" id="favGrid" hidden></div>
+
+        <div class="empty" id="emptyState" hidden>
+          <i class="bi bi-heart"></i>
+          <h2>В избранном пока пусто</h2>
+          <p>Добавьте товары в закладки, чтобы быстро вернуться к ним позже.</p>
+          <a href="{% url 'catalog' %}" class="btn btn--primary">Перейти в каталог</a>
+        </div>
+      </section>
+    </section>
+  </main>
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/favorites.js' %}"></script>
+{% endblock %}
+

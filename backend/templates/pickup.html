@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — Пункты самовывоза{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/pickup.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+    <div class="breadcrumbs">
+      <a href="{% url 'home' %}">Главная</a>
+      <span>/</span>
+      <span>Пункты самовывоза</span>
+    </div>
+
+    <section class="hero">
+      <div>
+        <p class="eyebrow">ПВЗ и шоурумы</p>
+        <h1>Пункты самовывоза Paperly</h1>
+        <p class="lead">Выберите ближайший пункт на карте или в списке. Большинство заказов доступно к получению в день комплектации.</p>
+      </div>
+      <div class="hero-note">
+        <h3><i class="bi bi-clock-history"></i> Срок хранения</h3>
+        <p>Заказ хранится в пункте самовывоза 5 календарных дней, затем автоматически отменяется.</p>
+      </div>
+    </section>
+
+    <section class="layout">
+      <aside class="pickup-list" id="pickupList"></aside>
+
+      <section class="map-wrap">
+        <div id="pickupMap" class="map"></div>
+      </section>
+    </section>
+  </main>
+{% endblock %}
+
+{% block page_js %}
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU"></script>
+<script src="{% static 'js/pickup.js' %}"></script>
+{% endblock %}

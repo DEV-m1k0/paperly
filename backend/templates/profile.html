@@ -1,0 +1,99 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — Профиль{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+    <div class="breadcrumbs">
+      <a href="{% url 'home' %}">Главная</a>
+      <span>/</span>
+      <span>Профиль</span>
+    </div>
+
+    <section class="profile-layout">
+      <aside class="sidebar">
+        <p class="eyebrow">Личный кабинет</p>
+        <h1>Мои данные</h1>
+        <div class="user-card">
+          <div class="avatar">{{ profile_initials }}</div>
+          <div>
+            <strong id="userNamePreview">
+              {% if profile_first_name or profile_last_name %}
+                {{ profile_first_name }} {{ profile_last_name }}
+              {% else %}
+                {{ request.user.get_username }}
+              {% endif %}
+            </strong>
+            <p id="userEmailPreview">{{ profile_email|default:"" }}</p>
+          </div>
+        </div>
+        <ul>
+          {% with current=request.resolver_match.url_name %}
+          <li class="{% if current == 'profile' %}is-active{% endif %}"><a href="{% url 'profile' %}">Профиль</a></li>
+          <li class="{% if current == 'order_history' %}is-active{% endif %}"><a href="{% url 'order_history' %}">История заказов</a></li>
+          <li class="{% if current == 'favorites' %}is-active{% endif %}"><a href="{% url 'favorites' %}">Избранное</a></li>
+          {% endwith %}
+        </ul>
+        {% if request.user.is_authenticated %}
+        <form class="logout-form" method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button class="btn btn--ghost btn--logout" type="submit">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Выйти из аккаунта</span>
+          </button>
+        </form>
+        {% endif %}
+      </aside>
+
+      <section class="content">
+        <div class="cards">
+          <article class="card">
+            <h2>Персональные данные</h2>
+            <form id="profileForm" class="grid-form" novalidate>
+                         {% csrf_token %}
+              <label>Имя<input id="firstName" type="text" required placeholder="Введите имя" value="{{ profile_first_name }}"></label>
+              <label>Фамилия<input id="lastName" type="text" required placeholder="Введите фамилию" value="{{ profile_last_name }}"></label>
+              <label>Email<input id="email" type="email" required placeholder="mail@example.com" value="{{ profile_email }}"></label>
+              <label>Телефон<input id="phone" type="tel" required placeholder="Введите телефон" value="{{ profile_phone }}"></label>
+              <label class="full">Дата рождения<input id="birthDate" type="date" value="{{ profile_birth_date }}"></label>
+              <button class="btn btn--primary full" type="submit">Сохранить изменения</button>
+            </form>
+          </article>
+
+          <article class="card">
+            <h2>Адрес доставки</h2>
+            <form id="addressForm" class="grid-form" novalidate>              {% csrf_token %}
+              <label class="full">Город<input id="city" type="text" required placeholder="Город" value="{{ address_city }}"></label>
+              <label class="full">Улица и дом<input id="street" type="text" required placeholder="Улица и дом" value="{{ address_street }}"></label>
+              <label>Подъезд<input id="entrance" type="text" placeholder="Подъезд" value="{{ address_entrance }}"></label>
+              <label>Квартира / офис<input id="flat" type="text" placeholder="Квартира / офис" value="{{ address_flat }}"></label>
+              <label class="full">Комментарий курьеру<textarea id="comment" rows="3" placeholder="Комментарий для курьера">{{ address_comment }}</textarea></label>
+              <button class="btn btn--primary full" type="submit">Сохранить адрес</button>
+            </form>
+          </article>
+
+          <article class="card">
+            <h2>Уведомления</h2>
+            <form id="notifyForm" class="notify-form" novalidate>              {% csrf_token %}
+              <label><input id="nOrder" type="checkbox" {% if notify_order %}checked{% endif %}> Статусы заказов</label>
+              <label><input id="nPromo" type="checkbox" {% if notify_promo %}checked{% endif %}> Акции и спецпредложения</label>
+              <label><input id="nRestock" type="checkbox" {% if notify_restock %}checked{% endif %}> Появление товара в наличии</label>
+              <button class="btn btn--ghost" type="submit">Сохранить настройки</button>
+            </form>
+          </article>
+        </div>
+      </section>
+    </section>
+  </main>
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/profile.js' %}"></script>
+{% endblock %}
+
+

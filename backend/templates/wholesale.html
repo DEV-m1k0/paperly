@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — Оптовым клиентам{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/wholesale.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+    <div class="breadcrumbs">
+      <a href="{% url 'home' %}">Главная</a>
+      <span>/</span>
+      <span>Оптовым клиентам</span>
+    </div>
+
+    <section class="hero">
+      <div>
+        <p class="eyebrow">B2B и образование</p>
+        <h1>Поставки канцтоваров для юрлиц, школ и университетов</h1>
+        <p class="lead">Работаем по договору, предоставляем персональные цены, закрывающие документы и регулярные поставки по вашему графику.</p>
+        <div class="hero__actions">
+          <a href="#priceLists" class="btn btn--primary">Скачать прайс-листы</a>
+          <a href="#request" class="btn btn--ghost">Оставить заявку</a>
+        </div>
+      </div>
+      <article class="hero-card">
+        <h3><i class="bi bi-check2-square"></i> Что получите</h3>
+        <ul>
+          <li>Оптовые цены от объема и частоты закупок</li>
+          <li>Персональный менеджер и быстрый SLA по заявкам</li>
+          <li>Поставка на склад, в офис или учебные корпуса</li>
+          <li>УПД, счета, акты и помощь с тендерными пакетами</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section__head">
+        <h2>Кому подходит сотрудничество</h2>
+      </div>
+      <div class="segment-grid">
+        <article>
+          <i class="bi bi-building"></i>
+          <h3>Юридическим лицам</h3>
+          <p>Офисы, сетевые компании, call-центры, бэк-офисы и производственные подразделения.</p>
+        </article>
+        <article>
+          <i class="bi bi-backpack2"></i>
+          <h3>Школам и колледжам</h3>
+          <p>Наборы для классов, методические материалы, расходники для кабинетов и кружков.</p>
+        </article>
+        <article>
+          <i class="bi bi-mortarboard"></i>
+          <h3>Университетам и учебным центрам</h3>
+          <p>Комплектация кафедр, лабораторий, библиотек, канцелярия для административных блоков.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="priceLists">
+      <div class="section__head">
+        <h2>Прайс-листы</h2>
+      </div>
+      <div class="price-grid">
+        <article class="price-card">
+          <h3>Корпоративный прайс</h3>
+          <p>Для офисов и коммерческих организаций.</p>
+          <a href="#" class="download"><i class="bi bi-file-earmark-arrow-down"></i> Скачать XLSX</a>
+        </article>
+        <article class="price-card">
+          <h3>Прайс для школ</h3>
+          <p>Базовые позиции и наборы для классов.</p>
+          <a href="#" class="download"><i class="bi bi-file-earmark-arrow-down"></i> Скачать XLSX</a>
+        </article>
+        <article class="price-card">
+          <h3>Прайс для вузов</h3>
+          <p>Категории для кафедр, учебных отделов и кампусов.</p>
+          <a href="#" class="download"><i class="bi bi-file-earmark-arrow-down"></i> Скачать XLSX</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section--split">
+      <article class="panel">
+        <h2>Условия сотрудничества</h2>
+        <ul>
+          <li><strong>Минимальный заказ:</strong> от 15 000 ₽</li>
+          <li><strong>Доставка:</strong> бесплатно от 20 000 ₽ по городу</li>
+          <li><strong>Оплата:</strong> безналичный расчет, отсрочка для постоянных клиентов</li>
+          <li><strong>Поставка:</strong> разово, еженедельно или по графику клиента</li>
+        </ul>
+      </article>
+
+      <article class="panel panel--accent">
+        <h2>Документы</h2>
+        <ul>
+          <li>Договор поставки</li>
+          <li>Счет и УПД</li>
+          <li>Сертификаты и спецификации по запросу</li>
+          <li>Пакет документов для бюджетных учреждений</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section__head">
+        <h2>Как начать работу</h2>
+      </div>
+      <div class="steps">
+        <article><span>1</span><h3>Заявка</h3><p>Оставьте контакты и тип организации.</p></article>
+        <article><span>2</span><h3>Аудит потребностей</h3><p>Согласуем ассортимент, объемы и периодичность.</p></article>
+        <article><span>3</span><h3>Коммерческое предложение</h3><p>Подготовим цены, условия и логистику.</p></article>
+        <article><span>4</span><h3>Договор и старт поставок</h3><p>Заключаем договор и запускаем регулярные отгрузки.</p></article>
+      </div>
+    </section>
+
+    <section class="section request" id="request">
+      <div class="request__intro">
+        <h2>Запросить оптовое предложение</h2>
+        <p>Ответим в течение рабочего дня. Для срочных заявок — в течение 1 часа в рабочее время.</p>
+        <ul>
+          <li><i class="bi bi-check2"></i> Персональные цены под объем</li>
+          <li><i class="bi bi-check2"></i> КП и прайс в день обращения</li>
+          <li><i class="bi bi-check2"></i> Помощь с договором и документами</li>
+        </ul>
+      </div>
+      <form id="requestForm" class="request-form">
+        <label>Название организации<input type="text" required placeholder="ООО / Школа / Университет"></label>
+        <label>Контактное лицо<input type="text" required placeholder="ФИО"></label>
+        <label>Телефон<input type="tel" required placeholder="+7 (...) ...-..-.."></label>
+        <label>Email<input type="email" required placeholder="mail@company.ru"></label>
+        <label>Комментарий<textarea rows="4" placeholder="Категории товаров, примерный объем, адрес доставки"></textarea></label>
+        <button class="btn btn--primary" type="submit">Отправить заявку</button>
+      </form>
+    </section>
+  </main>
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/wholesale.js' %}"></script>
+{% endblock %}

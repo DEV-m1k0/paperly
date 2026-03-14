@@ -1,0 +1,59 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — История заказов{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/order-history.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+    <div class="breadcrumbs">
+      <a href="{% url 'home' %}">Главная</a>
+      <span>/</span>
+      <a href="{% url 'profile' %}">Профиль</a>
+      <span>/</span>
+      <span>История заказов</span>
+    </div>
+
+    <section class="layout">
+      <aside class="sidebar">
+        <p class="eyebrow">Личный кабинет</p>
+        <h1>История заказов</h1>
+        <ul>
+          {% with current=request.resolver_match.url_name %}
+            <li class="{% if current == 'profile' %}is-active{% endif %}"><a href="{% url 'profile' %}">Профиль</a></li>
+            <li class="{% if current == 'order_history' %}is-active{% endif %}"><a href="{% url 'order_history' %}">История заказов</a></li>
+            <li class="{% if current == 'favorites' %}is-active{% endif %}"><a href="{% url 'favorites' %}">Избранное</a></li>
+          {% endwith %}
+        </ul>
+        {% if request.user.is_authenticated %}
+          <form class="logout-form" method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="btn btn--ghost btn--logout" type="submit">
+              <i class="bi bi-box-arrow-right"></i>
+              <span>Выйти из аккаунта</span>
+            </button>
+          </form>        
+        {% endif %}
+      </aside>
+
+      <section class="content">
+        <div class="orders" id="ordersList" hidden></div>
+
+        <div class="empty" id="ordersEmpty" hidden>
+          <i class="bi bi-receipt"></i>
+          <h2>Заказов пока нет</h2>
+          <p>Когда вы оформите покупки, они появятся в истории заказов.</p>
+          <a href="{% url 'catalog' %}" class="btn btn--primary">Перейти в каталог</a>
+        </div>
+      </section>
+    </section>
+  </main>
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/order-history.js' %}"></script>
+{% endblock %}
+

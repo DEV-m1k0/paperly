@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — Доставка и оплата{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/delivery.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+    <div class="breadcrumbs">
+      <a href="{% url 'home' %}">Главная</a>
+      <span>/</span>
+      <span>Доставка и оплата</span>
+    </div>
+
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Логистика и расчеты</p>
+        <h1>Доставка и оплата для розничных и оптовых заказов</h1>
+        <p class="lead">Прозрачные тарифы, понятные сроки и отдельные условия для офисов, школ и учебных центров.</p>
+      </div>
+      <div class="hero-note">
+        <h3><i class="bi bi-lightning-charge"></i> Быстрая отгрузка</h3>
+        <p>Заказы, оформленные до 14:00 (МСК), передаем в доставку в тот же рабочий день.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__head">
+        <h2>Тарифы и сроки доставки</h2>
+      </div>
+
+      <div class="tariff-grid">
+        <article class="tariff-card">
+          <h3>Курьер по городу</h3>
+          <ul>
+            <li><span>До 2 500 ₽</span><strong>350 ₽</strong></li>
+            <li><span>От 2 500 ₽</span><strong>Бесплатно</strong></li>
+            <li><span>Срок</span><strong>1 рабочий день</strong></li>
+          </ul>
+        </article>
+
+        <article class="tariff-card">
+          <h3>Экспресс-доставка</h3>
+          <ul>
+            <li><span>В пределах города</span><strong>590 ₽</strong></li>
+            <li><span>Срок</span><strong>3-5 часов</strong></li>
+            <li><span>Окно оформления</span><strong>до 16:00</strong></li>
+          </ul>
+        </article>
+
+        <article class="tariff-card">
+          <h3>По регионам РФ</h3>
+          <ul>
+            <li><span>СДЭК/DPD/Почта</span><strong>от 420 ₽</strong></li>
+            <li><span>Срок</span><strong>2-7 дней</strong></li>
+            <li><span>Бесплатно от</span><strong>10 000 ₽*</strong></li>
+          </ul>
+        </article>
+      </div>
+      <p class="note">* Для ряда удаленных регионов бесплатная доставка может быть недоступна.</p>
+    </section>
+
+    <section class="section section--split">
+      <article class="panel">
+        <h2>Самовывоз</h2>
+        <p>Забрать заказ можно из пунктов выдачи в день комплектации или на следующий день.</p>
+        <ul>
+          <li><i class="bi bi-geo-alt"></i> 8 пунктов выдачи в городе</li>
+          <li><i class="bi bi-clock"></i> Хранение заказа — 5 дней</li>
+          <li><i class="bi bi-cash-coin"></i> Оплата при получении доступна</li>
+        </ul>
+      </article>
+
+      <article class="panel panel--accent">
+        <h2>Опт для офисов и юрлиц</h2>
+        <p>Для регулярных закупок канцтоваров предлагаем фиксированные тарифы и персональные условия.</p>
+        <ul>
+          <li>Отсрочка платежа по договору</li>
+          <li>Персональный менеджер</li>
+          <li>Бесплатная доставка от 15 000 ₽</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section__head">
+        <h2>Способы оплаты</h2>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button class="tab is-active" data-tab="retail" role="tab">Физлица</button>
+        <button class="tab" data-tab="business" role="tab">Юрлица и опт</button>
+      </div>
+
+      <div class="tab-panels">
+        <article class="tab-panel is-active" id="retail" role="tabpanel">
+          <ul class="payment-list">
+            <li><i class="bi bi-credit-card"></i> Банковская карта онлайн (МИР, Visa, Mastercard)</li>
+            <li><i class="bi bi-phone"></i> СБП и мобильные платежи</li>
+            <li><i class="bi bi-cash"></i> Наличными или картой при получении</li>
+          </ul>
+        </article>
+
+        <article class="tab-panel" id="business" role="tabpanel">
+          <ul class="payment-list">
+            <li><i class="bi bi-receipt"></i> Безналичный расчет по счету</li>
+            <li><i class="bi bi-file-earmark-text"></i> Закрывающие документы (УПД, счет-фактура)</li>
+            <li><i class="bi bi-calendar-check"></i> Отсрочка платежа для постоянных клиентов</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__head">
+        <h2>Частые вопросы</h2>
+      </div>
+
+      <div class="faq" id="faq">
+        <article class="faq-item">
+          <button class="faq-question" aria-expanded="false">Можно ли изменить адрес доставки после оформления заказа?</button>
+          <div class="faq-answer">Да, если заказ еще не передан в службу доставки. Свяжитесь с поддержкой как можно раньше.</div>
+        </article>
+        <article class="faq-item">
+          <button class="faq-question" aria-expanded="false">Как оформить оптовый заказ для офиса?</button>
+          <div class="faq-answer">Оформите заказ на сайте и выберите тип клиента «Юридическое лицо» или напишите менеджеру для персонального прайса.</div>
+        </article>
+        <article class="faq-item">
+          <button class="faq-question" aria-expanded="false">Есть ли доставка по выходным?</button>
+          <div class="faq-answer">Да, по городу действует доставка в субботу. Воскресенье зависит от курьерской службы и адреса.</div>
+        </article>
+      </div>
+    </section>
+  </main>
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/delivery.js' %}"></script>
+{% endblock %}

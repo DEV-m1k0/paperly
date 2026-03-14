@@ -1,0 +1,60 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — Новости и блог{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/blog.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+  <div class="blog-head">
+    <div>
+      <h1>Новости и блог</h1>
+      <p class="lead">Полезные статьи для выбора канцелярии, учебы и офиса.</p>
+    </div>
+    {% if blog_post %}
+    <a class="blog-back" href="{% url 'blog' %}">Вернуться к статьям</a>
+    {% endif %}
+  </div>
+
+  {% if blog_post %}
+  <article class="blog-detail">
+    {% if blog_post.cover_url %}
+    <div class="blog-detail__cover" style="background-image: url('{{ blog_post.cover_url }}')"></div>
+    {% endif %}
+    <div class="blog-detail__meta">
+      {% if blog_post.published_at %}Опубликовано {{ blog_post.published_at|date:"d E Y" }}{% endif %}
+    </div>
+    <h2>{{ blog_post.title }}</h2>
+    <div class="blog-detail__content">{{ blog_post.content|linebreaksbr }}</div>
+  </article>
+  {% else %}
+  <section class="promo-grid" id="blogGrid" aria-live="polite">
+    {% if blog_posts %}
+      {% for post in blog_posts %}
+      <article class="promo-card">
+        {% if post.published_at %}
+        <span class="promo-card__meta">{{ post.published_at|date:"d E Y" }}</span>
+        {% endif %}
+        <h2><a href="{% url 'blog' %}?slug={{ post.slug }}">{{ post.title }}</a></h2>
+        <p>{{ post.excerpt|default:post.content|truncatechars:180 }}</p>
+        <a href="{% url 'blog' %}?slug={{ post.slug }}">Читать статью</a>
+      </article>
+      {% endfor %}
+    {% else %}
+      <p class="empty-state">Пока нет публикаций</p>
+    {% endif %}
+  </section>
+
+  {% if not blog_posts %}
+  <div class="empty">
+    <h2>Пока нет публикаций</h2>
+    <p>Мы скоро добавим полезные статьи о выборе канцелярии.</p>
+  </div>
+  {% endif %}
+  {% endif %}
+</main>
+{% endblock %}
+

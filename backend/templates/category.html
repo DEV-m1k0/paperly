@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — Раздел каталога{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/category.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+    <div class="breadcrumbs" id="breadcrumbs"></div>
+
+    <section class="layout">
+      <aside class="tree" id="treeNav"></aside>
+
+      <section class="content">
+        <p class="eyebrow" id="groupLabel"></p>
+        <h1 id="subTitle"></h1>
+        <p class="lead" id="subLead"></p>
+
+        <div class="content-cards" id="subCards"></div>
+
+        <div class="next-step">
+          <h2>Следующий уровень</h2>
+          <p>Отсюда пользователь переходит в карточку конкретного товара.</p>
+          <a href="{% url 'product' %}" class="go-product">Открыть пример карточки товара <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </section>
+    </section>
+  </main>
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/category.js' %}"></script>
+{% endblock %}

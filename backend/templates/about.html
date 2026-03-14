@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — О магазине{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/about.css' %}">
+{% endblock %}
+
+{% block pre_content %}
+<div class="bg-shape bg-shape--one" aria-hidden="true"></div>
+  <div class="bg-shape bg-shape--two" aria-hidden="true"></div>
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+    <div class="breadcrumbs">
+      <a href="{% url 'home' %}">Главная</a>
+      <span>/</span>
+      <span>О магазине</span>
+    </div>
+
+    <section class="hero reveal">
+      <div>
+        <p class="eyebrow">О компании</p>
+        <h1>Paperly — магазин канцтоваров для школы, офиса и творчества</h1>
+        <p class="hero__lead">Мы помогаем быстро собирать нужные товары: от тетрадей и ручек до комплексных решений для офисов и учебных центров. Работаем как с розничными покупателями, так и с оптом.</p>
+      </div>
+      <div class="hero__card">
+        <h3>Наша миссия</h3>
+        <p>Сделать покупку канцтоваров понятной, быстрой и предсказуемой по качеству.</p>
+        <ul>
+          <li><i class="bi bi-check2-circle"></i> Проверенные бренды</li>
+          <li><i class="bi bi-check2-circle"></i> Честные сроки поставки</li>
+          <li><i class="bi bi-check2-circle"></i> Поддержка на всех этапах заказа</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="stats reveal">
+      <article><strong>12 000+</strong><span>товаров в каталоге</span></article>
+      <article><strong>8 лет</strong><span>опыта в рынке канцтоваров</span></article>
+      <article><strong>2 500+</strong><span>корпоративных клиентов</span></article>
+      <article><strong>4.9/5</strong><span>средняя оценка сервиса</span></article>
+    </section>
+
+    <section class="section reveal">
+      <div class="section__head">
+        <h2>Наши преимущества</h2>
+      </div>
+      <div class="benefits-grid">
+        <article>
+          <i class="bi bi-box-seam"></i>
+          <h3>Широкий ассортимент</h3>
+          <p>Полная матрица товаров по категориям и подкатегориям, включая редкие позиции.</p>
+        </article>
+        <article>
+          <i class="bi bi-lightning"></i>
+          <h3>Быстрая отгрузка</h3>
+          <p>Большая часть заказов передается в доставку в течение 24 часов.</p>
+        </article>
+        <article>
+          <i class="bi bi-building"></i>
+          <h3>Экспертиза B2B</h3>
+          <p>Работаем с компаниями, школами, вузами и закупочными отделами.</p>
+        </article>
+        <article>
+          <i class="bi bi-shield-check"></i>
+          <h3>Гарантия качества</h3>
+          <p>Контроль поставок и прозрачные правила обмена/возврата.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="section__head">
+        <h2>Опыт и развитие</h2>
+      </div>
+      <div class="timeline">
+        <article>
+          <span>2018</span>
+          <h3>Запуск онлайн-витрины</h3>
+          <p>Открыли первые категории бумажной продукции и письменных принадлежностей.</p>
+        </article>
+        <article>
+          <span>2020</span>
+          <h3>Выход в B2B сегмент</h3>
+          <p>Добавили оптовые поставки для офисов, школ и образовательных проектов.</p>
+        </article>
+        <article>
+          <span>2023</span>
+          <h3>Масштабирование каталога</h3>
+          <p>Расширили ассортимент художественных и чертежных товаров.</p>
+        </article>
+        <article>
+          <span>2026</span>
+          <h3>Новая UX-платформа</h3>
+          <p>Переработали структуру каталога и карточки товаров для ускорения выбора.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section--split reveal">
+      <article class="panel">
+        <h2>Команда</h2>
+        <p>У нас работают категорийные менеджеры, специалисты по закупкам, логисты и служба клиентского сервиса. Мы регулярно обновляем каталог на основе спроса школ, офисов и творческих студий.</p>
+      </article>
+      <article class="panel panel--accent">
+        <h2>Партнеры</h2>
+        <p>Сотрудничаем с поставщиками и брендами Erich Krause, Brauberg, Maped, Kores и другими производителями канцтоваров.</p>
+      </article>
+    </section>
+
+    <section class="cta reveal">
+      <h2>Готовы к заказу?</h2>
+      <p>Перейдите в каталог и соберите комплект для школы, офиса или творчества.</p>
+      <a href="{% url 'catalog' %}">Перейти в каталог <i class="bi bi-arrow-right"></i></a>
+    </section>
+  </main>
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/about.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,159 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — Товар{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/product.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+    <div class="breadcrumbs">
+      <a href="{% url 'home' %}">Главная</a>
+      <span>/</span>
+      <a href="{% url 'catalog' %}">Каталог</a>
+      <span>/</span>
+      <span id="productBreadcrumb">Товар</span>
+    </div>
+
+    <section class="product-hero">
+      <div class="gallery">
+        <div class="gallery__main">
+          <img id="mainImage" src="https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80" alt="Товар">
+        </div>
+        <div class="gallery__thumbs">
+          <button class="thumb is-active" data-image="https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80"><img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=300&q=80" alt="Вид 1"></button>
+          <button class="thumb" data-image="https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&w=1200&q=80"><img src="https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&w=300&q=80" alt="Вид 2"></button>
+          <button class="thumb" data-image="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=1200&q=80"><img src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=300&q=80" alt="Вид 3"></button>
+          <button class="thumb" data-image="https://images.unsplash.com/photo-1506784365847-bbad939e9335?auto=format&fit=crop&w=1200&q=80"><img src="https://images.unsplash.com/photo-1506784365847-bbad939e9335?auto=format&fit=crop&w=300&q=80" alt="Вид 4"></button>
+        </div>
+      </div>
+
+      <article class="product-info">
+        <span class="badge">Хит продаж</span>
+        <h1 id="productTitle">Ежедневник датированный A5, 176 страниц</h1>
+        <p class="sku" id="productSku">Артикул: PL-ED-A5-176-BLK</p>
+
+        <div class="rating-row">
+          <div class="stars" id="ratingStars">
+            <i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+          </div>
+          <span class="rating-value" id="ratingValue">—</span>
+          <span class="rating-count" id="ratingCount"></span>
+        </div>
+
+        <div class="price-row">
+          <strong id="productPrice">590 Руб.</strong>
+          <span class="old-price" id="productOldPrice">690 Руб.</span>
+          <span class="economy" id="productDiscount">-14%</span>
+        </div>
+
+        <div class="product-facts" id="productFacts"></div>
+
+        <div class="buy-row">
+          <div class="qty" aria-label="Количество">
+            <button id="qtyMinus" aria-label="Уменьшить количество">-</button>
+            <input id="qtyInput" type="number" min="1" value="1">
+            <button id="qtyPlus" aria-label="Увеличить количество">+</button>
+          </div>
+          <button class="btn btn--primary" id="addToCart">В корзину</button>
+          <button class="btn btn--ghost fav-btn fav-btn--main" aria-label="Добавить в избранное"><i class="bi bi-heart"></i></button>
+        </div>
+
+        <ul class="highlights">
+          <li><i class="bi bi-check2-circle"></i> Плотная бумага 80 г/м2, не просвечивает</li>
+          <li><i class="bi bi-check2-circle"></i> Ляссе и закругленные уголки</li>
+          <li><i class="bi bi-check2-circle"></i> Доставка: завтра или самовывоз сегодня</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="details">
+      <div class="tabs" role="tablist">
+        <button class="tab is-active" data-tab="specs" role="tab">Характеристики</button>
+        <button class="tab" data-tab="delivery" role="tab">Доставка и оплата</button>
+      </div>
+
+      <div class="tab-panels">
+        <article class="panel is-active" id="specs" role="tabpanel">
+          <div class="spec-grid" id="specsGrid">
+            <div><span>Бренд</span><strong>Paperly</strong></div>
+            <div><span>Формат</span><strong>A5</strong></div>
+            <div><span>Количество страниц</span><strong>176</strong></div>
+            <div><span>Тип крепления</span><strong>Книжный блок</strong></div>
+            <div><span>Материал обложки</span><strong>Экокожа</strong></div>
+            <div><span>Страна производства</span><strong>Россия</strong></div>
+          </div>
+        </article>
+
+        <article class="panel" id="delivery" role="tabpanel">
+          <ul class="delivery-list">
+            <li>Курьером по городу: 1 день, от 290 Руб.</li>
+            <li>Самовывоз: сегодня из 8 пунктов выдачи</li>
+            <li>Оплата: картой онлайн, по счету для юрлиц, наличными при получении</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="reviews" id="reviews">
+      <div class="section-head">
+        <h2>Отзывы покупателей</h2>
+      </div>
+
+      <div class="reviews-layout">
+        <div class="reviews-list" id="reviewsList">
+          <article class="review-card">
+            <div class="review-card__head">
+              <strong>Анна П.</strong>
+              <span>5/5</span>
+            </div>
+            <p>Очень удобный ежедневник. Бумага плотная, чернила не просвечивают, обложка выглядит дорого.</p>
+            <time datetime="2026-02-14">14 февраля 2026</time>
+          </article>
+          <article class="review-card">
+            <div class="review-card__head">
+              <strong>Игорь С.</strong>
+              <span>4/5</span>
+            </div>
+            <p>Для офиса отличный вариант. Хотелось бы больше цветов в наличии, но качество супер.</p>
+            <time datetime="2026-01-28">28 января 2026</time>
+          </article>
+        </div>
+
+        {% if request.user.is_authenticated %}
+        <form class="review-form" id="reviewForm">
+          <h3>Написать отзыв</h3>
+          <label>
+            Оценка
+            <select id="reviewRating" required>
+              <option value="5">5 — Отлично</option>
+              <option value="4">4 — Хорошо</option>
+              <option value="3">3 — Нормально</option>
+              <option value="2">2 — Слабо</option>
+              <option value="1">1 — Плохо</option>
+            </select>
+          </label>
+          <label>
+            Текст отзыва
+            <textarea id="reviewText" rows="4" required placeholder="Расскажите о вашем опыте использования товара"></textarea>
+          </label>
+          <button class="btn btn--primary review-submit" type="submit">Отправить отзыв</button>
+        </form>
+        {% else %}
+        <div class="review-auth" id="reviewAuthNotice">
+          <i class="bi bi-lock"></i>
+          <h3>Отзывы доступны только авторизованным</h3>
+          <p>Войдите в аккаунт, чтобы оставить отзыв о товаре.</p>
+          <a href="{% url 'auth' %}" class="btn btn--primary">Войти</a>
+        </div>
+        {% endif %}
+      </div>
+    </section>
+  </main>
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/product.js' %}"></script>
+{% endblock %}

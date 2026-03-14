@@ -1,0 +1,72 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — Корзина и оформление заказа{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/cart.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+    <div class="breadcrumbs">
+      <a href="{% url 'home' %}">Главная</a>
+      <span>/</span>
+      <span>Корзина и оформление заказа</span>
+    </div>
+
+    <section class="layout">
+      <section>
+        <h1>Корзина</h1>
+        <p class="lead">Проверьте товары и измените количество перед оформлением.</p>
+
+        <div id="cartItems" class="cart-items"></div>
+
+        <div id="cartEmpty" class="empty" hidden>
+          <i class="bi bi-bag-x"></i>
+          <h2>Корзина пуста</h2>
+          <p>Добавьте товары из каталога, чтобы оформить заказ.</p>
+          <a href="{% url 'catalog' %}" class="btn btn--primary">Перейти в каталог</a>
+        </div>
+      </section>
+
+      <aside class="checkout" id="checkoutBlock">
+        <h2>Оформление заказа</h2>
+        <p class="muted">Один шаг: контакты, доставка и оплата.</p>
+
+        <div class="summary" id="summary"></div>
+
+        <form id="checkoutForm" class="checkout-form" novalidate>
+          <label>Имя и фамилия<input id="fullName" type="text" required placeholder="Иван Иванов"></label>
+          <label>Телефон<input id="phone" type="tel" required placeholder="+7 (...) ...-..-.."></label>
+          <label>Email<input id="email" type="email" required placeholder="mail@example.com"></label>
+          <label>Город<input id="city" type="text" required placeholder="Москва"></label>
+          <label>Адрес доставки<input id="address" type="text" required placeholder="ул. Тверская, 12"></label>
+
+          <label>Способ доставки
+            <select id="deliveryType" required>
+              <option value="courier">Курьер</option>
+              <option value="pickup">Самовывоз</option>
+            </select>
+          </label>
+
+          <label>Способ оплаты
+            <select id="paymentType" required>
+              <option value="card">Карта онлайн</option>
+              <option value="sbp">СБП</option>
+              <option value="cash">Картой/наличными при получении</option>
+            </select>
+          </label>
+
+          <label class="full">Комментарий к заказу<textarea id="comment" rows="3" placeholder="Домофон, этаж, ориентир"></textarea></label>
+
+          <button class="btn btn--primary full" type="submit">Оформить заказ</button>
+        </form>
+      </aside>
+    </section>
+  </main>
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/cart.js' %}"></script>
+{% endblock %}

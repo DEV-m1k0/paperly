@@ -1,0 +1,2332 @@
+[
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "username": "ivan_petrov",
+      "email": "ivan@example.com",
+      "password": "pbkdf2_sha256$600000$pWpi7HJ0hC8SgHyurkckbN$N6KOSGZQhQxUBeL7SRL9VJ5TNQUJfxGkP74VG1QReIA=",
+      "is_active": true,
+      "is_staff": false,
+      "date_joined": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 2,
+    "fields": {
+      "username": "maria_sidorova",
+      "email": "maria@example.com",
+      "password": "pbkdf2_sha256$600000$pWpi7HJ0hC8SgHyurkckbN$N6KOSGZQhQxUBeL7SRL9VJ5TNQUJfxGkP74VG1QReIA=",
+      "is_active": true,
+      "is_staff": false,
+      "date_joined": "2026-01-05T00:00:00Z"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 3,
+    "fields": {
+      "username": "admin_user",
+      "email": "admin@example.com",
+      "password": "pbkdf2_sha256$600000$pWpi7HJ0hC8SgHyurkckbN$N6KOSGZQhQxUBeL7SRL9VJ5TNQUJfxGkP74VG1QReIA=",
+      "is_active": true,
+      "is_staff": true,
+      "date_joined": "2023-12-01T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.category",
+    "pk": 1,
+    "fields": {
+      "name": "Тетради",
+      "slug": "tetradi",
+      "parent": null,
+      "description": "Коллекция школьных и офисных тетрадей с разлиновкой, разной плотностью бумаги и количеством листов. Подойдут для учебы, заметок, конспектов и рабочих задач.",
+      "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmvHiV0KGG-VRces0m1ABra6rLZyKZ6iq4lw&s",
+      "sort_order": 1,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.category",
+    "pk": 2,
+    "fields": {
+      "name": "Школьные тетради",
+      "slug": "shkolnye-tetradi",
+      "parent": 1,
+      "description": "Школьные тетради для 1–11 классов: клетка и линейка, плотность 60–80 г/м², износостойкие обложки и аккуратная разметка.",
+      "image_url": "https://www.informat.ru/upload/iblock/cd7/cd7ac7fe30251587906b27ce89320c0e.jpg",
+      "sort_order": 1,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.category",
+    "pk": 3,
+    "fields": {
+      "name": "Офисные тетради",
+      "slug": "ofisnye-tetradi",
+      "parent": 1,
+      "description": "Офисные тетради и блокноты для протоколов, планов и совещаний. Классический дизайн, удобные форматы, качественная бумага.",
+      "image_url": "https://pro100snab.ru/upload/iblock/597/mmyxv4cxp600fpnhuxzbd3qjm9l4ian4.jpg",
+      "sort_order": 2,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.category",
+    "pk": 4,
+    "fields": {
+      "name": "Блокноты",
+      "slug": "bloknoty",
+      "parent": null,
+      "description": "Блокноты A5/A4 и компактные форматы, на пружине или склейке. Подходят для ежедневных записей, задач, идей и заметок в пути.",
+      "image_url": "https://s3.ibta.ru/goods/405632/d63e1d11cbafa652f46b03be2399ae83_xl.jpg",
+      "sort_order": 2,
+      "is_active": true,
+      "created_at": "2026-01-02T00:00:00Z",
+      "updated_at": "2026-01-02T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.category",
+    "pk": 5,
+    "fields": {
+      "name": "Альбомы для рисования",
+      "slug": "albomy-dlya-risovaniya",
+      "parent": null,
+      "description": "Альбомы для рисования и скетчинга: плотная бумага 100–160 г/м², надежная склейка или скрепка, комфортные форматы для творчества.",
+      "image_url": "https://myluch.ru/wa-data/public/shop/products/69/06/669/images/2853/2853.970.png",
+      "sort_order": 3,
+      "is_active": true,
+      "created_at": "2026-01-02T00:00:00Z",
+      "updated_at": "2026-01-02T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.category",
+    "pk": 6,
+    "fields": {
+      "name": "Бумажная продукция",
+      "slug": "bumazhnaya-produktsiya",
+      "parent": null,
+      "description": "Бумажная продукция для офиса и творчества: офисная бумага, чертежные листы, цветные наборы и расходники для печати.",
+      "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxQZ-Q-PRYMrsN5LZfH3h-Apb0nMe_NcdzXA&s",
+      "sort_order": 4,
+      "is_active": true,
+      "created_at": "2026-01-03T00:00:00Z",
+      "updated_at": "2026-01-03T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.category",
+    "pk": 7,
+    "fields": {
+      "name": "Письменные принадлежности",
+      "slug": "pismennye-prinadlezhnosti",
+      "parent": null,
+      "description": "Ручки, карандаши, маркеры и корректоры для школы и офиса. В категории — базовые и профессиональные варианты для письма и творчества.",
+      "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmvHiV0KGG-VRces0m1ABra6rLZyKZ6iq4lw&s",
+      "sort_order": 5,
+      "is_active": true,
+      "created_at": "2026-01-04T00:00:00Z",
+      "updated_at": "2026-01-04T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.category",
+    "pk": 8,
+    "fields": {
+      "name": "Товары для офиса",
+      "slug": "tovary-dlya-ofisa",
+      "parent": null,
+      "description": "Все для организации рабочего места: папки, блокноты, офисная бумага и аксессуары для планирования.",
+      "image_url": "https://pro100snab.ru/upload/iblock/597/mmyxv4cxp600fpnhuxzbd3qjm9l4ian4.jpg",
+      "sort_order": 6,
+      "is_active": true,
+      "created_at": "2026-01-04T00:00:00Z",
+      "updated_at": "2026-01-04T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.brand",
+    "pk": 1,
+    "fields": {
+      "name": "BG",
+      "slug": "bg",
+      "description": "Российский производитель тетрадей и канцелярии с акцентом на доступность и стабильное качество бумаги. Линейки для школы, офиса и творчества.",
+      "logo_url": "https://i.pinimg.com/1200x/14/86/3b/14863b5eabb9158f75cc7562c550d108.jpg",
+      "website": "https://bg-brand.ru",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.brand",
+    "pk": 2,
+    "fields": {
+      "name": "Hatber",
+      "slug": "hatber",
+      "description": "Крупный производитель канцтоваров в России: тетради, альбомы, обложки и бумажная продукция. Известен надежностью и широким ассортиментом.",
+      "logo_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ05dIReuFOXhBTaFOrW0LD3eFQ7PI1zMKT5A&s",
+      "website": "https://hatber.ru",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.brand",
+    "pk": 3,
+    "fields": {
+      "name": "Brauberg",
+      "slug": "brauberg",
+      "description": "Канцтовары для офиса и учебы с практичным дизайном и хорошей эргономикой. Сильная линейка ежедневников, папок и блокнотов.",
+      "logo_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQalAAGU4hRLBCpGf_dG8Bps2miQZz0n0GISg&s",
+      "website": "https://brauberg.com",
+      "is_active": true,
+      "created_at": "2026-01-02T00:00:00Z",
+      "updated_at": "2026-01-02T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.brand",
+    "pk": 4,
+    "fields": {
+      "name": "ErichKrause",
+      "slug": "erichkrause",
+      "description": "Международный бренд канцтоваров с яркими коллекциями и устойчивыми материалами. Популярен за надежность и современный дизайн.",
+      "logo_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSglCuHuBt5EX-QlZc6Hr_kvnneKz4VQXcm_Q&s",
+      "website": "https://erichkrause.com",
+      "is_active": true,
+      "created_at": "2026-01-02T00:00:00Z",
+      "updated_at": "2026-01-02T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.brand",
+    "pk": 5,
+    "fields": {
+      "name": "Pilot",
+      "slug": "pilot",
+      "description": "Бренд пишущих принадлежностей с фокусом на мягкое письмо и стабильную подачу чернил. Подходит для школы, офиса и ежедневных записей.",
+      "logo_url": "https://www.andys-pens.co.uk/image/data/brands/pilotlogo.jpg",
+      "website": "https://pilotpen.ru",
+      "is_active": true,
+      "created_at": "2026-01-05T00:00:00Z",
+      "updated_at": "2026-01-05T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.brand",
+    "pk": 6,
+    "fields": {
+      "name": "Maped",
+      "slug": "maped",
+      "description": "Французский бренд школьных и офисных товаров: ножницы, карандаши, циркули и аксессуары. Известен качеством и эргономикой.",
+      "logo_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSCV8a2CFuucvMfFJp8e3wvOwVWqVKFIXTzBg&s",
+      "website": "https://maped.com",
+      "is_active": true,
+      "created_at": "2026-01-05T00:00:00Z",
+      "updated_at": "2026-01-05T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.catalogfiltergroup",
+    "pk": 1,
+    "fields": {
+      "title": "Бренд",
+      "slug": "brand",
+      "sort_order": 1,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.catalogfiltergroup",
+    "pk": 2,
+    "fields": {
+      "title": "Формат",
+      "slug": "format",
+      "sort_order": 2,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.catalogfiltergroup",
+    "pk": 3,
+    "fields": {
+      "title": "Назначение",
+      "slug": "purpose",
+      "sort_order": 3,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.catalogfiltergroup",
+    "pk": 4,
+    "fields": {
+      "title": "Наличие",
+      "slug": "availability",
+      "sort_order": 4,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.catalogfilteroption",
+    "pk": 1,
+    "fields": {
+      "group": 1,
+      "label": "BG",
+      "query_param": "brand",
+      "value": "bg",
+      "sort_order": 1,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.catalogfilteroption",
+    "pk": 2,
+    "fields": {
+      "group": 1,
+      "label": "Hatber",
+      "query_param": "brand",
+      "value": "hatber",
+      "sort_order": 2,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.catalogfilteroption",
+    "pk": 3,
+    "fields": {
+      "group": 1,
+      "label": "Brauberg",
+      "query_param": "brand",
+      "value": "brauberg",
+      "sort_order": 3,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.catalogfilteroption",
+    "pk": 4,
+    "fields": {
+      "group": 2,
+      "label": "A4",
+      "query_param": "product_format",
+      "value": "A4",
+      "sort_order": 1,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.catalogfilteroption",
+    "pk": 5,
+    "fields": {
+      "group": 2,
+      "label": "A5",
+      "query_param": "product_format",
+      "value": "A5",
+      "sort_order": 2,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.catalogfilteroption",
+    "pk": 6,
+    "fields": {
+      "group": 3,
+      "label": "Школа",
+      "query_param": "purpose",
+      "value": "school",
+      "sort_order": 1,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.catalogfilteroption",
+    "pk": 7,
+    "fields": {
+      "group": 3,
+      "label": "Офис",
+      "query_param": "purpose",
+      "value": "office",
+      "sort_order": 2,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.catalogfilteroption",
+    "pk": 8,
+    "fields": {
+      "group": 4,
+      "label": "В наличии",
+      "query_param": "in_stock",
+      "value": "true",
+      "sort_order": 1,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.product",
+    "pk": 1,
+    "fields": {
+      "title": "Тетрадь школьная BG 12 листов клетка",
+      "slug": "tetrad-shkolnaya-bg-12-kletka",
+      "sku": "BG-T12-KL-001",
+      "brand": 1,
+      "categories": [1, 2],
+      "short_description": "Компактная тетрадь 12 листов в клетку для ежедневных школьных заданий.",
+      "description": "Школьная тетрадь на 12 листов в клетку с аккуратной разлиновкой. Обложка из мелованного картона защищает от заломов, а офсетная бумага 60 г/м² подходит для шариковых и гелевых ручек. Оптимальна для классных и домашних работ.",
+      "price": "25.00",
+      "old_price": null,
+      "stock": 500,
+      "format": "A5",
+      "sheets_count": 12,
+      "purpose": "school",
+      "status": "active",
+      "is_new": false,
+      "is_hit": true,
+      "is_featured": false,
+      "weight_grams": 50,
+      "length_mm": 170,
+      "width_mm": 205,
+      "height_mm": 2,
+      "created_at": "2026-01-10T00:00:00Z",
+      "updated_at": "2026-01-10T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.product",
+    "pk": 2,
+    "fields": {
+      "title": "Тетрадь школьная Hatber 18 листов линейка",
+      "slug": "tetrad-shkolnaya-hatber-18-lineika",
+      "sku": "HT-T18-LN-001",
+      "brand": 2,
+      "categories": [1, 2],
+      "short_description": "Тетрадь 18 листов в линейку с яркой обложкой для школьных предметов.",
+      "description": "Школьная тетрадь Hatber на 18 листов в линейку. Прочная обложка с полноцветной печатью, ровная разметка и удобный формат A5. Подходит для русского языка, литературы и конспектов.",
+      "price": "35.00",
+      "old_price": "45.00",
+      "stock": 320,
+      "format": "A5",
+      "sheets_count": 18,
+      "purpose": "school",
+      "status": "active",
+      "is_new": true,
+      "is_hit": false,
+      "is_featured": true,
+      "weight_grams": 70,
+      "length_mm": 170,
+      "width_mm": 205,
+      "height_mm": 3,
+      "created_at": "2026-01-12T00:00:00Z",
+      "updated_at": "2026-01-15T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.product",
+    "pk": 3,
+    "fields": {
+      "title": "Тетрадь общая Brauberg A4 96 листов клетка",
+      "slug": "tetrad-obshchaya-brauberg-a4-96-kletka",
+      "sku": "BR-T96-KL-A4",
+      "brand": 3,
+      "categories": [1, 3],
+      "short_description": "Общая тетрадь A4 на 96 листов для офиса, учебы и проектных заметок.",
+      "description": "Общая тетрадь формата A4 Brauberg на 96 листов с прочной ламинированной обложкой. Внутренний блок — офсет 70 г/м², хорошо выдерживает интенсивное письмо и маркеры. Идеальна для протоколов и больших объемов записей.",
+      "price": "189.00",
+      "old_price": null,
+      "stock": 150,
+      "format": "A4",
+      "sheets_count": 96,
+      "purpose": "office",
+      "status": "active",
+      "is_new": false,
+      "is_hit": true,
+      "is_featured": true,
+      "weight_grams": 380,
+      "length_mm": 297,
+      "width_mm": 210,
+      "height_mm": 10,
+      "created_at": "2026-01-14T00:00:00Z",
+      "updated_at": "2026-01-14T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.product",
+    "pk": 4,
+    "fields": {
+      "title": "Блокнот ErichKrause A5 на пружине 80 листов",
+      "slug": "bloknot-erichkrause-a5-pruzhina-80",
+      "sku": "EK-BL80-A5-SP",
+      "brand": 4,
+      "categories": [4],
+      "short_description": "Блокнот A5 на боковой пружине для заметок, планов и списков задач.",
+      "description": "Блокнот ErichKrause формата A5 на боковой пружине, 80 листов в клетку. Пластиковая обложка защищает в сумке, листы удобно откидываются на 180°. Подходит для учебы и офиса.",
+      "price": "210.00",
+      "old_price": "250.00",
+      "stock": 85,
+      "format": "A5",
+      "sheets_count": 80,
+      "purpose": "universal",
+      "status": "active",
+      "is_new": true,
+      "is_hit": false,
+      "is_featured": false,
+      "weight_grams": 200,
+      "length_mm": 210,
+      "width_mm": 148,
+      "height_mm": 12,
+      "created_at": "2026-02-01T00:00:00Z",
+      "updated_at": "2026-02-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.product",
+    "pk": 5,
+    "fields": {
+      "title": "Альбом для рисования BG A4 40 листов",
+      "slug": "albom-risovaniya-bg-a4-40",
+      "sku": "BG-ALB40-A4",
+      "brand": 1,
+      "categories": [5],
+      "short_description": "Альбом A4 на 40 листов для рисования, скетчей и творческих работ.",
+      "description": "Альбом для рисования BG формата A4 на скрепке, 40 листов. Бумага плотностью 100 г/м² подходит для карандаша, фломастеров и легких красок. Удобен для школы и кружков.",
+      "price": "120.00",
+      "old_price": null,
+      "stock": 200,
+      "format": "A4",
+      "sheets_count": 40,
+      "purpose": "creative",
+      "status": "active",
+      "is_new": false,
+      "is_hit": false,
+      "is_featured": true,
+      "weight_grams": 250,
+      "length_mm": 297,
+      "width_mm": 210,
+      "height_mm": 5,
+      "created_at": "2026-02-05T00:00:00Z",
+      "updated_at": "2026-02-05T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.product",
+    "pk": 6,
+    "fields": {
+      "title": "Тетрадь школьная BG 48 листов клетка «Космос»",
+      "slug": "tetrad-bg-48-kletka-kosmos",
+      "sku": "BG-T48-KL-KOS",
+      "brand": 1,
+      "categories": [1, 2],
+      "short_description": "Тетрадь 48 листов в клетку с дизайнерской обложкой «Космос».",
+      "description": "Школьная тетрадь BG на 48 листов в клетку с ламинированной обложкой «Космос». Офсет 60 г/м², четкая разметка и аккуратные поля. Подходит для математики и естественных наук.",
+      "price": "65.00",
+      "old_price": null,
+      "stock": 0,
+      "format": "A5",
+      "sheets_count": 48,
+      "purpose": "school",
+      "status": "active",
+      "is_new": true,
+      "is_hit": true,
+      "is_featured": false,
+      "weight_grams": 130,
+      "length_mm": 170,
+      "width_mm": 205,
+      "height_mm": 5,
+      "created_at": "2026-02-10T00:00:00Z",
+      "updated_at": "2026-02-10T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.product",
+    "pk": 7,
+    "fields": {
+      "title": "Тетрадь Hatber A3 для черчения 24 листа",
+      "slug": "tetrad-hatber-a3-cherchenie-24",
+      "sku": "HT-TCH24-A3",
+      "brand": 2,
+      "categories": [1, 5],
+      "short_description": "Тетрадь A3 для черчения и графических работ с плотной бумагой.",
+      "description": "Тетрадь Hatber формата A3 для черчения, 24 листа. Бумага 200 г/м² выдерживает ластик и тушевку, линии не расползаются. Идеальна для уроков черчения и художественных занятий.",
+      "price": "280.00",
+      "old_price": null,
+      "stock": 45,
+      "format": "A3",
+      "sheets_count": 24,
+      "purpose": "school",
+      "status": "active",
+      "is_new": false,
+      "is_hit": false,
+      "is_featured": false,
+      "weight_grams": 450,
+      "length_mm": 420,
+      "width_mm": 297,
+      "height_mm": 4,
+      "created_at": "2026-02-12T00:00:00Z",
+      "updated_at": "2026-02-12T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.product",
+    "pk": 8,
+    "fields": {
+      "title": "Блокнот Brauberg бизнес A5 160 листов кожзам",
+      "slug": "bloknot-brauberg-biznes-a5-160",
+      "sku": "BR-BL160-A5-BIZ",
+      "brand": 3,
+      "categories": [4, 3],
+      "short_description": "Деловой блокнот A5 в кожзаме для рабочих встреч и планирования.",
+      "description": "Блокнот Brauberg бизнес-серии формата A5 на 160 листов. Обложка из кожзама, закладка-ляссе, плотный блок для ежедневных записей. Подходит для переговоров, планирования и ведения проектов.",
+      "price": "540.00",
+      "old_price": "650.00",
+      "stock": 30,
+      "format": "A5",
+      "sheets_count": 160,
+      "purpose": "office",
+      "status": "active",
+      "is_new": false,
+      "is_hit": true,
+      "is_featured": true,
+      "weight_grams": 350,
+      "length_mm": 210,
+      "width_mm": 148,
+      "height_mm": 18,
+      "created_at": "2026-02-15T00:00:00Z",
+      "updated_at": "2026-02-15T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.product",
+    "pk": 9,
+    "fields": {
+      "title": "Ручка гелевая Pilot G2 0.5 мм, черная",
+      "slug": "ruchka-pilot-g2-05-black",
+      "sku": "PL-G2-05-BLK",
+      "brand": 5,
+      "categories": [7],
+      "short_description": "Гелевая ручка 0.5 мм с мягким письмом для школы и офиса.",
+      "description": "Гелевая ручка Pilot G2 с толщиной письма 0.5 мм. Ровная линия, быстрое высыхание и удобный грип. Подходит для ежедневных записей, контрольных и деловых заметок.",
+      "price": "95.00",
+      "old_price": "120.00",
+      "stock": 260,
+      "format": "other",
+      "sheets_count": null,
+      "purpose": "office",
+      "status": "active",
+      "is_new": true,
+      "is_hit": false,
+      "is_featured": false,
+      "weight_grams": 12,
+      "length_mm": 140,
+      "width_mm": 10,
+      "height_mm": 10,
+      "created_at": "2026-02-18T00:00:00Z",
+      "updated_at": "2026-02-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.product",
+    "pk": 10,
+    "fields": {
+      "title": "Карандаши цветные Maped Color'Peps 12 цветов",
+      "slug": "karandashi-maped-colorpeps-12",
+      "sku": "MP-CP-12",
+      "brand": 6,
+      "categories": [7, 5],
+      "short_description": "Набор цветных карандашей на 12 цветов для творчества.",
+      "description": "Цветные карандаши Maped Color'Peps — 12 насыщенных оттенков, мягкий грифель и удобный шестигранный корпус. Подходят для рисования, раскрашивания и школьных проектов.",
+      "price": "210.00",
+      "old_price": null,
+      "stock": 120,
+      "format": "other",
+      "sheets_count": null,
+      "purpose": "creative",
+      "status": "active",
+      "is_new": false,
+      "is_hit": false,
+      "is_featured": true,
+      "weight_grams": 90,
+      "length_mm": 175,
+      "width_mm": 35,
+      "height_mm": 10,
+      "created_at": "2026-02-20T00:00:00Z",
+      "updated_at": "2026-02-20T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.product",
+    "pk": 11,
+    "fields": {
+      "title": "Бумага офисная Brauberg A4 500 листов 80 г/м²",
+      "slug": "bumaga-brauberg-a4-500-80",
+      "sku": "BR-A4-500-80",
+      "brand": 3,
+      "categories": [6, 8],
+      "short_description": "Офисная бумага A4 80 г/м² для принтера и копиров.",
+      "description": "Белая офисная бумага Brauberg A4, 500 листов, плотность 80 г/м². Подходит для лазерной и струйной печати, обеспечивает четкий текст и минимальное просвечивание.",
+      "price": "420.00",
+      "old_price": "520.00",
+      "stock": 90,
+      "format": "A4",
+      "sheets_count": 500,
+      "purpose": "office",
+      "status": "active",
+      "is_new": false,
+      "is_hit": true,
+      "is_featured": false,
+      "weight_grams": 2500,
+      "length_mm": 297,
+      "width_mm": 210,
+      "height_mm": 55,
+      "created_at": "2026-02-22T00:00:00Z",
+      "updated_at": "2026-02-22T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.product",
+    "pk": 12,
+    "fields": {
+      "title": "Ежедневник BG недатированный A5 192 страницы",
+      "slug": "ezhednevnik-bg-a5-192",
+      "sku": "BG-ED-A5-192",
+      "brand": 1,
+      "categories": [4, 8],
+      "short_description": "Недатированный ежедневник A5 для планирования и встреч.",
+      "description": "Ежедневник BG формата A5, 192 страницы, плотная бумага и удобная разметка для планирования. Обложка защищает в сумке, есть место для заметок и списка задач.",
+      "price": "650.00",
+      "old_price": "790.00",
+      "stock": 60,
+      "format": "A5",
+      "sheets_count": 96,
+      "purpose": "office",
+      "status": "active",
+      "is_new": true,
+      "is_hit": false,
+      "is_featured": true,
+      "weight_grams": 420,
+      "length_mm": 210,
+      "width_mm": 148,
+      "height_mm": 20,
+      "created_at": "2026-02-24T00:00:00Z",
+      "updated_at": "2026-02-24T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.productimage",
+    "pk": 1,
+    "fields": {
+      "product": 1,
+      "image_url": "https://артматериалы.рф/wa-data/public/shop/products/46/26/42646/images/11411/11411.970.jpg",
+      "alt_text": "Тетрадь школьная BG 12 листов клетка",
+      "is_primary": true,
+      "sort_order": 0,
+      "created_at": "2026-01-10T00:00:00Z",
+      "updated_at": "2026-01-10T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productimage",
+    "pk": 2,
+    "fields": {
+      "product": 1,
+      "image_url": "https://dc-electro.ru/upload/iblock/937/8mu8no2bwk38rnm368l725xxrm8mzxwv.jpg",
+      "alt_text": "Тетрадь BG 12 листов — задняя обложка",
+      "is_primary": false,
+      "sort_order": 1,
+      "created_at": "2026-01-10T00:00:00Z",
+      "updated_at": "2026-01-10T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productimage",
+    "pk": 3,
+    "fields": {
+      "product": 2,
+      "image_url": "https://officeclass.ru/upload/iblock/f91/qvehbwkhkqys06lmo0sqxap86swg6kws.jpeg",
+      "alt_text": "Тетрадь Hatber 18 листов линейка",
+      "is_primary": true,
+      "sort_order": 0,
+      "created_at": "2026-01-12T00:00:00Z",
+      "updated_at": "2026-01-12T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productimage",
+    "pk": 4,
+    "fields": {
+      "product": 3,
+      "image_url": "https://offt.ru/wp-content/uploads/2022/07/4a0f3b04-82ed-11ec-bac1-1831bf2721f6.webp",
+      "alt_text": "Тетрадь Brauberg A4 96 листов",
+      "is_primary": true,
+      "sort_order": 0,
+      "created_at": "2026-01-14T00:00:00Z",
+      "updated_at": "2026-01-14T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productimage",
+    "pk": 5,
+    "fields": {
+      "product": 4,
+      "image_url": "https://goods-photos.static1-sima-land.com/items/7242099/1/700.jpg?v=1698991054",
+      "alt_text": "Блокнот ErichKrause A5 80 листов",
+      "is_primary": true,
+      "sort_order": 0,
+      "created_at": "2026-02-01T00:00:00Z",
+      "updated_at": "2026-02-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productimage",
+    "pk": 6,
+    "fields": {
+      "product": 5,
+      "image_url": "https://www.belykrolik.ru/media/catalog/product_images/7679521_1_albom-dlya-risovaniya-40l-a4-na-skrepke-bg-risuem-karandashami.jpg",
+      "alt_text": "Альбом для рисования BG A4 40 листов",
+      "is_primary": true,
+      "sort_order": 0,
+      "created_at": "2026-02-05T00:00:00Z",
+      "updated_at": "2026-02-05T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productimage",
+    "pk": 7,
+    "fields": {
+      "product": 6,
+      "image_url": "https://www.deloks.ru/upload/iblock/5dd/ympqjhlzy4m2ny5eenutldeozanxjgdp/tetrad_48l_a5_kletka_bg_kosmos_zovet_glyantsevaya_laminatsiya_6_full.jpg",
+      "alt_text": "Тетрадь BG 48 листов «Космос»",
+      "is_primary": true,
+      "sort_order": 0,
+      "created_at": "2026-02-10T00:00:00Z",
+      "updated_at": "2026-02-10T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productimage",
+    "pk": 8,
+    "fields": {
+      "product": 7,
+      "image_url": "https://main-cdn.sbermegamarket.ru/big1/hlr-system/958/074/382/108/154/6/100029234030b0.jpg",
+      "alt_text": "Тетрадь Hatber A3 для черчения",
+      "is_primary": true,
+      "sort_order": 0,
+      "created_at": "2026-02-12T00:00:00Z",
+      "updated_at": "2026-02-12T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productimage",
+    "pk": 9,
+    "fields": {
+      "product": 8,
+      "image_url": "https://cdn.vseinstrumenti.ru/images/goods/tovary-dlya-ofisa-i-doma/snabzhenie-i-osnaschenie-ofisa/17365697/560x504/185755421.jpg",
+      "alt_text": "Блокнот Brauberg бизнес A5 160 листов",
+      "is_primary": true,
+      "sort_order": 0,
+      "created_at": "2026-02-15T00:00:00Z",
+      "updated_at": "2026-02-15T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productimage",
+    "pk": 10,
+    "fields": {
+      "product": 9,
+      "image_url": "https://goods-photos.static1-sima-land.com/items/7242099/1/700.jpg?v=1698991054",
+      "alt_text": "Ручка гелевая Pilot G2 0.5 мм, черная",
+      "is_primary": true,
+      "sort_order": 0,
+      "created_at": "2026-02-18T00:00:00Z",
+      "updated_at": "2026-02-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productimage",
+    "pk": 11,
+    "fields": {
+      "product": 10,
+      "image_url": "https://www.belykrolik.ru/media/catalog/product_images/7679521_1_albom-dlya-risovaniya-40l-a4-na-skrepke-bg-risuem-karandashami.jpg",
+      "alt_text": "Карандаши цветные Maped Color'Peps 12 цветов",
+      "is_primary": true,
+      "sort_order": 0,
+      "created_at": "2026-02-20T00:00:00Z",
+      "updated_at": "2026-02-20T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productimage",
+    "pk": 12,
+    "fields": {
+      "product": 11,
+      "image_url": "https://offt.ru/wp-content/uploads/2022/07/4a0f3b04-82ed-11ec-bac1-1831bf2721f6.webp",
+      "alt_text": "Бумага офисная Brauberg A4 500 листов 80 г/м²",
+      "is_primary": true,
+      "sort_order": 0,
+      "created_at": "2026-02-22T00:00:00Z",
+      "updated_at": "2026-02-22T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productimage",
+    "pk": 13,
+    "fields": {
+      "product": 12,
+      "image_url": "https://i.pinimg.com/1200x/14/86/3b/14863b5eabb9158f75cc7562c550d108.jpg",
+      "alt_text": "Ежедневник BG недатированный A5 192 страницы",
+      "is_primary": true,
+      "sort_order": 0,
+      "created_at": "2026-02-24T00:00:00Z",
+      "updated_at": "2026-02-24T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.productspecification",
+    "pk": 1,
+    "fields": {
+      "product": 1,
+      "name": "Разлиновка",
+      "value": "Клетка",
+      "sort_order": 1,
+      "created_at": "2026-01-10T00:00:00Z",
+      "updated_at": "2026-01-10T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 2,
+    "fields": {
+      "product": 1,
+      "name": "Тип обложки",
+      "value": "Мелованный картон",
+      "sort_order": 2,
+      "created_at": "2026-01-10T00:00:00Z",
+      "updated_at": "2026-01-10T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 3,
+    "fields": {
+      "product": 1,
+      "name": "Плотность бумаги",
+      "value": "60 г/м²",
+      "sort_order": 3,
+      "created_at": "2026-01-10T00:00:00Z",
+      "updated_at": "2026-01-10T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 4,
+    "fields": {
+      "product": 2,
+      "name": "Разлиновка",
+      "value": "Линейка",
+      "sort_order": 1,
+      "created_at": "2026-01-12T00:00:00Z",
+      "updated_at": "2026-01-12T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 5,
+    "fields": {
+      "product": 2,
+      "name": "Тип обложки",
+      "value": "Картон с полноцветной печатью",
+      "sort_order": 2,
+      "created_at": "2026-01-12T00:00:00Z",
+      "updated_at": "2026-01-12T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 6,
+    "fields": {
+      "product": 3,
+      "name": "Тип крепления",
+      "value": "Скрепка",
+      "sort_order": 1,
+      "created_at": "2026-01-14T00:00:00Z",
+      "updated_at": "2026-01-14T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 7,
+    "fields": {
+      "product": 3,
+      "name": "Плотность бумаги",
+      "value": "70 г/м²",
+      "sort_order": 2,
+      "created_at": "2026-01-14T00:00:00Z",
+      "updated_at": "2026-01-14T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 8,
+    "fields": {
+      "product": 4,
+      "name": "Тип крепления",
+      "value": "Боковая пружина",
+      "sort_order": 1,
+      "created_at": "2026-02-01T00:00:00Z",
+      "updated_at": "2026-02-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 9,
+    "fields": {
+      "product": 4,
+      "name": "Материал обложки",
+      "value": "Пластик",
+      "sort_order": 2,
+      "created_at": "2026-02-01T00:00:00Z",
+      "updated_at": "2026-02-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 10,
+    "fields": {
+      "product": 5,
+      "name": "Плотность бумаги",
+      "value": "100 г/м²",
+      "sort_order": 1,
+      "created_at": "2026-02-05T00:00:00Z",
+      "updated_at": "2026-02-05T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 11,
+    "fields": {
+      "product": 8,
+      "name": "Материал обложки",
+      "value": "Кожзаменитель",
+      "sort_order": 1,
+      "created_at": "2026-02-15T00:00:00Z",
+      "updated_at": "2026-02-15T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 12,
+    "fields": {
+      "product": 8,
+      "name": "Закладка",
+      "value": "Ляссе",
+      "sort_order": 2,
+      "created_at": "2026-02-15T00:00:00Z",
+      "updated_at": "2026-02-15T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 13,
+    "fields": {
+      "product": 9,
+      "name": "Цвет чернил",
+      "value": "Черный",
+      "sort_order": 1,
+      "created_at": "2026-02-18T00:00:00Z",
+      "updated_at": "2026-02-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 14,
+    "fields": {
+      "product": 9,
+      "name": "Толщина письма",
+      "value": "0.5 мм",
+      "sort_order": 2,
+      "created_at": "2026-02-18T00:00:00Z",
+      "updated_at": "2026-02-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 15,
+    "fields": {
+      "product": 10,
+      "name": "Количество цветов",
+      "value": "12",
+      "sort_order": 1,
+      "created_at": "2026-02-20T00:00:00Z",
+      "updated_at": "2026-02-20T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 16,
+    "fields": {
+      "product": 10,
+      "name": "Тип грифеля",
+      "value": "Мягкий",
+      "sort_order": 2,
+      "created_at": "2026-02-20T00:00:00Z",
+      "updated_at": "2026-02-20T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 17,
+    "fields": {
+      "product": 11,
+      "name": "Плотность бумаги",
+      "value": "80 г/м²",
+      "sort_order": 1,
+      "created_at": "2026-02-22T00:00:00Z",
+      "updated_at": "2026-02-22T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 18,
+    "fields": {
+      "product": 11,
+      "name": "Белизна",
+      "value": "CIE 146",
+      "sort_order": 2,
+      "created_at": "2026-02-22T00:00:00Z",
+      "updated_at": "2026-02-22T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 19,
+    "fields": {
+      "product": 12,
+      "name": "Тип разметки",
+      "value": "Недатированный блок",
+      "sort_order": 1,
+      "created_at": "2026-02-24T00:00:00Z",
+      "updated_at": "2026-02-24T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productspecification",
+    "pk": 20,
+    "fields": {
+      "product": 12,
+      "name": "Материал обложки",
+      "value": "Ламинированный картон",
+      "sort_order": 2,
+      "created_at": "2026-02-24T00:00:00Z",
+      "updated_at": "2026-02-24T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.productreview",
+    "pk": 1,
+    "fields": {
+      "product": 1,
+      "user": 1,
+      "author_name": "Иван Петров",
+      "rating": 5,
+      "text": "Отличные тетради! Покупаю каждый год ребёнку в школу. Бумага белая, не просвечивает.",
+      "is_published": true,
+      "created_at": "2026-02-01T10:00:00Z",
+      "updated_at": "2026-02-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productreview",
+    "pk": 2,
+    "fields": {
+      "product": 1,
+      "user": 2,
+      "author_name": "Мария Сидорова",
+      "rating": 4,
+      "text": "Хорошая тетрадь за свою цену. Единственное — обложка немного тонковата.",
+      "is_published": true,
+      "created_at": "2026-02-05T14:30:00Z",
+      "updated_at": "2026-02-05T14:30:00Z"
+    }
+  },
+  {
+    "model": "shop.productreview",
+    "pk": 3,
+    "fields": {
+      "product": 3,
+      "user": 1,
+      "author_name": "Иван Петров",
+      "rating": 5,
+      "text": "Использую для рабочих записей. Формат A4 очень удобен, бумага плотная.",
+      "is_published": true,
+      "created_at": "2026-02-20T09:15:00Z",
+      "updated_at": "2026-02-20T09:15:00Z"
+    }
+  },
+  {
+    "model": "shop.productreview",
+    "pk": 4,
+    "fields": {
+      "product": 4,
+      "user": 2,
+      "author_name": "Мария Сидорова",
+      "rating": 3,
+      "text": "Пружина немного тугая, но в целом блокнот нормальный.",
+      "is_published": true,
+      "created_at": "2026-03-01T16:00:00Z",
+      "updated_at": "2026-03-01T16:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productreview",
+    "pk": 5,
+    "fields": {
+      "product": 8,
+      "user": null,
+      "author_name": "Алексей К.",
+      "rating": 5,
+      "text": "Шикарный блокнот! Кожзам приятный на ощупь, ляссе-закладка — приятный бонус.",
+      "is_published": true,
+      "created_at": "2026-03-10T11:00:00Z",
+      "updated_at": "2026-03-10T11:00:00Z"
+    }
+  },
+  {
+    "model": "shop.productreview",
+    "pk": 6,
+    "fields": {
+      "product": 9,
+      "user": null,
+      "author_name": "Мария Д.",
+      "rating": 4,
+      "text": "Пишет мягко и без пропусков, удобно держать. Чернила сохнут быстро, не размазываются.",
+      "is_published": true,
+      "created_at": "2026-03-12T09:20:00Z",
+      "updated_at": "2026-03-12T09:20:00Z"
+    }
+  },
+  {
+    "model": "shop.productreview",
+    "pk": 7,
+    "fields": {
+      "product": 11,
+      "user": null,
+      "author_name": "Ирина С.",
+      "rating": 5,
+      "text": "Бумага плотная, принтер не зажевывает. Для офиса отличный вариант, берем регулярно.",
+      "is_published": true,
+      "created_at": "2026-03-12T10:10:00Z",
+      "updated_at": "2026-03-12T10:10:00Z"
+    }
+  },
+
+  {
+    "model": "shop.promotion",
+    "pk": 1,
+    "fields": {
+      "title": "Скидка 15% на школьные тетради",
+      "slug": "skidka-15-shkolnye-tetradi",
+      "description": "Скидка 15% на все школьные тетради при покупке от 10 штук. Предложение действует на товары из категории «Школьные тетради» и суммируется внутри одной корзины.",
+      "promo_type": "discount",
+      "discount_percent": 15,
+      "start_at": "2026-08-01T00:00:00Z",
+      "end_at": "2026-09-15T23:59:59Z",
+      "is_active": true,
+      "products": [1, 2, 6],
+      "created_at": "2026-07-25T00:00:00Z",
+      "updated_at": "2026-07-25T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.promotion",
+    "pk": 2,
+    "fields": {
+      "title": "Набор «Школьник»: 5 тетрадей + альбом",
+      "slug": "nabor-shkolnik",
+      "description": "Комплект из 5 тетрадей и альбома для рисования по специальной цене. Отличный стартовый набор к учебному году с фиксированной выгодой.",
+      "promo_type": "bundle",
+      "discount_percent": null,
+      "start_at": "2026-08-15T00:00:00Z",
+      "end_at": "2026-09-30T23:59:59Z",
+      "is_active": true,
+      "products": [1, 2, 5, 6],
+      "created_at": "2026-08-10T00:00:00Z",
+      "updated_at": "2026-08-10T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.promotion",
+    "pk": 3,
+    "fields": {
+      "title": "Распродажа блокнотов — скидка 20%",
+      "slug": "rasprodazha-bloknotov-20",
+      "description": "Скидка 20% на все блокноты брендов ErichKrause и Brauberg. Акция распространяется на форматы A5 и A4, пока действует период распродажи.",
+      "promo_type": "discount",
+      "discount_percent": 20,
+      "start_at": "2026-03-01T00:00:00Z",
+      "end_at": "2026-03-31T23:59:59Z",
+      "is_active": false,
+      "products": [4, 8],
+      "created_at": "2026-02-25T00:00:00Z",
+      "updated_at": "2026-04-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.promotion",
+    "pk": 4,
+    "fields": {
+      "title": "Скидка 10% на письменные принадлежности",
+      "slug": "skidka-10-writing",
+      "description": "Скидка 10% на ручки и карандаши из категории «Письменные принадлежности». Отличный вариант для пополнения школьных запасов.",
+      "promo_type": "discount",
+      "discount_percent": 10,
+      "start_at": "2026-02-20T00:00:00Z",
+      "end_at": "2026-03-20T23:59:59Z",
+      "is_active": true,
+      "products": [9, 10],
+      "created_at": "2026-02-18T00:00:00Z",
+      "updated_at": "2026-02-18T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.giftcertificate",
+    "pk": 1,
+    "fields": {
+      "title": "Подарочный сертификат 500 ₽",
+      "slug": "gift-500",
+      "nominal": "500.00",
+      "description": "Электронный подарочный сертификат на 500 рублей. Можно использовать при оплате любого товара в каталоге, срок действия 12 месяцев.",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.giftcertificate",
+    "pk": 2,
+    "fields": {
+      "title": "Подарочный сертификат 1000 ₽",
+      "slug": "gift-1000",
+      "nominal": "1000.00",
+      "description": "Электронный подарочный сертификат на 1000 рублей. Подходит для покупки нескольких товаров, действует 12 месяцев с момента покупки.",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.giftcertificate",
+    "pk": 3,
+    "fields": {
+      "title": "Подарочный сертификат 3000 ₽",
+      "slug": "gift-3000",
+      "nominal": "3000.00",
+      "description": "Электронный подарочный сертификат на 3000 рублей. Идеален для крупной закупки канцелярии, можно использовать полностью или частями в течение года.",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.giftcertificate",
+    "pk": 4,
+    "fields": {
+      "title": "Подарочный сертификат 5000 ₽",
+      "slug": "gift-5000",
+      "nominal": "5000.00",
+      "description": "Электронный подарочный сертификат на 5000 рублей. Подходит для больших закупок, действует 12 месяцев и применяется к любым товарам.",
+      "is_active": true,
+      "created_at": "2026-01-05T00:00:00Z",
+      "updated_at": "2026-01-05T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.blogcategory",
+    "pk": 1,
+    "fields": {
+      "title": "Советы покупателям",
+      "slug": "sovety-pokupatelyam",
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.blogcategory",
+    "pk": 2,
+    "fields": {
+      "title": "Новости компании",
+      "slug": "novosti-kompanii",
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.blogcategory",
+    "pk": 3,
+    "fields": {
+      "title": "Обзоры товаров",
+      "slug": "obzory-tovarov",
+      "created_at": "2026-01-05T00:00:00Z",
+      "updated_at": "2026-01-05T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.blogpost",
+    "pk": 1,
+    "fields": {
+      "title": "Как выбрать тетрадь для школьника",
+      "slug": "kak-vybrat-tetrad-dlya-shkolnika",
+      "category": 1,
+      "excerpt": "Подробный гид по выбору школьных тетрадей: разлиновка, плотность бумаги, обложка.",
+      "content": "## Критерии выбора\n\nПри выборе тетради для школьника обратите внимание на:\n\n1. **Разлиновку** — клетка или линейка в зависимости от предмета.\n2. **Плотность бумаги** — рекомендуем от 60 г/м².\n3. **Качество обложки** — мелованный картон прослужит дольше.\n4. **Количество листов** — 12, 18, 24, 48 в зависимости от потребностей.\n\nВ нашем каталоге вы найдёте тетради ведущих производителей.",
+      "cover_url": "https://mekka.spb.ru/upload/medialibrary/994/2ed60b325e20fcc87e08781c331e1506.jpg",
+      "status": "published",
+      "published_at": "2026-02-01T10:00:00Z",
+      "created_at": "2026-01-28T00:00:00Z",
+      "updated_at": "2026-02-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "shop.blogpost",
+    "pk": 2,
+    "fields": {
+      "title": "Открытие нового пункта самовывоза в Санкт-Петербурге",
+      "slug": "novyy-punkt-samovyvoza-spb",
+      "category": 2,
+      "excerpt": "Рады сообщить об открытии нового пункта выдачи заказов рядом с метро Невский проспект.",
+      "content": "Уважаемые покупатели!\n\nМы открыли новый пункт самовывоза по адресу: Невский проспект, д. 100.\nГрафик работы: пн-пт 9:00–20:00, сб 10:00–18:00.\n\nЖдём вас!",
+      "cover_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNg75I27QzyRIPfzsGnX1mjjVwx0qmAsl9sw&s",
+      "status": "published",
+      "published_at": "2026-03-15T12:00:00Z",
+      "created_at": "2026-03-10T00:00:00Z",
+      "updated_at": "2026-03-15T12:00:00Z"
+    }
+  },
+  {
+  "model": "shop.blogpost",
+  "pk": 3,
+  "fields": {
+    "title": "Обзор блокнотов Brauberg бизнес-серии",
+    "slug": "obzor-bloknotov-brauberg-biznes",
+    "category": 3,
+    "excerpt": "Подробный обзор деловых блокнотов Brauberg: материалы, удобство, цена.",
+    "content": "В мире деловой канцелярии блокноты Brauberg бизнес-серии занимают особое место – они сочетают в себе строгий стиль, функциональность и доступную стоимость, что делает их идеальным выбором для руководителей, менеджеров и всех, кто ценит комфорт при ведении записей. В этом обзоре мы детально разберем особенности этих блокнотов, чтобы вы могли оценить их преимущества перед покупкой.\n\n## Ассортимент и форматы\n\nБизнес-серия Brauberg представлена несколькими вариантами исполнения, чтобы каждый мог найти блокнот под свои задачи:\n- **По формату:** популярные А5 (для ежедневного ношения в сумке или портфеле) и А4 (для масштабных записей, планерок и презентаций).\n- **По типу переплета:** модели на гребне/пружине (удобно раскладываются на 180°, можно отогнуть обложку) и с твердым переплетом (обеспечивают дополнительную защиту листов и жесткость при письме «на весу»).\n- **По внутреннему блоку:** большинство вариантов имеют классическую клетку или линию, но встречаются и нелинованные листы – для скетчей, схем или свободных записей.\n\n## Материалы и качество изготовления\n\nBrauberg уделяет большое внимание материалам, ведь от них зависит долговечность и внешний вид блокнота.\n\n**Обложка.** В зависимости от модели используются:\n- Искусственная кожа с тиснением – приятная на ощупь, износостойкая, выглядит солидно и не маркая.\n- Тканевые обложки (лен, букле) – добавляют тактильный комфорт и оригинальность.\n- Высококачественный твердый картон с матовой ламинацией – строгий офисный стиль.\nПрактически все модели снабжены эластичной застёжкой-резинкой, которая надёжно фиксирует блокнот в закрытом состоянии и предохраняет листы от загибания.\n\n**Бумага.** Внутренний блок выполнен из офсетной бумаги плотностью 70–80 г/м². Она достаточно плотная, чтобы чернила не просвечивали на обратную сторону, и приятная на ощупь. Листы идеально подходят для письма шариковыми, гелевыми и даже некоторыми видами перьевых ручек – без растекания и чрезмерного впитывания.\n\n**Переплёт и детали.** Все блокноты прошиты нитками (в твердых переплетах) или скреплены надежной металлической пружиной, что гарантирует долгий срок службы. Многие модели дополнены полезными элементами:\n- закладка-ляссе (ленточка) – чтобы быстро открыть нужную страницу;\n- кармашек для визиток или мелких записей на форзаце;\n- перфорированные углы листов для отрывания.\n\n## Дизайн и эргономика\n\nВнешний вид блокнотов бизнес-серии – это воплощение лаконичности и делового стиля. Основные цвета: классический черный, темно-синий, бордовый, коричневый, иногда серый или бежевый. Отсутствие ярких кричащих деталей позволяет блокноту органично вписаться в любой интерьер или деловой образ. На обложке обычно присутствует минималистичное тиснение логотипом Brauberg – знак качества и статуса.\n\nБлагодаря продуманной конструкции блокнот удобно держать в руках, страницы не норовят захлопнуться, а если это модель на пружине – можно без труда работать даже на ограниченном пространстве, сложив блокнот пополам.\n\n## Целевая аудитория\n\nБлокноты Brauberg бизнес-серии адресованы широкому кругу пользователей:\n- Руководители и офисные сотрудники – для записи задач, протоколов совещаний, ведения ежедневников.\n- Студенты и преподаватели – как качественная замена обычным тетрадям для конспектов.\n- Творческие люди – в нелинованных блокнотах можно делать зарисовки, вести арт-дневники.\n- Все, кто ценит организованность и хочет вести записи в аккуратном и надежном блокноте.\n\n## Соотношение цены и качества\n\nОдно из главных преимуществ продукции Brauberg – демократичная цена при сохранении высоких стандартов качества. Блокноты бизнес-серии стоят значительно дешевле аналогичных предложений премиум-брендов, но при этом не уступают им по большинству характеристик. Это идеальный выбор для корпоративных закупок, а также для личного использования без лишних затрат.\n\n## Итоги\n\nПодводя итог обзора, можно смело рекомендовать блокноты Brauberg бизнес-серии как отличное сочетание стиля, функциональности и экономии. Будь то ежедневные записи, планирование проектов или творческие идеи – эти блокноты станут вашим надежным спутником. Приходите в наш интернет-магазин, чтобы выбрать подходящий формат и цвет – мы предлагаем полный ассортимент моделей этой серии по приятным ценам.",
+    "cover_url": "https://s3.ibta.ru/goods/125204/873636741759b96c2ad4182e0edafb0f_x.jpg",
+    "status": "draft",
+    "published_at": null,
+    "created_at": "2026-03-20T00:00:00Z",
+    "updated_at": "2026-03-20T00:00:00Z"
+  }
+  },
+  {
+    "model": "shop.blogpost",
+    "pk": 4,
+    "fields": {
+      "title": "Как выбрать бумагу для принтера: плотность, белизна, назначение",
+      "slug": "kak-vybrat-bumagu-dlya-printera",
+      "category": 1,
+      "excerpt": "Разбираем плотность, белизну и форматы офисной бумаги, чтобы печать была четкой, а техника работала без замятий.",
+      "content": "## На что смотреть при выборе\n\n**Плотность.** Для офисной печати оптимально 80 г/м² — это универсальный вариант для текста и простых графиков. Для презентаций и односторонней печати можно выбрать 90–100 г/м².\n\n**Белизна.** Показатель CIE влияет на контраст и яркость отпечатка. Для деловой печати подойдут значения от 146 CIE и выше.\n\n**Формат.** Чаще всего нужен A4, но для буклетов или больших схем используют A3.\n\n## Советы по хранению\n\nДержите бумагу в сухом месте, не вскрывайте пачку заранее и не допускайте перепадов влажности — так листы не поведет.\n\nВ каталоге Paperly вы найдете бумагу для лазерных и струйных принтеров с проверенными характеристиками.",
+      "cover_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxQZ-Q-PRYMrsN5LZfH3h-Apb0nMe_NcdzXA&s",
+      "status": "published",
+      "published_at": "2026-03-22T09:00:00Z",
+      "created_at": "2026-03-20T00:00:00Z",
+      "updated_at": "2026-03-22T09:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.pickuppoint",
+    "pk": 1,
+    "fields": {
+      "name": "Пункт выдачи «Центральный»",
+      "slug": "punkt-tsentral-msk",
+      "city": "Москва",
+      "address": "ул. Тверская, д. 15, стр. 1",
+      "metro": "Тверская",
+      "latitude": "55.764010",
+      "longitude": "37.605600",
+      "opening_hours": "пн-пт 9:00–21:00, сб-вс 10:00–19:00",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.pickuppoint",
+    "pk": 2,
+    "fields": {
+      "name": "Пункт выдачи «Южный»",
+      "slug": "punkt-yuzhnyy-msk",
+      "city": "Москва",
+      "address": "Варшавское шоссе, д. 72",
+      "metro": "Нагатинская",
+      "latitude": "55.682500",
+      "longitude": "37.621300",
+      "opening_hours": "пн-пт 10:00–20:00, сб 10:00–17:00",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.pickuppoint",
+    "pk": 3,
+    "fields": {
+      "name": "Пункт выдачи «Невский»",
+      "slug": "punkt-nevskiy-spb",
+      "city": "Санкт-Петербург",
+      "address": "Невский проспект, д. 100",
+      "metro": "Невский проспект",
+      "latitude": "59.932740",
+      "longitude": "30.350580",
+      "opening_hours": "пн-пт 9:00–20:00, сб 10:00–18:00",
+      "is_active": true,
+      "created_at": "2026-03-15T00:00:00Z",
+      "updated_at": "2026-03-15T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.deliverytariff",
+    "pk": 1,
+    "fields": {
+      "title": "Курьер по Москве",
+      "city": "Москва",
+      "delivery_type": "courier",
+      "price": "350.00",
+      "free_from_amount": "3000.00",
+      "eta_min_days": 1,
+      "eta_max_days": 2,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.deliverytariff",
+    "pk": 2,
+    "fields": {
+      "title": "Экспресс по Москве",
+      "city": "Москва",
+      "delivery_type": "express",
+      "price": "700.00",
+      "free_from_amount": null,
+      "eta_min_days": 1,
+      "eta_max_days": 1,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.deliverytariff",
+    "pk": 3,
+    "fields": {
+      "title": "Самовывоз Москва",
+      "city": "Москва",
+      "delivery_type": "pickup",
+      "price": "0.00",
+      "free_from_amount": null,
+      "eta_min_days": 1,
+      "eta_max_days": 1,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.deliverytariff",
+    "pk": 4,
+    "fields": {
+      "title": "Доставка по России",
+      "city": "",
+      "delivery_type": "region",
+      "price": "500.00",
+      "free_from_amount": "5000.00",
+      "eta_min_days": 3,
+      "eta_max_days": 10,
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.deliverytariff",
+    "pk": 5,
+    "fields": {
+      "title": "Курьер по СПб",
+      "city": "Санкт-Петербург",
+      "delivery_type": "courier",
+      "price": "350.00",
+      "free_from_amount": "3000.00",
+      "eta_min_days": 1,
+      "eta_max_days": 3,
+      "is_active": true,
+      "created_at": "2026-03-15T00:00:00Z",
+      "updated_at": "2026-03-15T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.customerprofile",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "first_name": "Иван",
+      "last_name": "Петров",
+      "phone": "+79161234567",
+      "birth_date": "1990-05-15",
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.customerprofile",
+    "pk": 2,
+    "fields": {
+      "user": 2,
+      "first_name": "Мария",
+      "last_name": "Сидорова",
+      "phone": "+79037654321",
+      "birth_date": "1985-11-20",
+      "created_at": "2026-01-05T00:00:00Z",
+      "updated_at": "2026-01-05T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.address",
+    "pk": 1,
+    "fields": {
+      "profile": 1,
+      "address_type": "shipping",
+      "city": "Москва",
+      "street": "ул. Ленина, д. 10",
+      "entrance": "3",
+      "flat_or_office": "45",
+      "postal_code": "101000",
+      "comment": "Домофон — 45, код подъезда 1234",
+      "is_default": true,
+      "created_at": "2026-01-02T00:00:00Z",
+      "updated_at": "2026-01-02T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.address",
+    "pk": 2,
+    "fields": {
+      "profile": 1,
+      "address_type": "shipping",
+      "city": "Москва",
+      "street": "ул. Гагарина, д. 5",
+      "entrance": "",
+      "flat_or_office": "офис 301",
+      "postal_code": "105064",
+      "comment": "Рабочий адрес",
+      "is_default": false,
+      "created_at": "2026-01-15T00:00:00Z",
+      "updated_at": "2026-01-15T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.address",
+    "pk": 3,
+    "fields": {
+      "profile": 2,
+      "address_type": "shipping",
+      "city": "Санкт-Петербург",
+      "street": "Невский проспект, д. 50",
+      "entrance": "1",
+      "flat_or_office": "12",
+      "postal_code": "191025",
+      "comment": "",
+      "is_default": true,
+      "created_at": "2026-01-06T00:00:00Z",
+      "updated_at": "2026-01-06T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.notificationsetting",
+    "pk": 1,
+    "fields": {
+      "profile": 1,
+      "order_status": true,
+      "promotions": true,
+      "restock": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.notificationsetting",
+    "pk": 2,
+    "fields": {
+      "profile": 2,
+      "order_status": true,
+      "promotions": false,
+      "restock": false,
+      "created_at": "2026-01-05T00:00:00Z",
+      "updated_at": "2026-01-05T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.favorite",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "product": 3,
+      "created_at": "2026-02-20T09:00:00Z",
+      "updated_at": "2026-02-20T09:00:00Z"
+    }
+  },
+  {
+    "model": "shop.favorite",
+    "pk": 2,
+    "fields": {
+      "user": 1,
+      "product": 8,
+      "created_at": "2026-03-01T12:00:00Z",
+      "updated_at": "2026-03-01T12:00:00Z"
+    }
+  },
+  {
+    "model": "shop.favorite",
+    "pk": 3,
+    "fields": {
+      "user": 2,
+      "product": 4,
+      "created_at": "2026-03-05T10:00:00Z",
+      "updated_at": "2026-03-05T10:00:00Z"
+    }
+  },
+  {
+    "model": "shop.favorite",
+    "pk": 4,
+    "fields": {
+      "user": 2,
+      "product": 1,
+      "created_at": "2026-03-05T10:05:00Z",
+      "updated_at": "2026-03-05T10:05:00Z"
+    }
+  },
+
+  {
+    "model": "shop.cart",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "session_key": "",
+      "is_active": true,
+      "created_at": "2026-03-20T10:00:00Z",
+      "updated_at": "2026-03-20T10:00:00Z"
+    }
+  },
+  {
+    "model": "shop.cart",
+    "pk": 2,
+    "fields": {
+      "user": 2,
+      "session_key": "",
+      "is_active": true,
+      "created_at": "2026-03-22T14:00:00Z",
+      "updated_at": "2026-03-22T14:00:00Z"
+    }
+  },
+  {
+    "model": "shop.cart",
+    "pk": 3,
+    "fields": {
+      "user": null,
+      "session_key": "abc123sessionkey456",
+      "is_active": true,
+      "created_at": "2026-03-25T08:00:00Z",
+      "updated_at": "2026-03-25T08:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.cartitem",
+    "pk": 1,
+    "fields": {
+      "cart": 1,
+      "product": 3,
+      "quantity": 2,
+      "price_snapshot": "189.00",
+      "created_at": "2026-03-20T10:05:00Z",
+      "updated_at": "2026-03-20T10:05:00Z"
+    }
+  },
+  {
+    "model": "shop.cartitem",
+    "pk": 2,
+    "fields": {
+      "cart": 1,
+      "product": 5,
+      "quantity": 1,
+      "price_snapshot": "120.00",
+      "created_at": "2026-03-20T10:10:00Z",
+      "updated_at": "2026-03-20T10:10:00Z"
+    }
+  },
+  {
+    "model": "shop.cartitem",
+    "pk": 3,
+    "fields": {
+      "cart": 2,
+      "product": 1,
+      "quantity": 10,
+      "price_snapshot": "25.00",
+      "created_at": "2026-03-22T14:05:00Z",
+      "updated_at": "2026-03-22T14:05:00Z"
+    }
+  },
+  {
+    "model": "shop.cartitem",
+    "pk": 4,
+    "fields": {
+      "cart": 3,
+      "product": 4,
+      "quantity": 1,
+      "price_snapshot": "210.00",
+      "created_at": "2026-03-25T08:05:00Z",
+      "updated_at": "2026-03-25T08:05:00Z"
+    }
+  },
+
+  {
+    "model": "shop.order",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "number": "ORD-2026-000001",
+      "status": "done",
+      "full_name": "Иван Петров",
+      "phone": "+79161234567",
+      "email": "ivan@example.com",
+      "city": "Москва",
+      "address": "ул. Ленина, д. 10, кв. 45",
+      "comment": "Позвонить за час до доставки",
+      "delivery_type": "courier",
+      "payment_type": "card",
+      "pickup_point": null,
+      "subtotal": "498.00",
+      "delivery_price": "350.00",
+      "discount_amount": "0.00",
+      "total": "848.00",
+      "created_at": "2026-02-15T12:00:00Z",
+      "updated_at": "2026-02-20T14:00:00Z"
+    }
+  },
+  {
+    "model": "shop.order",
+    "pk": 2,
+    "fields": {
+      "user": 2,
+      "number": "ORD-2026-000002",
+      "status": "shipped",
+      "full_name": "Мария Сидорова",
+      "phone": "+79037654321",
+      "email": "maria@example.com",
+      "city": "Санкт-Петербург",
+      "address": "Невский проспект, д. 50, кв. 12",
+      "comment": "",
+      "delivery_type": "courier",
+      "payment_type": "sbp",
+      "pickup_point": null,
+      "subtotal": "750.00",
+      "delivery_price": "350.00",
+      "discount_amount": "0.00",
+      "total": "1100.00",
+      "created_at": "2026-03-10T09:30:00Z",
+      "updated_at": "2026-03-14T10:00:00Z"
+    }
+  },
+  {
+    "model": "shop.order",
+    "pk": 3,
+    "fields": {
+      "user": 1,
+      "number": "ORD-2026-000003",
+      "status": "new",
+      "full_name": "Иван Петров",
+      "phone": "+79161234567",
+      "email": "ivan@example.com",
+      "city": "Москва",
+      "address": "Самовывоз — Тверская, д. 15",
+      "comment": "Заберу после обеда",
+      "delivery_type": "pickup",
+      "payment_type": "cash",
+      "pickup_point": 1,
+      "subtotal": "540.00",
+      "delivery_price": "0.00",
+      "discount_amount": "108.00",
+      "total": "432.00",
+      "created_at": "2026-03-25T15:00:00Z",
+      "updated_at": "2026-03-25T15:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.orderitem",
+    "pk": 1,
+    "fields": {
+      "order": 1,
+      "product": 3,
+      "title_snapshot": "Тетрадь общая Brauberg A4 96 листов клетка",
+      "sku_snapshot": "BR-T96-KL-A4",
+      "quantity": 2,
+      "unit_price": "189.00",
+      "created_at": "2026-02-15T12:00:00Z",
+      "updated_at": "2026-02-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "shop.orderitem",
+    "pk": 2,
+    "fields": {
+      "order": 1,
+      "product": 5,
+      "title_snapshot": "Альбом для рисования BG A4 40 листов",
+      "sku_snapshot": "BG-ALB40-A4",
+      "quantity": 1,
+      "unit_price": "120.00",
+      "created_at": "2026-02-15T12:00:00Z",
+      "updated_at": "2026-02-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "shop.orderitem",
+    "pk": 3,
+    "fields": {
+      "order": 2,
+      "product": 1,
+      "title_snapshot": "Тетрадь школьная BG 12 листов клетка",
+      "sku_snapshot": "BG-T12-KL-001",
+      "quantity": 10,
+      "unit_price": "25.00",
+      "created_at": "2026-03-10T09:30:00Z",
+      "updated_at": "2026-03-10T09:30:00Z"
+    }
+  },
+  {
+    "model": "shop.orderitem",
+    "pk": 4,
+    "fields": {
+      "order": 2,
+      "product": 2,
+      "title_snapshot": "Тетрадь школьная Hatber 18 листов линейка",
+      "sku_snapshot": "HT-T18-LN-001",
+      "quantity": 10,
+      "unit_price": "35.00",
+      "created_at": "2026-03-10T09:30:00Z",
+      "updated_at": "2026-03-10T09:30:00Z"
+    }
+  },
+  {
+    "model": "shop.orderitem",
+    "pk": 5,
+    "fields": {
+      "order": 2,
+      "product": 5,
+      "title_snapshot": "Альбом для рисования BG A4 40 листов",
+      "sku_snapshot": "BG-ALB40-A4",
+      "quantity": 1,
+      "unit_price": "120.00",
+      "created_at": "2026-03-10T09:30:00Z",
+      "updated_at": "2026-03-10T09:30:00Z"
+    }
+  },
+  {
+    "model": "shop.orderitem",
+    "pk": 6,
+    "fields": {
+      "order": 3,
+      "product": 8,
+      "title_snapshot": "Блокнот Brauberg бизнес A5 160 листов кожзам",
+      "sku_snapshot": "BR-BL160-A5-BIZ",
+      "quantity": 1,
+      "unit_price": "540.00",
+      "created_at": "2026-03-25T15:00:00Z",
+      "updated_at": "2026-03-25T15:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.orderstatushistory",
+    "pk": 1,
+    "fields": {
+      "order": 1,
+      "status": "new",
+      "comment": "Заказ создан",
+      "created_at": "2026-02-15T12:00:00Z",
+      "updated_at": "2026-02-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "shop.orderstatushistory",
+    "pk": 2,
+    "fields": {
+      "order": 1,
+      "status": "confirmed",
+      "comment": "Заказ подтверждён менеджером",
+      "created_at": "2026-02-15T14:00:00Z",
+      "updated_at": "2026-02-15T14:00:00Z"
+    }
+  },
+  {
+    "model": "shop.orderstatushistory",
+    "pk": 3,
+    "fields": {
+      "order": 1,
+      "status": "paid",
+      "comment": "Оплата получена",
+      "created_at": "2026-02-15T15:00:00Z",
+      "updated_at": "2026-02-15T15:00:00Z"
+    }
+  },
+  {
+    "model": "shop.orderstatushistory",
+    "pk": 4,
+    "fields": {
+      "order": 1,
+      "status": "shipped",
+      "comment": "Передан курьеру",
+      "created_at": "2026-02-17T10:00:00Z",
+      "updated_at": "2026-02-17T10:00:00Z"
+    }
+  },
+  {
+    "model": "shop.orderstatushistory",
+    "pk": 5,
+    "fields": {
+      "order": 1,
+      "status": "done",
+      "comment": "Заказ доставлен",
+      "created_at": "2026-02-18T16:00:00Z",
+      "updated_at": "2026-02-18T16:00:00Z"
+    }
+  },
+  {
+    "model": "shop.orderstatushistory",
+    "pk": 6,
+    "fields": {
+      "order": 2,
+      "status": "new",
+      "comment": "Заказ создан",
+      "created_at": "2026-03-10T09:30:00Z",
+      "updated_at": "2026-03-10T09:30:00Z"
+    }
+  },
+  {
+    "model": "shop.orderstatushistory",
+    "pk": 7,
+    "fields": {
+      "order": 2,
+      "status": "paid",
+      "comment": "Оплата через СБП",
+      "created_at": "2026-03-10T09:35:00Z",
+      "updated_at": "2026-03-10T09:35:00Z"
+    }
+  },
+  {
+    "model": "shop.orderstatushistory",
+    "pk": 8,
+    "fields": {
+      "order": 2,
+      "status": "shipped",
+      "comment": "Отправлен СДЭК",
+      "created_at": "2026-03-12T12:00:00Z",
+      "updated_at": "2026-03-12T12:00:00Z"
+    }
+  },
+  {
+    "model": "shop.orderstatushistory",
+    "pk": 9,
+    "fields": {
+      "order": 3,
+      "status": "new",
+      "comment": "Заказ создан",
+      "created_at": "2026-03-25T15:00:00Z",
+      "updated_at": "2026-03-25T15:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.wholesalepricelist",
+    "pk": 1,
+    "fields": {
+      "title": "Прайс-лист для юрлиц — Q1 2026",
+      "slug": "price-business-q1-2026",
+      "segment": "business",
+      "file_url": "https://example.com/files/price-business-q1-2026.xlsx",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.wholesalepricelist",
+    "pk": 2,
+    "fields": {
+      "title": "Прайс-лист для школ — 2026",
+      "slug": "price-school-2026",
+      "segment": "school",
+      "file_url": "https://example.com/files/price-school-2026.xlsx",
+      "is_active": true,
+      "created_at": "2026-01-15T00:00:00Z",
+      "updated_at": "2026-01-15T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.wholesalepricelist",
+    "pk": 3,
+    "fields": {
+      "title": "Прайс-лист для университетов — 2026",
+      "slug": "price-university-2026",
+      "segment": "university",
+      "file_url": "https://example.com/files/price-university-2026.xlsx",
+      "is_active": true,
+      "created_at": "2026-02-01T00:00:00Z",
+      "updated_at": "2026-02-01T00:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.wholesalerequest",
+    "pk": 1,
+    "fields": {
+      "organization_name": "ООО «Канцтовары Плюс»",
+      "organization_type": "llc",
+      "contact_person": "Алексей Смирнов",
+      "phone": "+79991112233",
+      "email": "alex@kantplus.ru",
+      "comment": "Интересует закупка тетрадей партиями от 5000 шт.",
+      "status": "in_progress",
+      "created_at": "2026-02-10T10:00:00Z",
+      "updated_at": "2026-02-12T09:00:00Z"
+    }
+  },
+  {
+    "model": "shop.wholesalerequest",
+    "pk": 2,
+    "fields": {
+      "organization_name": "Школа №42 г. Москва",
+      "organization_type": "school",
+      "contact_person": "Елена Николаевна Иванова",
+      "phone": "+74951234567",
+      "email": "school42@edu.ru",
+      "comment": "Нужны тетради 12 и 18 листов к 1 сентября, около 3000 шт.",
+      "status": "done",
+      "created_at": "2026-03-01T08:00:00Z",
+      "updated_at": "2026-03-05T16:00:00Z"
+    }
+  },
+  {
+    "model": "shop.wholesalerequest",
+    "pk": 3,
+    "fields": {
+      "organization_name": "МГУ им. Ломоносова",
+      "organization_type": "university",
+      "contact_person": "Петр Васильев",
+      "phone": "+74959393939",
+      "email": "supply@msu.ru",
+      "comment": "Запрос на блокноты и тетради для канцелярии факультетов",
+      "status": "new",
+      "created_at": "2026-03-20T14:00:00Z",
+      "updated_at": "2026-03-20T14:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.returnrequest",
+    "pk": 1,
+    "fields": {
+      "order": 1,
+      "user": 1,
+      "return_type": "defect",
+      "reason": "Одна тетрадь в партии имеет смятые страницы и повреждённую обложку.",
+      "status": "approved",
+      "created_at": "2026-02-22T10:00:00Z",
+      "updated_at": "2026-02-25T12:00:00Z"
+    }
+  },
+  {
+    "model": "shop.returnrequest",
+    "pk": 2,
+    "fields": {
+      "order": 2,
+      "user": 2,
+      "return_type": "good_quality",
+      "reason": "Заказала лишние тетради, хочу вернуть 5 штук.",
+      "status": "new",
+      "created_at": "2026-03-18T09:00:00Z",
+      "updated_at": "2026-03-18T09:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.returnrequestitem",
+    "pk": 1,
+    "fields": {
+      "return_request": 1,
+      "order_item": 1,
+      "quantity": 1,
+      "comment": "Одна тетрадь повреждена",
+      "created_at": "2026-02-22T10:00:00Z",
+      "updated_at": "2026-02-22T10:00:00Z"
+    }
+  },
+  {
+    "model": "shop.returnrequestitem",
+    "pk": 2,
+    "fields": {
+      "return_request": 2,
+      "order_item": 3,
+      "quantity": 5,
+      "comment": "",
+      "created_at": "2026-03-18T09:00:00Z",
+      "updated_at": "2026-03-18T09:00:00Z"
+    }
+  },
+
+  {
+    "model": "shop.sitepage",
+    "pk": 1,
+    "fields": {
+      "title": "О магазине",
+      "slug": "about",
+      "page_type": "about",
+      "content": "# О нас\n\nМы — интернет-магазин тетрадей и канцелярских товаров. Работаем с 2010 года. Прямые поставки от производителей BG, Hatber, Brauberg, ErichKrause и других.\n\n## Наши преимущества\n\n- Низкие цены благодаря прямым контрактам\n- Доставка по всей России\n- Гарантия качества",
+      "is_published": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.sitepage",
+    "pk": 2,
+    "fields": {
+      "title": "Доставка и оплата",
+      "slug": "delivery",
+      "page_type": "delivery",
+      "content": "# Доставка\n\n## Москва\n- Курьер: 350 ₽, бесплатно от 3000 ₽\n- Экспресс: 700 ₽\n- Самовывоз: бесплатно\n\n## Регионы\n- СДЭК, Почта России: от 500 ₽, бесплатно от 5000 ₽\n\n# Оплата\n\n- Картой онлайн\n- СБП\n- Наличными при получении\n- Счёт для юридических лиц",
+      "is_published": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.sitepage",
+    "pk": 3,
+    "fields": {
+      "title": "Гарантия и возврат",
+      "slug": "guarantee",
+      "page_type": "guarantee",
+      "content": "# Гарантия и возврат\n\nВы можете вернуть товар надлежащего качества в течение 14 дней с момента получения.\n\nТовар ненадлежащего качества принимается к возврату в любое время в течение гарантийного срока.\n\nДля оформления возврата перейдите в раздел «Мои заказы» в личном кабинете.",
+      "is_published": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.sitepage",
+    "pk": 4,
+    "fields": {
+      "title": "Оптовым клиентам",
+      "slug": "wholesale",
+      "page_type": "wholesale",
+      "content": "# Оптовым клиентам\n\nМы предлагаем специальные условия для:\n\n- Юридических лиц\n- Школ и образовательных учреждений\n- Университетов\n\nСкачайте прайс-лист или оставьте заявку — мы свяжемся с вами в течение рабочего дня.",
+      "is_published": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.sitepage",
+    "pk": 5,
+    "fields": {
+      "title": "Политика конфиденциальности",
+      "slug": "privacy",
+      "page_type": "privacy",
+      "content": "Политика конфиденциальности интернет-магазина...",
+      "is_published": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.sitepage",
+    "pk": 6,
+    "fields": {
+      "title": "Пользовательское соглашение",
+      "slug": "terms",
+      "page_type": "terms",
+      "content": "Настоящее пользовательское соглашение определяет условия использования сайта...",
+      "is_published": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.sitepage",
+    "pk": 7,
+    "fields": {
+      "title": "Договор оферты",
+      "slug": "offer",
+      "page_type": "offer",
+      "content": "Настоящий документ является публичной офертой...",
+      "is_published": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  }
+]

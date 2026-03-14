@@ -1,0 +1,68 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — Каталог канцтоваров{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/catalog.css' %}">
+{% endblock %}
+
+
+{% block content %}
+<main class="container page">
+    <div class="breadcrumbs">
+      <a href="{% url 'home' %}">Главная</a>
+      <span>/</span>
+      <span>Каталог</span>
+    </div>
+
+    <section class="page-head">
+      <div>
+        <h1>Каталог канцтоваров</h1>
+        <p>Подберите товары по брендам, типу, формату, листам и назначению.</p>
+      </div>
+      <button class="filters-toggle" id="openFilters"><i class="bi bi-sliders"></i> Фильтры</button>
+    </section>
+
+    <section class="catalog-layout">
+      <aside class="filters" id="filtersPanel">
+        <div class="filters__head">
+          <h2>Фильтры</h2>
+          <button id="closeFilters" aria-label="Закрыть фильтры"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <div id="dynamicFilters" aria-live="polite">
+          <p class="filter-empty">Загрузка...</p>
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn btn--primary" id="applyFilters">Применить</button>
+          <button class="btn btn--ghost" id="resetFilters">Сбросить</button>
+        </div>
+      </aside>
+
+      <div class="catalog-main">
+        <div class="catalog-toolbar">
+          <p id="resultsCount">Найдено: 0 товаров</p>
+          <label>
+            Сортировка
+            <select id="sortSelect">
+              <option value="popular">По популярности</option>
+              <option value="price-asc">Сначала дешевле</option>
+              <option value="price-desc">Сначала дороже</option>
+              <option value="name">По названию</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="products" id="productsGrid" aria-live="polite">
+          <p class="empty-state">Загрузка товаров...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/catalog.js' %}"></script>
+{% endblock %}

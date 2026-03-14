@@ -1,0 +1,39 @@
+﻿<footer class="site-footer">
+  <div class="container site-footer__grid">
+    <div>
+      <h4>Покупателям</h4>
+      <a href="{% url 'about' %}">О магазине</a>
+      <a href="{% url 'delivery' %}">Доставка и оплата</a>
+      <a href="{% url 'guarantee' %}">Гарантия и возврат</a>
+      <a href="{% url 'pickup' %}">Пункты самовывоза</a>
+    </div>
+    <div>
+      <h4>Каталог</h4>
+      <a href="{% url 'catalog' %}">Каталог товаров</a>
+      <a href="{% url 'new_arrivals' %}">Новинки</a>
+      <a href="{% url 'bestsellers' %}">Хиты продаж</a>
+      <a href="{% url 'brands' %}">Бренды</a>
+    </div>
+    <div>
+      <h4>Личный кабинет</h4>
+      {% if request.user.is_authenticated %}
+      <a href="{% url 'profile' %}">Профиль</a>
+      <a href="{% url 'order_history' %}">История заказов</a>
+      <a href="{% url 'favorites' %}">Избранное</a>
+      {% else %}
+      <a href="{% url 'auth' %}">Вход / Регистрация</a>
+      {% endif %}
+      <a href="{% url 'cart' %}">Корзина</a>
+    </div>
+    <div>
+      <h4>Бизнес</h4>
+      <a href="{% url 'wholesale' %}">Оптовым клиентам</a>
+      <a href="{% url 'promotions' %}">Акции и скидки</a>
+      <a href="{% url 'blog' %}">Новости / Блог</a>
+    </div>
+  </div>
+  <div class="container site-footer__bottom">
+    <p>© {% now "Y" %} Paperly</p>
+    <p>hello@paperly.ru · +7 (495) 123-45-67</p>
+  </div>
+</footer>

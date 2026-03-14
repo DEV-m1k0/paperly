@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paperly — Гарантия и возврат{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/guarantee.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container page">
+    <div class="breadcrumbs">
+      <a href="{% url 'home' %}">Главная</a>
+      <span>/</span>
+      <span>Гарантия и возврат</span>
+    </div>
+
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Права покупателя</p>
+        <h1>Гарантия, обмен и возврат канцелярских товаров</h1>
+        <p class="lead">Правила действуют в соответствии с Законом РФ «О защите прав потребителей» (ЗоЗПП) и применимыми подзаконными актами.</p>
+      </div>
+      <article class="hero-note">
+        <h3><i class="bi bi-info-circle"></i> Важно</h3>
+        <p>Для ускорения обработки возврата подготовьте номер заказа, фото товара и описание ситуации.</p>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="tabs" role="tablist">
+        <button class="tab is-active" data-tab="good" role="tab">Товар надлежащего качества</button>
+        <button class="tab" data-tab="defect" role="tab">Товар с недостатком</button>
+      </div>
+
+      <div class="tab-panels">
+        <article class="tab-panel is-active" id="good" role="tabpanel">
+          <h2>Обмен/возврат, если товар не подошел</h2>
+          <ul class="rules">
+            <li><i class="bi bi-check2-circle"></i> Срок обращения: в течение 14 дней, не считая дня покупки (ст. 25 ЗоЗПП).</li>
+            <li><i class="bi bi-check2-circle"></i> Товар не должен быть в употреблении, сохранены товарный вид, пломбы, фабричные ярлыки.</li>
+            <li><i class="bi bi-check2-circle"></i> При отсутствии аналогичного товара для обмена покупатель вправе потребовать возврат денег.</li>
+          </ul>
+          <p class="note">Ряд непродовольственных товаров надлежащего качества не подлежит обмену/возврату согласно Перечню, утв. Постановлением Правительства РФ №2463.</p>
+        </article>
+
+        <article class="tab-panel" id="defect" role="tabpanel">
+          <h2>Если обнаружен недостаток товара</h2>
+          <ul class="rules">
+            <li><i class="bi bi-check2-circle"></i> Потребитель вправе требовать замену, ремонт, соразмерное уменьшение цены или возврат денег (ст. 18 ЗоЗПП).</li>
+            <li><i class="bi bi-check2-circle"></i> Требования предъявляются в пределах гарантийного срока или срока, установленного законом (ст. 19 ЗоЗПП).</li>
+            <li><i class="bi bi-check2-circle"></i> По требованию продавца может проводиться проверка качества/экспертиза.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__head">
+        <h2>Сроки рассмотрения требований</h2>
+      </div>
+      <div class="terms-grid">
+        <article class="term-card">
+          <h3>Возврат денежных средств</h3>
+          <p>До 10 дней с даты предъявления требования (ст. 22 ЗоЗПП).</p>
+        </article>
+        <article class="term-card">
+          <h3>Замена товара</h3>
+          <p>До 7 дней, а при необходимости проверки качества — до 20 дней (ст. 21 ЗоЗПП).</p>
+        </article>
+        <article class="term-card">
+          <h3>Гарантийный ремонт</h3>
+          <p>Срок определяется законом и документами по товару; точный период указывается при приеме.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section--split">
+      <article class="panel">
+        <h2>Как оформить возврат</h2>
+        <ol>
+          <li>Заполните заявку в поддержке или напишите на email.</li>
+          <li>Укажите номер заказа и причину возврата.</li>
+          <li>Передайте товар в пункт самовывоза или курьером.</li>
+          <li>Дождитесь решения и возврата средств на исходный способ оплаты.</li>
+        </ol>
+      </article>
+
+      <article class="panel panel--accent">
+        <h2>Документы и данные</h2>
+        <ul>
+          <li>Номер заказа</li>
+          <li>ФИО и контакты покупателя</li>
+          <li>Фото товара и упаковки (если есть дефект)</li>
+          <li>Реквизиты для возврата денежных средств</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="section legal">
+      <h2>Нормативная база</h2>
+      <ul>
+        <li>Закон РФ от 07.02.1992 №2300-1 «О защите прав потребителей» (ст. 18, 19, 21, 22, 25).</li>
+        <li>Постановление Правительства РФ от 31.12.2020 №2463 (перечень товаров надлежащего качества, не подлежащих обмену/возврату).</li>
+      </ul>
+      <p class="legal-note">Информация на странице носит справочный характер. В спорных ситуациях применяется действующая редакция законодательства РФ.</p>
+    </section>
+  </main>
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/guarantee.js' %}"></script>
+{% endblock %}
