@@ -200,7 +200,7 @@ class ProductReview(TimeStampedModel):
     author_name = models.CharField(max_length=120)
     rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     text = models.TextField()
-    is_published = models.BooleanField(default=True)
+    is_published = models.BooleanField(default=True, db_index=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -278,7 +278,7 @@ class BlogPost(TimeStampedModel):
     excerpt = models.CharField(max_length=350, blank=True)
     content = models.TextField()
     cover_url = models.URLField(blank=True)
-    status = models.CharField(max_length=16, choices=PostStatus.choices, default=PostStatus.DRAFT)
+    status = models.CharField(max_length=16, choices=PostStatus.choices, default=PostStatus.DRAFT, db_index=True)
     published_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
@@ -453,7 +453,7 @@ class Order(TimeStampedModel):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     number = models.CharField(max_length=32, unique=True)
-    status = models.CharField(max_length=16, choices=OrderStatus.choices, default=OrderStatus.NEW)
+    status = models.CharField(max_length=16, choices=OrderStatus.choices, default=OrderStatus.NEW, db_index=True)
 
     full_name = models.CharField(max_length=255)
     phone = models.CharField(max_length=32)
@@ -628,9 +628,9 @@ class SitePage(TimeStampedModel):
 def set_slugs(sender, instance, **kwargs):
     if hasattr(instance, "slug") and not instance.slug:
         if hasattr(instance, "title") and instance.title:
-            instance.slug = slugify(instance.title)
+            instance.slug = slugify(instance.title, allow_unicode=True)
         elif hasattr(instance, "name") and instance.name:
-            instance.slug = slugify(instance.name)
+            instance.slug = slugify(instance.name, allow_unicode=True)
 
 
 for model in [

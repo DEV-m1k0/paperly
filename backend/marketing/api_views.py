@@ -26,7 +26,7 @@ class BlogPostViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = BlogPostSerializer
 
     def get_queryset(self):
-        queryset = BlogPost.objects.all()
+        queryset = BlogPost.objects.filter(status=BlogPost.PostStatus.PUBLISHED)
         slug = self.request.query_params.get("slug")
         if slug:
             queryset = queryset.filter(slug=slug)

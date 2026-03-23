@@ -267,7 +267,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 
 class ProductReviewViewSet(viewsets.ModelViewSet):
-    queryset = ProductReview.objects.select_related("product", "user").all()
+    queryset = ProductReview.objects.filter(is_published=True).select_related("product", "user")
     serializer_class = ProductReviewSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
