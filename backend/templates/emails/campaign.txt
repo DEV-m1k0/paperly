@@ -1,0 +1,16 @@
+{{ campaign.heading }}
+
+{% if campaign.intro_text %}{{ campaign.intro_text }}
+
+{% endif %}{% if products %}ПОДБОРКА ТОВАРОВ
+{% for product in products %}
+— {{ product.title }} — {{ product.price|floatformat:"0" }} ₽
+  {{ site_url }}/product/?id={{ product.id }}
+{% endfor %}
+
+{% endif %}{% if campaign.cta_url %}{{ campaign.cta_label|default:"Подробнее" }}: {{ cta_absolute_url }}
+{% endif %}
+
+—
+{{ site_name|default:"Paperly" }}
+Отписаться: {{ unsubscribe_url }}

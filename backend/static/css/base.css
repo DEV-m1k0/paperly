@@ -20,6 +20,37 @@ body {
   padding: 0;
 }
 
+/* Страховка от случайного горизонтального скролла на мобильных.
+ * ВАЖНО: используем `overflow: clip` (а не `hidden`), потому что
+ * `overflow: hidden` на html/body **ломает position: sticky** у всех
+ * потомков — Chromium считает body scroll-container'ом. `clip` даёт
+ * тот же визуальный эффект, но не создаёт scroll container.
+ * Для старых браузеров (Safari < 16) fallback через @supports. */
+html, body {
+  overflow-x: clip;
+}
+@supports not (overflow: clip) {
+  html, body { overflow-x: hidden; }
+}
+
+/* Картинки и видео не выезжают за контейнер даже без явных rules на странице */
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Touch-targets на мобильных — минимум 40×40 для пальца (WCAG 2.5.5) */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  a.btn,
+  .btn,
+  a.site-chip,
+  input[type="submit"],
+  input[type="button"] {
+    min-height: 44px;
+  }
+}
+
 [hidden] {
   display: none !important;
 }
@@ -703,6 +734,17 @@ body {
   color: var(--primary);
 }
 
+.site-burger[aria-expanded="true"] {
+  background: linear-gradient(135deg, var(--primary), #14a396);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 8px 18px -10px rgba(14, 118, 110, 0.5);
+}
+
+.site-burger[aria-expanded="true"] i::before {
+  content: "\F659"; /* bi-x-lg — при открытом меню крестик */
+}
+
 /* ── Nav ── */
 
 .site-nav {
@@ -760,6 +802,33 @@ body {
 .site-nav__link--admin.is-active {
   background: linear-gradient(135deg, #f59e0b, #fbbf24);
   color: #fff;
+}
+
+/* Mobile-only пункты (избранное, вход, выход) — в drawer-меню,
+   на десктопе скрыты. */
+.site-nav__link--mobile {
+  display: none;
+}
+
+.site-nav__logout-form {
+  margin: 0;
+  padding: 0;
+  display: none;
+}
+
+.site-nav__link--logout {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  width: 100%;
+  color: #b91c1c;
+}
+
+.site-nav__link--logout:hover {
+  background: rgba(185, 28, 28, 0.08);
+  color: #991b1b;
 }
 
 /* Back-compat for old classes if something still uses them */
@@ -930,6 +999,14 @@ a.site-footer__contact:hover i {
   color: #9be6dc;
   border: 1px solid rgba(255, 255, 255, 0.12);
   transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+  overflow: hidden;
+}
+
+.site-footer__social img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
 }
 
 .site-footer__social:hover {
@@ -1052,6 +1129,42 @@ a.site-footer__contact:hover i {
   box-shadow: 0 12px 24px -8px rgba(245, 158, 11, 0.7);
 }
 
+.site-footer__status {
+  margin: 0 0 8px 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  font-weight: 600;
+  animation: fade-in 0.18s ease-out;
+}
+
+.site-footer__status[hidden] {
+  display: none !important;
+}
+
+.site-footer__status.is-pending {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(216, 236, 233, 0.85);
+}
+
+.site-footer__status.is-success {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.site-footer__status.is-error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .site-footer__tiny {
   margin: 0;
   color: rgba(216, 236, 233, 0.6);
@@ -1164,11 +1277,16 @@ a.site-footer__contact:hover i {
   .site-header__row {
     grid-template-columns: auto minmax(0, 1fr) auto;
     row-gap: 10px;
+    padding: 12px 0;
+  }
+
+  .site-search-wrap {
+    grid-column: 1 / -1;
+    order: 3;
+    max-width: 100%;
   }
 
   .site-search {
-    grid-column: 1 / -1;
-    order: 3;
     height: 42px;
   }
 
@@ -1190,30 +1308,69 @@ a.site-footer__contact:hover i {
     max-width: 480px;
   }
 
+  /* Скрываем в шапке второстепенные chip'ы — «Избранное» уходит в burger-меню,
+     но «Корзина» остаётся как главный элемент воронки покупки. */
+  .site-header__actions .site-chip--fav,
+  .site-header__actions .site-chip--auth {
+    display: none;
+  }
+
   .site-burger {
     display: inline-flex;
   }
 
+  /* ── Mobile nav — вертикальный dropdown под header, не горизонтальный скролл ── */
   .site-nav {
     display: none;
   }
 
   .site-nav.is-open {
     display: flex;
-    padding: 4px 0 12px;
-    justify-content: flex-start;
-    gap: 6px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  .site-nav.is-open::-webkit-scrollbar {
-    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 8px 0 14px;
+    border-top: 1px solid rgba(14, 118, 110, 0.1);
+    animation: site-nav-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    width: 100%;
+    max-width: 100%;
   }
 
   .site-nav__link {
     flex-shrink: 0;
+    justify-content: flex-start;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    gap: 12px;
+  }
+
+  .site-nav__link i {
+    font-size: 1.1rem;
+    width: 22px;
+    text-align: center;
+  }
+
+  /* Разделитель перед mobile-only блоком ссылок */
+  .site-nav.is-open .site-nav__link--mobile:first-of-type {
+    margin-top: 6px;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(14, 118, 110, 0.15);
+    border-radius: 0;
+  }
+
+  /* Mobile-only пункты становятся видимыми в drawer */
+  .site-nav__link--mobile {
+    display: inline-flex;
+  }
+
+  .site-nav__logout-form {
+    display: block;
+  }
+
+  @keyframes site-nav-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 }
 
@@ -1223,25 +1380,27 @@ a.site-footer__contact:hover i {
     padding: 10px 0;
   }
 
+  /* На маленьких экранах прячем word-mark, остаётся только icon-mark */
   .site-logo__text {
-    font-size: 20px;
+    display: none;
   }
 
   .site-logo__mark {
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    font-size: 0.95rem;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    font-size: 1rem;
   }
 
   .site-chip {
-    height: 40px;
-    padding: 0 0.6rem;
-    min-width: 40px;
+    height: 42px;
+    padding: 0 0.7rem;
+    min-width: 42px;
+    border-radius: 12px;
   }
 
   .site-chip i {
-    font-size: 1.05rem;
+    font-size: 1.15rem;
   }
 
   .site-chip__count {
@@ -1249,20 +1408,27 @@ a.site-footer__contact:hover i {
     height: 20px;
     padding: 0 5px;
     font-size: 10px;
+    top: -4px;
+    right: -4px;
   }
 
   .site-burger {
-    width: 40px;
-    height: 40px;
-    border-radius: 11px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
   }
 
   .site-search {
     padding: 0 0.75rem;
+    height: 44px;
   }
 
   .site-search input {
-    font-size: 14px;
+    font-size: 15px;
+  }
+
+  .site-search__icon {
+    font-size: 1.05rem;
   }
 
   .site-footer__inner {

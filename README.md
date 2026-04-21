@@ -211,6 +211,34 @@ Starting development server at http://127.0.0.1:8000/
 | Демо-покупатель 1 | `/auth/` | `demo` | `demo12345` |
 | Демо-покупатель 2 | `/auth/` | `maria` | `maria12345` |
 
+## Роли и права
+
+В проекте две служебные роли (плюс обычный покупатель):
+
+| Роль | Что может | Где живёт |
+|---|---|---|
+| **Суперпользователь** | всё — заказы, товары, настройки, пользователи | `createsuperuser` |
+| **Менеджер** | модерировать отзывы, публиковать статьи блога + категории блога | группа «Менеджер», создаётся миграцией |
+| **Покупатель** | обычный магазин: корзина, заказы, избранное | регистрация на сайте |
+
+Группа **«Менеджер»** и её права настраиваются автоматически миграцией `shop/0010_create_manager_group.py` — она включает:
+- Полный CRUD на **«Отзывы на товары»** (включая `is_published` — approve/reject)
+- Полный CRUD на **«Блог-посты»** (draft/published)
+- Полный CRUD на **«Категории блога»**
+- Read-only доступ к товарам, брендам и категориям (для контекста)
+
+При входе в `/admin/` менеджер видит **только** эти разделы — Django фильтрует сайдбар по permissions.
+
+Назначить роль через CLI:
+
+```bash
+python manage.py make_manager demo              # выдать
+python manage.py make_manager demo --revoke     # снять
+python manage.py make_manager editor@paperly.ru # можно по email
+```
+
+Или через админку: **Auth → Users → выбрать пользователя → Groups → «Менеджер» → ✓ Staff status**.
+
 ---
 
 ## Структура проекта
@@ -391,6 +419,8 @@ python manage.py makemigrations             # создать миграции
 python manage.py seed_demo_data             # загрузить демо
 python manage.py seed_demo_data --reset     # полная перезагрузка
 python manage.py createsuperuser            # админ
+python manage.py make_manager <user>        # выдать роль «Менеджер»
+python manage.py make_manager <user> --revoke  # снять роль
 python manage.py collectstatic              # собрать статику (prod)
 python manage.py shell                      # shell с Django-окружением
 

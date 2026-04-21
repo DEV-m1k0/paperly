@@ -1,1 +1,185 @@
-/* About page — uses shared primitives from theme.css. No page-specific rules needed. */
+/*
+ * About page — page-specific responsive refinements.
+ * Base layout + visuals from theme.css; этот файл только шлифует
+ * переходы ширины для страницы «О магазине».
+ */
+
+/* Контейнер страницы — аккуратные вертикальные отступы между секциями */
+.page > section + section {
+  margin-top: clamp(1.8rem, 3.2vw, 3rem);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * Page stats — улучшение на планшете и телефоне
+ * Дефолтно theme.css даёт 4/2/1 — делаем 2 колонки плотнее на 430-560px,
+ * чтобы 4 карточки выглядели сеткой, а не одной колонкой.
+ * ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 560px) and (min-width: 400px) {
+  .about-page .page-stats,
+  .container.page .page-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+  .container.page .page-stat {
+    padding: 1rem 0.9rem 1rem 1.15rem;
+    border-radius: 16px;
+  }
+  .container.page .page-stat strong {
+    font-size: 1.45rem;
+  }
+  .container.page .page-stat span {
+    font-size: 0.82rem;
+    line-height: 1.3;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * Hero aside — на планшете/телефоне компактнее
+ * ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 720px) {
+  .container.page .page-hero__side-head i {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+  .container.page .page-hero__side h3 {
+    font-size: 1.02rem;
+  }
+  .container.page .page-hero__side ul {
+    gap: 0.55rem;
+  }
+  .container.page .page-hero__side li {
+    font-size: 0.88rem;
+    gap: 0.45rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * Steps-grid — при 1-col на узких экранах карточки более плоские,
+ * чтобы номер с текстом «обнимались» и не выглядели пустыми.
+ * ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 560px) {
+  .container.page .step {
+    padding: 1.2rem 1.15rem 1.15rem;
+    gap: 0.8rem;
+    align-items: center;
+    border-radius: 16px;
+  }
+  .container.page .step__num {
+    width: 34px;
+    height: 34px;
+    font-size: 0.88rem;
+  }
+  .container.page .step h3 {
+    font-size: 0.98rem;
+    margin-bottom: 0.15rem;
+  }
+  .container.page .step p {
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * CTA-dark (B2B) — на телефоне более эффектный,
+ * крупная кнопка, тесно стоящий список
+ * ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 560px) {
+  .container.page .cta-dark h2 {
+    font-size: 1.35rem;
+  }
+  .container.page .cta-dark__content > p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .container.page .cta-dark ul {
+    gap: 0.45rem;
+  }
+  .container.page .cta-dark li {
+    font-size: 0.88rem;
+  }
+  .container.page .cta-dark .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * Contact grid — на мобиле чуть компактнее, иконка 40×40
+ * ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 560px) {
+  .container.page .contact-card {
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+    gap: 0.7rem;
+  }
+  .container.page .contact-card > i {
+    width: 40px;
+    height: 40px;
+    font-size: 1.05rem;
+    border-radius: 10px;
+  }
+  .container.page .contact-card__label {
+    font-size: 0.72rem;
+  }
+  .container.page .contact-card strong {
+    font-size: 0.92rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * Page hero — на очень узких экранах (<380px)
+ * ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 380px) {
+  .container.page .page-hero h1 {
+    font-size: 1.35rem;
+    line-height: 1.2;
+  }
+  .container.page .page-hero__lead {
+    font-size: 0.88rem;
+  }
+  .container.page .page-hero__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  /* Отменяем `flex: 1 1 180px` из theme.css — при flex-direction: column
+     это стретчит кнопки по вертикали (главная ось = высота). */
+  .container.page .page-hero__actions .btn {
+    flex: 0 0 auto !important;
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+  .container.page .page-hero__side {
+    padding: 1.1rem 1rem;
+    border-radius: 16px;
+  }
+  .container.page .page-hero__side li {
+    font-size: 0.83rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * Section heading — поменьше на мобиле
+ * ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 560px) {
+  .container.page .page-section {
+    margin-top: 1.8rem;
+  }
+  .container.page .page-section__head h2 {
+    font-size: 1.35rem;
+  }
+  .container.page .eyebrow {
+    font-size: 0.72rem;
+  }
+}
+
+/* Reduced motion safeguard — отключаем hover-трансформации */
+@media (prefers-reduced-motion: reduce) {
+  .container.page .step:hover,
+  .container.page .feature:hover,
+  .container.page .page-stat:hover,
+  .container.page .contact-card:hover {
+    transform: none;
+  }
+}

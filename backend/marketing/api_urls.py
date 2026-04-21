@@ -2,6 +2,7 @@ from rest_framework.routers import DefaultRouter
 
 from .api_views import (
     BlogPostViewSet,
+    NewsletterSubscribeViewSet,
     PromotionViewSet,
     SitePageViewSet,
     WholesalePriceListViewSet,
@@ -14,5 +15,6 @@ router.register("blog", BlogPostViewSet, basename="api-blog")
 router.register("wholesale-price-lists", WholesalePriceListViewSet, basename="api-wholesale-price-lists")
 router.register("wholesale-requests", WholesaleRequestViewSet, basename="api-wholesale-requests")
 router.register("pages", SitePageViewSet, basename="api-pages")
+router.register("newsletter/subscribe", NewsletterSubscribeViewSet, basename="api-newsletter-subscribe")
 
 urlpatterns = router.urls

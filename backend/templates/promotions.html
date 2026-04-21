@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ site.site_name|default:"Paperly" }} — Акции и скидки{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — Акции и промокоды{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/promotions.css' %}">
@@ -9,35 +9,232 @@
 {% endblock %}
 
 {% block content %}
-<div class="container page">
-    <h1>Акции и скидки</h1>
-    <p class="lead">Все текущие спецпредложения для школы, офиса и творчества.</p>
-
-    <section class="promo-grid">
-      <article class="promo-card accent">
-        <p class="badge">-25%</p>
-        <h2>Снова в школу</h2>
-        <p>Скидки на тетради, ручки и наборы первоклассника до конца месяца.</p>
-        <a href="{% url 'catalog' %}">Перейти в подборку</a>
-      </article>
-      <article class="promo-card">
-        <p class="badge">2+1</p>
-        <h2>Бумага для офиса</h2>
-        <p>При покупке двух пачек офисной бумаги третья в подарок.</p>
-        <a href="{% url 'catalog' %}">Выбрать товары</a>
-      </article>
-      <article class="promo-card">
-        <p class="badge">Опт</p>
-        <h2>Скидка для юрлиц</h2>
-        <p>Дополнительные условия при заказе от 20 000 ₽ для компаний и учебных центров.</p>
-        <a href="{% url 'wholesale' %}">Условия опта</a>
-      </article>
-    </section>
-
-    <section class="products" id="promotionsProducts" aria-live="polite">
-      <p class="empty-state">Загрузка акционных товаров...</p>
-    </section>
+<div class="container page promotions-page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <a href="{% url 'catalog' %}">Каталог</a>
+    <span>/</span>
+    <span>Акции</span>
   </div>
+
+  <section class="pr-hero reveal">
+    <div class="pr-hero__bg" aria-hidden="true">
+      <span class="pr-blob pr-blob--rose"></span>
+      <span class="pr-blob pr-blob--amber"></span>
+      <span class="pr-blob pr-blob--teal"></span>
+    </div>
+    <div class="pr-hero__content">
+      <p class="eyebrow pr-hero__eyebrow">
+        <span class="pr-hero__fire" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-.9 3-2 4.4-3.2 5.4C7.6 8.4 6 9.6 6 12.5 6 16 8.7 19 12 19s6-3 6-6.5c0-1.9-.6-3.1-1.5-4.2C15.1 6.4 13.8 4.8 12 2zm0 15c-1.9 0-3.5-1.6-3.5-3.5 0-1.4.8-2.2 1.8-3.1.4-.4 1-.9 1.5-1.4.5.8 1.1 1.5 1.9 2.3.8.8 1.8 1.7 1.8 3 0 1.5-1.6 2.7-3.5 2.7z"/></svg>
+        </span>
+        Горячие предложения
+      </p>
+      <h1 class="pr-hero__title">
+        Акции, скидки и <span class="accent">промокоды</span>
+      </h1>
+      <p class="pr-hero__lead">
+        Все спецпредложения в одном месте. Актуальные акции магазина, действующие промокоды —
+        применяйте их при оформлении и экономьте до&nbsp;30% на заказе.
+      </p>
+      <ul class="pr-hero__stats">
+        <li>
+          <span class="pr-hero__stats-num">{{ promotions|length|default:0 }}</span>
+          <span class="pr-hero__stats-label">активных акций</span>
+        </li>
+        <li>
+          <span class="pr-hero__stats-num">{{ public_promocodes|length|default:0 }}</span>
+          <span class="pr-hero__stats-label">промокодов</span>
+        </li>
+        <li>
+          <span class="pr-hero__stats-num">−30%</span>
+          <span class="pr-hero__stats-label">максимум на заказ</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  {# ── Promo codes section ── #}
+  <section class="pr-codes reveal" aria-label="Промокоды">
+    <header class="pr-section__head">
+      <p class="eyebrow">Публичные коды</p>
+      <h2>Промокоды на скидку</h2>
+      <p class="pr-section__sub">
+        {% if public_promocodes %}
+          Скопируйте код и вставьте его в корзине в поле «Промокод».
+        {% else %}
+          Прямо сейчас публичных промокодов нет. Персональные коды мы присылаем в рассылке.
+        {% endif %}
+      </p>
+    </header>
+
+    {% if public_promocodes %}
+    <div class="pr-codes__grid">
+      {% for code in public_promocodes %}
+      <article class="pr-code" data-code="{{ code.code }}">
+        <div class="pr-code__top">
+          <span class="pr-code__tag">
+            {% if code.discount_type == 'percent' %}
+              <svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.442 2.558a.625.625 0 0 1 0 .884l-10 10a.625.625 0 1 1-.884-.884l10-10a.625.625 0 0 1 .884 0M4.5 6a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3m7 7a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3"/></svg>
+              {{ code.discount_value|floatformat:"0" }}%
+            {% elif code.discount_type == 'fixed' %}
+              <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V4.151c1.133.19 1.864.81 2.005 1.684h1.773c-.128-1.6-1.459-2.74-3.778-2.933V2h-1.043v.914c-1.882.202-3.22 1.353-3.22 3.085 0 1.429.98 2.432 2.849 2.917l.371.1v3.192c-1.14-.176-1.89-.733-2.072-1.527H4zm3.565-1.593c-1.146-.296-1.72-.853-1.72-1.61 0-.755.654-1.312 1.72-1.32v2.93zm1.06 2.76c1.31.244 1.941.83 1.941 1.692 0 .912-.661 1.395-1.94 1.473V11.95z"/></svg>
+              −{{ code.discount_value|floatformat:"0" }}&nbsp;₽
+            {% elif code.discount_type == 'free_shipping' %}
+              <svg viewBox="0 0 16 16" fill="currentColor"><path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-3.998-.085A1.5 1.5 0 0 1 0 10.5v-7zm1.294 7.456A1.999 1.999 0 0 1 4.732 11h5.536a2.01 2.01 0 0 1 .732-.732V3.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .294.456M12 10a2 2 0 0 1 1.732 1h.768a.5.5 0 0 0 .5-.5V8.35a.5.5 0 0 0-.11-.312l-1.48-1.85A.5.5 0 0 0 13.02 6H12v4zm-9 1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m9 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2"/></svg>
+              Бесплатная доставка
+            {% endif %}
+          </span>
+          {% if code.audience == 'new_only' %}
+            <span class="pr-code__aud">Только новым</span>
+          {% endif %}
+        </div>
+
+        <div class="pr-code__body">
+          <span class="pr-code__value">{{ code.code }}</span>
+          <button class="pr-code__copy" type="button" data-copy="{{ code.code }}" aria-label="Скопировать промокод {{ code.code }}">
+            <span class="pr-code__copy-icon" aria-hidden="true">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 10V3.5a.5.5 0 0 1 .5-.5H10"/></svg>
+            </span>
+            <span class="pr-code__copy-label">Скопировать</span>
+          </button>
+        </div>
+
+        <ul class="pr-code__meta">
+          {% if code.description %}
+          <li class="pr-code__desc">{{ code.description }}</li>
+          {% endif %}
+          {% if code.min_order_amount %}
+          <li><i class="bi bi-cart-check"></i> от {{ code.min_order_amount|floatformat:"0" }} ₽</li>
+          {% endif %}
+          {% if code.valid_until %}
+          <li><i class="bi bi-calendar"></i> до {{ code.valid_until|date:"j M Y" }}</li>
+          {% endif %}
+          {% if code.max_discount_amount %}
+          <li><i class="bi bi-bounding-box"></i> макс. {{ code.max_discount_amount|floatformat:"0" }} ₽</li>
+          {% endif %}
+        </ul>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    {# Fallback — no public codes. Instead of leaving the page empty, direct users to channels where codes are actually distributed. #}
+    <div class="pr-codes__fallback">
+      <div class="pr-code-channel">
+        <div class="pr-code-channel__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <h3>Подпишитесь на рассылку</h3>
+        <p>Дарим <b>−10%</b> на первый заказ всем новым подписчикам. Раз в 2 недели — подборки и персональные коды.</p>
+        <a class="btn btn--primary" href="#" id="prFocusSubscribe2">
+          <i class="bi bi-send" aria-hidden="true"></i>
+          <span>Подписаться</span>
+        </a>
+      </div>
+      <div class="pr-code-channel">
+        <div class="pr-code-channel__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3>Спросите у AI-ассистента</h3>
+        <p>Чат внизу-справа подскажет действующие акции, подходящие под ваш заказ, и условия каждой скидки.</p>
+        <a class="btn btn--ghost" href="#" onclick="window.paperly?.chat?.open(); return false;">
+          <i class="bi bi-chat-dots" aria-hidden="true"></i>
+          <span>Открыть чат</span>
+        </a>
+      </div>
+      <div class="pr-code-channel">
+        <div class="pr-code-channel__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 12l-4-4-4 4"/><path d="M12 16V8"/></svg>
+        </div>
+        <h3>Оформите первый заказ</h3>
+        <p>Сразу после покупки присылаем персональный промокод на следующий заказ и открываем доступ к закрытым акциям.</p>
+        <a class="btn btn--ghost" href="{% url 'catalog' %}">
+          <i class="bi bi-grid" aria-hidden="true"></i>
+          <span>В каталог</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  {# ── Store promotions (cards) ── #}
+  {% if promotions %}
+  <section class="pr-promos reveal" aria-label="Акции магазина">
+    <header class="pr-section__head">
+      <p class="eyebrow">Акции магазина</p>
+      <h2>Действующие спецпредложения</h2>
+    </header>
+    <div class="pr-promos__grid">
+      {% for promo in promotions %}
+      <article class="pr-promo {% if forloop.first %}pr-promo--featured{% endif %}">
+        <div class="pr-promo__head">
+          {% if promo.discount_percent %}
+            <span class="pr-promo__badge">−{{ promo.discount_percent|floatformat:"0" }}%</span>
+          {% elif promo.promo_type == 'gift' %}
+            <span class="pr-promo__badge pr-promo__badge--gift">Подарок</span>
+          {% elif promo.promo_type == 'bundle' %}
+            <span class="pr-promo__badge pr-promo__badge--bundle">2+1</span>
+          {% else %}
+            <span class="pr-promo__badge">Акция</span>
+          {% endif %}
+          {% if promo.end_at %}
+            <span class="pr-promo__until">до {{ promo.end_at|date:"j M" }}</span>
+          {% endif %}
+        </div>
+        <h3>{{ promo.title }}</h3>
+        <p>{{ promo.description|default:"Не упустите — акция действует ограниченное время."|truncatechars:150 }}</p>
+        <a href="{% url 'catalog' %}" class="pr-promo__link">
+          <span>К товарам акции</span>
+          <i class="bi bi-arrow-right" aria-hidden="true"></i>
+        </a>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {# ── Discounted products grid ── #}
+  <section class="pr-products reveal">
+    <header class="pr-section__head">
+      <p class="eyebrow">Товары со скидкой</p>
+      <h2>Прямо сейчас по акции</h2>
+      <p class="pr-section__sub">Цена с зачёркнутой старой — сравните и берите пока есть в наличии.</p>
+    </header>
+    <section class="products pr-products__grid" id="promotionsProducts" aria-live="polite">
+      <p class="empty-state">Загружаем товары со скидкой...</p>
+    </section>
+  </section>
+
+  <section class="pr-cta reveal">
+    <div class="pr-cta__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+        <path d="M7 7h.01"/>
+      </svg>
+    </div>
+    <div class="pr-cta__text">
+      <h2>Хотите узнавать о новых акциях первыми?</h2>
+      <p>Подпишитесь на рассылку — присылаем лучшие скидки и персональные промокоды раз в две недели.</p>
+    </div>
+    <div class="pr-cta__actions">
+      <a href="#" class="btn btn--primary" id="prFocusSubscribe">
+        <i class="bi bi-send" aria-hidden="true"></i>
+        <span>Подписаться</span>
+      </a>
+      <a href="{% url 'catalog' %}" class="btn btn--ghost">
+        <i class="bi bi-grid" aria-hidden="true"></i>
+        <span>В каталог</span>
+      </a>
+    </div>
+  </section>
+
+  {# Hidden toast for copy feedback #}
+  <div class="pr-toast" id="prToast" role="status" aria-live="polite" hidden>
+    <i class="bi bi-check2-circle" aria-hidden="true"></i>
+    <span id="prToastMsg">Промокод скопирован</span>
+  </div>
+</div>
 {% endblock %}
 
 {% block page_js %}

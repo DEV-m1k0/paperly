@@ -157,7 +157,11 @@
       if (button.dataset.bound === "true") return;
       button.dataset.bound = "true";
 
-      button.addEventListener("click", () => {
+      button.addEventListener("click", (event) => {
+        // Stop the click from bubbling to the card's navigation handler —
+        // otherwise a click on "В корзину" also opens the product page.
+        event.preventDefault();
+        event.stopPropagation();
         if (typeof window.paperlyAddToCart === "function") {
           window.paperlyAddToCart(button);
         }

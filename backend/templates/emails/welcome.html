@@ -1,0 +1,76 @@
+{% extends "emails/base.html" %}
+
+{% block body %}
+<h1 style="margin:0 0 12px 0; font-size:26px; font-weight:800; color:#0a5f58; letter-spacing:-0.01em;">
+  Добро пожаловать! 👋
+</h1>
+<p style="margin:0 0 8px 0; font-size:16px; color:#1e2e33;">
+  Спасибо, что подписались на рассылку <strong>{{ site_name|default:"Paperly" }}</strong>.
+</p>
+<p style="margin:0 0 22px 0; font-size:15px; color:#60757b; line-height:1.55;">
+  Раз в две недели будем присылать подборку новинок, скидок и полезных материалов —
+  только то, что действительно стоит вашего внимания.
+</p>
+
+{# Mini "what to expect" box #}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px 0;">
+  <tr>
+    <td style="background:linear-gradient(135deg,rgba(14,118,110,0.06),rgba(20,166,155,0.03)); border:1px solid rgba(14,118,110,0.12); border-radius:14px; padding:18px 20px;">
+      <p style="margin:0 0 10px 0; font-size:13px; font-weight:700; color:#0e766e; letter-spacing:0.06em; text-transform:uppercase;">Что будет в письмах</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="padding:6px 0; font-size:14px; color:#1e2e33;">
+            <span style="color:#0e766e; font-weight:700;">✓</span>&nbsp; Новинки каталога и ограниченные серии
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0; font-size:14px; color:#1e2e33;">
+            <span style="color:#0e766e; font-weight:700;">✓</span>&nbsp; Персональные промокоды и скидки до&nbsp;-30%
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0; font-size:14px; color:#1e2e33;">
+            <span style="color:#0e766e; font-weight:700;">✓</span>&nbsp; Подборки для офиса, школы и творчества
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0; font-size:14px; color:#1e2e33;">
+            <span style="color:#0e766e; font-weight:700;">✓</span>&nbsp; Гайды и обзоры из блога
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+{# Promo code block #}
+{% if welcome_promo %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px 0;">
+  <tr>
+    <td align="center" style="background:#0e766e; border-radius:14px; padding:22px 20px; color:#ffffff;">
+      <p style="margin:0 0 6px 0; font-size:13px; color:rgba(255,255,255,0.85); letter-spacing:0.1em; text-transform:uppercase;">Подарок за подписку</p>
+      <p style="margin:0 0 10px 0; font-size:22px; font-weight:800;">Скидка 10% на первый заказ</p>
+      <p style="margin:0 0 14px 0; font-size:14px; color:rgba(255,255,255,0.92);">Промокод действует 14 дней:</p>
+      <div style="display:inline-block; padding:10px 22px; background:rgba(255,255,255,0.15); border:1px dashed rgba(255,255,255,0.45); border-radius:10px; font-family:'Courier New',monospace; font-size:20px; font-weight:700; letter-spacing:0.16em;">
+        {{ welcome_promo }}
+      </div>
+    </td>
+  </tr>
+</table>
+{% endif %}
+
+{# CTA button #}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px 0;">
+  <tr>
+    <td align="center">
+      <a href="{{ site_url }}/catalog/" style="display:inline-block; padding:14px 36px; background:linear-gradient(135deg,#0e766e,#14a69b); color:#ffffff; text-decoration:none; font-weight:700; font-size:15px; border-radius:999px; box-shadow:0 8px 22px -8px rgba(14,118,110,0.5);">
+        Смотреть каталог →
+      </a>
+    </td>
+  </tr>
+</table>
+
+<p style="margin:0; font-size:13px; color:#8a9ca0; text-align:center; line-height:1.55;">
+  Если не хотите получать рассылку — <a href="{{ unsubscribe_url }}" style="color:#60757b;">отпишитесь</a> в один клик.
+</p>
+{% endblock %}

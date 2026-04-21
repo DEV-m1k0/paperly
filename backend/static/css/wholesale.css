@@ -118,3 +118,28 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 720px) {
+  .request-wrap {
+    gap: 1rem;
+  }
+  .request__intro,
+  .request-form {
+    padding: 1.4rem 1.25rem;
+    border-radius: 18px;
+  }
+  .request__intro h3 {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 440px) {
+  .request__intro,
+  .request-form {
+    padding: 1.15rem 1rem;
+    border-radius: 16px;
+  }
+  .request__intro li {
+    font-size: 0.88rem;
+  }
+}

@@ -1,0 +1,79 @@
+# Render Blueprint — автоматически создаёт web-сервис + Postgres при импорте репозитория.
+# Документация: https://render.com/docs/blueprint-spec
+#
+# Использование:
+#   1. Залогиниться на render.com → New → Blueprint
+#   2. Подключить GitHub-репозиторий
+#   3. Render прочитает этот файл и развернёт всё автоматически
+#   4. После — нужно только добавить SECRET_KEY, AI_API_KEY и email-креды
+#      в Environment Variables в дашборде Render.
+
+services:
+  # ── Web-сервис (Django) ──
+  - type: web
+    name: paperly
+    runtime: python
+    plan: free
+    region: frankfurt            # ближе к Курску чем Oregon
+    branch: master               # deploy-ветка (или main — на выбор)
+    buildCommand: "./build.sh"
+    startCommand: "cd backend && gunicorn paperly_backend.wsgi:application"
+    autoDeploy: true             # push в master = пересборка
+
+    envVars:
+      # Обязательные — Render сгенерирует / заполнит сам:
+      - key: SECRET_KEY
+        generateValue: true      # Render создаст случайный 50+ символов
+
+      - key: DATABASE_URL        # Render свяжет с БД paperly-db автоматически
+        fromDatabase:
+          name: paperly-db
+          property: connectionString
+
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+
+      # Базовые — можно менять в dashboard:
+      - key: DEBUG
+        value: "False"
+
+      - key: ALLOWED_HOSTS
+        value: "paperly.onrender.com,.onrender.com"
+
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://paperly.onrender.com"
+
+      # AI-чат через Groq — ключ ОБЯЗАТЕЛЬНО задать вручную в dashboard:
+      - key: AI_API_KEY
+        sync: false              # не коммитим в git, юзер задаёт сам
+
+      - key: AI_API_BASE
+        value: "https://api.groq.com/openai/v1"
+
+      - key: AI_MODEL
+        value: "llama-3.3-70b-versatile"
+
+      - key: CHAT_RATE_LIMIT_PER_HOUR
+        value: "60"
+
+      # Email — пропишите свои SMTP-креды в dashboard (sync: false → не в git)
+      - key: EMAIL_HOST
+        value: "smtp.yandex.ru"
+      - key: EMAIL_PORT
+        value: "465"
+      - key: EMAIL_USE_SSL
+        value: "True"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+
+# ── Postgres база ──
+databases:
+  - name: paperly-db
+    plan: free                   # 256 MB, 90 дней; потом нужно переезжать
+    region: frankfurt
+    databaseName: paperly
+    user: paperly_user

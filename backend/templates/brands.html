@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}{{ site.site_name|default:"Paperly" }} — Бренды{% endblock %}
@@ -8,17 +8,113 @@
 {% endblock %}
 
 {% block content %}
-<div class="container page">
-  <h1>Бренды</h1>
-  <p class="lead">Популярные производители канцелярии с переходом к товарам бренда.</p>
-  <section class="products" id="brandsGrid" aria-live="polite">
-    <p class="empty-state">Загрузка брендов...</p>
-  </section>
-  <div class="empty" id="brandsEmpty" hidden>
-    <h2>Бренды пока не добавлены</h2>
-    <p>Как только бренды появятся в каталоге, мы покажем их здесь.</p>
-    <a href="{% url 'catalog' %}" class="btn">Перейти в каталог</a>
+<div class="container page brands-page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <a href="{% url 'catalog' %}">Каталог</a>
+    <span>/</span>
+    <span>Бренды</span>
   </div>
+
+  <section class="br-hero reveal">
+    <div class="br-hero__bg" aria-hidden="true">
+      <span class="br-blob br-blob--indigo"></span>
+      <span class="br-blob br-blob--teal"></span>
+      <span class="br-blob br-blob--violet"></span>
+    </div>
+    <div class="br-hero__content">
+      <p class="eyebrow br-hero__eyebrow">
+        <span class="br-hero__dot" aria-hidden="true"></span>
+        Производители на полках Paperly
+      </p>
+      <h1 class="br-hero__title">
+        Бренды, которым мы<br>
+        <span class="accent">доверяем</span>
+      </h1>
+      <p class="br-hero__lead">
+        Только проверенные производители канцелярии для школы, офиса и творчества.
+        Выбирайте по названию или переходите к ассортименту любимого бренда в один клик.
+      </p>
+      <ul class="br-hero__stats">
+        <li>
+          <span class="br-hero__stats-num" id="brStatBrands">—</span>
+          <span class="br-hero__stats-label">брендов в каталоге</span>
+        </li>
+        <li>
+          <span class="br-hero__stats-num" id="brStatProducts">—</span>
+          <span class="br-hero__stats-label">товаров всего</span>
+        </li>
+        <li>
+          <span class="br-hero__stats-num">12+</span>
+          <span class="br-hero__stats-label">стран-производителей</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="br-controls reveal" aria-label="Фильтры брендов">
+    <label class="br-search">
+      <span class="br-search__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+      </span>
+      <input id="brSearch" type="search" placeholder="Найти бренд — например, Pilot или Erich Krause" autocomplete="off">
+    </label>
+
+    <div class="br-sort" role="tablist" aria-label="Сортировка">
+      <button type="button" class="br-sort__btn is-active" data-sort="popular" role="tab" aria-selected="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-6"/></svg>
+        <span>По популярности</span>
+      </button>
+      <button type="button" class="br-sort__btn" data-sort="alpha" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M6 20V4"/><path d="M3 7l3-3 3 3"/><path d="M14 4h4l-4 16h4"/></svg>
+        <span>А–Я</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="br-grid" id="brandsGrid" aria-live="polite">
+    <p class="empty-state">Загружаем бренды...</p>
+  </section>
+
+  <div class="br-empty" id="brandsEmpty" hidden>
+    <div class="br-empty__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="M21 21l-4.35-4.35"/>
+        <path d="M8 11h6"/>
+      </svg>
+    </div>
+    <h3 id="brandsEmptyTitle">Брендов пока нет</h3>
+    <p id="brandsEmptyText">Как только добавим новых производителей — они появятся здесь.</p>
+    <div class="br-empty__actions">
+      <button type="button" class="btn btn--primary" id="brEmptyReset" hidden>
+        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+        <span>Очистить фильтр</span>
+      </button>
+      <a class="btn btn--ghost" href="{% url 'catalog' %}">
+        <i class="bi bi-grid" aria-hidden="true"></i>
+        <span>В каталог</span>
+      </a>
+    </div>
+  </div>
+
+  <section class="br-story reveal" aria-label="Как мы выбираем бренды">
+    <div class="br-story__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+    </div>
+    <div class="br-story__text">
+      <p class="eyebrow">Наш подход</p>
+      <h2>Как мы выбираем бренды</h2>
+      <p>Не добавляем «за красивое название» — каждый производитель сначала проходит проверку: закупаем пробную партию, тестируем на реальных задачах, смотрим на отзывы наших клиентов. В каталоге — только то, что не стыдно рекомендовать друзьям.</p>
+    </div>
+  </section>
 </div>
 {% endblock %}
 

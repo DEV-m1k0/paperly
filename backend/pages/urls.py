@@ -7,6 +7,7 @@ from .views import (
     legacy_html_redirect,
     legal_view,
     logout_view,
+    newsletter_unsubscribe_view,
     page_view,
 )
 
@@ -40,5 +41,6 @@ urlpatterns = [
     path("legal/privacy/", legal_view, {"kind": "privacy"}, name="legal_privacy"),
     path("legal/terms/", legal_view, {"kind": "offer"}, name="legal_offer"),
     path("legal/cookies/", legal_view, {"kind": "cookies"}, name="legal_cookies"),
+    path("newsletter/unsubscribe/<str:token>/", newsletter_unsubscribe_view, name="newsletter_unsubscribe"),
     path("<slug:page>.html", legacy_html_redirect, name="legacy_html_redirect"),
 ]

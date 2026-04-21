@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static l10n %}
 
 {% block title %}{{ site.site_name|default:"Paperly" }} — {{ page_title|default:"Доставка и оплата" }}{% endblock %}
 
@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container page">
+<div class="container page delivery-page">
   <div class="breadcrumbs">
     <a href="{% url 'home' %}">Главная</a>
     <span>/</span>
@@ -18,137 +18,245 @@
   {% if page_content %}
     {{ page_content|safe }}
   {% else %}
-  <section class="page-hero reveal">
-    <div class="page-hero__bg" aria-hidden="true">
+  <section class="delivery-hero reveal">
+    <div class="delivery-hero__bg" aria-hidden="true">
       <span class="blob blob--teal"></span>
       <span class="blob blob--amber"></span>
     </div>
-
-    <div class="page-hero__content">
+    <div class="delivery-hero__content">
       <p class="eyebrow">Логистика и расчёты</p>
-      <h1>Доставка и оплата для розничных и <span class="accent">оптовых</span> заказов</h1>
-      <p class="page-hero__lead">
-        Прозрачные тарифы, понятные сроки и отдельные условия для офисов, школ и учебных центров.
+      <h1>Доставим <span class="accent">быстро и аккуратно</span> — по городу, по России, до двери или пункта</h1>
+      <p class="delivery-hero__lead">
+        Прозрачные тарифы без скрытых наценок. Бесплатная доставка при больших заказах и всегда — для самовывоза.
       </p>
-      <div class="page-hero__actions">
+      <div class="delivery-hero__actions">
         <a class="btn btn--primary" href="{% url 'catalog' %}">
           <i class="bi bi-grid" aria-hidden="true"></i>
           <span>В каталог</span>
         </a>
         <a class="btn btn--ghost" href="{% url 'pickup' %}">
           <i class="bi bi-geo-alt" aria-hidden="true"></i>
-          <span>Пункты выдачи</span>
+          <span>{{ pickup_count|default:7 }} пункт{{ pickup_count|default:7|pluralize:"а,ов" }} самовывоза</span>
         </a>
       </div>
     </div>
 
-    <aside class="page-hero__side">
-      <div class="page-hero__side-head">
-        <i class="bi bi-truck" aria-hidden="true"></i>
-        <h3>Бесплатная доставка</h3>
-      </div>
-      <p>Экономьте на доставке при больших заказах или выбирайте самовывоз.</p>
-      <ul>
-        <li><i class="bi bi-check2-circle" aria-hidden="true"></i> По городу — от 2 500 ₽</li>
-        <li><i class="bi bi-check2-circle" aria-hidden="true"></i> По России — от 5 000 ₽</li>
-        <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Самовывоз — всегда бесплатно</li>
+    <aside class="delivery-hero__card" aria-label="Бесплатная доставка">
+      <span class="delivery-hero__card-ribbon">Выгодно</span>
+      <p class="delivery-hero__card-kicker">Всегда</p>
+      <h3 class="delivery-hero__card-title">Бесплатная<br>доставка</h3>
+      <p class="delivery-hero__card-sub">при заказе от <b>2 500 ₽</b></p>
+      <ul class="delivery-hero__card-list">
+        <li><span>По городу Курск</span><strong>1–2 дня</strong></li>
+        <li><span>По России</span><strong>3–7 дней</strong></li>
+        <li><span>Самовывоз</span><strong>бесплатно</strong></li>
       </ul>
     </aside>
   </section>
 
-  <section class="page-section reveal">
+  <section class="page-section reveal" id="tariffs">
     <header class="page-section__head">
-      <p class="eyebrow">Способы</p>
-      <h2>Тарифы на доставку</h2>
+      <p class="eyebrow">Тарифы</p>
+      <h2>Выберите способ доставки</h2>
+      <p class="page-section__subtitle">Точная стоимость рассчитывается при оформлении с учётом веса и габаритов.</p>
     </header>
-    <div class="feature-grid feature-grid--3">
+
+    <div class="tariff-grid" id="tariffGrid">
       {% if delivery_tariffs %}
         {% for tariff in delivery_tariffs %}
-        <article class="feature">
-          <div class="feature__icon {% if tariff.delivery_type == 'pickup' %}feature__icon--teal{% elif tariff.delivery_type == 'express' %}feature__icon--amber{% elif tariff.delivery_type == 'region' %}feature__icon--indigo{% else %}feature__icon--sky{% endif %}">
-            {% if tariff.delivery_type == 'pickup' %}<i class="bi bi-shop" aria-hidden="true"></i>
-            {% elif tariff.delivery_type == 'express' %}<i class="bi bi-lightning-charge" aria-hidden="true"></i>
-            {% elif tariff.delivery_type == 'region' %}<i class="bi bi-box-seam" aria-hidden="true"></i>
-            {% else %}<i class="bi bi-geo-alt" aria-hidden="true"></i>{% endif %}
-          </div>
-          <h3>{{ tariff.title }}</h3>
-          <p>
-            {% if tariff.city %}Город: {{ tariff.city }}.{% endif %}
-            {% if tariff.delivery_type == 'pickup' %}Заберите заказ из удобного пункта выдачи.
-            {% elif tariff.delivery_type == 'express' %}Приоритетная доставка за минимальные сроки.
-            {% elif tariff.delivery_type == 'region' %}Отправка в любой город России.
-            {% else %}Курьер привезёт заказ прямо на адрес.{% endif %}
-          </p>
-          <ul class="feature__details">
-            <li><span>Стоимость</span><strong>{% if tariff.price %}{{ tariff.price|floatformat:"0" }} ₽{% else %}Бесплатно{% endif %}</strong></li>
-            {% if tariff.free_from_amount %}
-            <li><span>Бесплатно от</span><strong>{{ tariff.free_from_amount|floatformat:"0" }} ₽</strong></li>
+          <article class="tariff-card {% if tariff.delivery_type == 'pickup' %}tariff-card--pickup{% elif tariff.delivery_type == 'express' %}tariff-card--express{% endif %}"
+                   data-tariff-type="{{ tariff.delivery_type }}"
+                   data-tariff-price="{{ tariff.price|default:0|unlocalize }}"
+                   data-tariff-free-from="{{ tariff.free_from_amount|default:0|unlocalize }}">
+            {% if tariff.delivery_type == 'express' %}
+              <span class="tariff-card__badge">⚡ Быстрее всех</span>
+            {% elif tariff.delivery_type == 'pickup' %}
+              <span class="tariff-card__badge tariff-card__badge--free">Всегда бесплатно</span>
+            {% elif tariff.free_from_amount %}
+              <span class="tariff-card__badge tariff-card__badge--accent">Бесплатно от {{ tariff.free_from_amount|floatformat:"0" }} ₽</span>
             {% endif %}
-            <li><span>Срок</span><strong>{% if tariff.eta_min_days == tariff.eta_max_days %}{{ tariff.eta_min_days }}{% else %}{{ tariff.eta_min_days }}–{{ tariff.eta_max_days }}{% endif %} дн.</strong></li>
-          </ul>
-        </article>
+
+            <span class="tariff-card__icon">
+              {% if tariff.delivery_type == 'pickup' %}<i class="bi bi-shop"></i>
+              {% elif tariff.delivery_type == 'express' %}<i class="bi bi-lightning-charge-fill"></i>
+              {% elif tariff.delivery_type == 'region' %}<i class="bi bi-box-seam"></i>
+              {% else %}<i class="bi bi-truck"></i>{% endif %}
+            </span>
+
+            <h3>{{ tariff.title }}</h3>
+            <p class="tariff-card__desc">
+              {% if tariff.city %}{{ tariff.city }}.{% endif %}
+              {% if tariff.delivery_type == 'pickup' %}Заберите заказ из удобного пункта.
+              {% elif tariff.delivery_type == 'express' %}Приоритетная доставка за минимальные сроки.
+              {% elif tariff.delivery_type == 'region' %}Отправка в любой город России.
+              {% else %}Курьер привезёт заказ прямо на адрес.{% endif %}
+            </p>
+
+            <div class="tariff-card__price">
+              {% if tariff.price %}
+                <strong>{{ tariff.price|floatformat:"0" }}</strong><span>₽</span>
+              {% else %}
+                <strong>Бесплатно</strong>
+              {% endif %}
+            </div>
+
+            <ul class="tariff-card__meta">
+              <li>
+                <i class="bi bi-clock" aria-hidden="true"></i>
+                <span>{% if tariff.eta_min_days == tariff.eta_max_days %}{{ tariff.eta_min_days }}{% else %}{{ tariff.eta_min_days }}–{{ tariff.eta_max_days }}{% endif %} дн.</span>
+              </li>
+              {% if tariff.delivery_type == 'pickup' and pickup_count %}
+              <li>
+                <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                <span>{{ pickup_count }} точек</span>
+              </li>
+              {% endif %}
+              {% if tariff.free_from_amount %}
+              <li>
+                <i class="bi bi-gift" aria-hidden="true"></i>
+                <span>бесплатно от {{ tariff.free_from_amount|floatformat:"0" }} ₽</span>
+              </li>
+              {% endif %}
+            </ul>
+          </article>
         {% endfor %}
       {% else %}
-        <article class="feature">
-          <div class="feature__icon feature__icon--sky"><i class="bi bi-geo-alt" aria-hidden="true"></i></div>
+        <article class="tariff-card">
+          <span class="tariff-card__badge tariff-card__badge--accent">Бесплатно от 2500 ₽</span>
+          <span class="tariff-card__icon"><i class="bi bi-truck"></i></span>
           <h3>Курьер по городу</h3>
-          <p>Курьер привезёт заказ прямо на адрес.</p>
-          <ul class="feature__details">
-            <li><span>Стоимость</span><strong>350 ₽</strong></li>
-            <li><span>Бесплатно от</span><strong>2 500 ₽</strong></li>
-            <li><span>Срок</span><strong>1–2 дн.</strong></li>
+          <p class="tariff-card__desc">Курьер привезёт заказ прямо на адрес.</p>
+          <div class="tariff-card__price"><strong>350</strong><span>₽</span></div>
+          <ul class="tariff-card__meta">
+            <li><i class="bi bi-clock"></i><span>1–2 дн.</span></li>
+            <li><i class="bi bi-gift"></i><span>бесплатно от 2500 ₽</span></li>
           </ul>
         </article>
-        <article class="feature">
-          <div class="feature__icon feature__icon--indigo"><i class="bi bi-box-seam" aria-hidden="true"></i></div>
+        <article class="tariff-card">
+          <span class="tariff-card__badge tariff-card__badge--accent">Бесплатно от 5000 ₽</span>
+          <span class="tariff-card__icon"><i class="bi bi-box-seam"></i></span>
           <h3>По России</h3>
-          <p>Отправка в любой город России.</p>
-          <ul class="feature__details">
-            <li><span>Стоимость</span><strong>от 490 ₽</strong></li>
-            <li><span>Бесплатно от</span><strong>5 000 ₽</strong></li>
-            <li><span>Срок</span><strong>3–7 дн.</strong></li>
+          <p class="tariff-card__desc">Отправка в любой город России.</p>
+          <div class="tariff-card__price"><strong>от 490</strong><span>₽</span></div>
+          <ul class="tariff-card__meta">
+            <li><i class="bi bi-clock"></i><span>3–7 дн.</span></li>
           </ul>
         </article>
-        <article class="feature">
-          <div class="feature__icon feature__icon--teal"><i class="bi bi-shop" aria-hidden="true"></i></div>
+        <article class="tariff-card tariff-card--pickup">
+          <span class="tariff-card__badge tariff-card__badge--free">Всегда бесплатно</span>
+          <span class="tariff-card__icon"><i class="bi bi-shop"></i></span>
           <h3>Самовывоз</h3>
-          <p>Заберите заказ из удобного пункта выдачи.</p>
-          <ul class="feature__details">
-            <li><span>Стоимость</span><strong>Бесплатно</strong></li>
-            {% if pickup_count %}<li><span>Пунктов</span><strong>{{ pickup_count }}</strong></li>{% endif %}
-            <li><span>Срок хранения</span><strong>5 дней</strong></li>
+          <p class="tariff-card__desc">Заберите заказ из удобного пункта.</p>
+          <div class="tariff-card__price"><strong>Бесплатно</strong></div>
+          <ul class="tariff-card__meta">
+            {% if pickup_count %}<li><i class="bi bi-geo-alt"></i><span>{{ pickup_count }} точек</span></li>{% endif %}
+            <li><i class="bi bi-clock"></i><span>1 дн.</span></li>
           </ul>
         </article>
       {% endif %}
     </div>
-    <p class="page-section__note">Точная стоимость рассчитывается при оформлении заказа с учётом веса и габаритов.</p>
+  </section>
+
+  <section class="delivery-calc reveal" aria-label="Калькулятор бесплатной доставки">
+    <div class="delivery-calc__text">
+      <p class="eyebrow">Посмотрите выгоду</p>
+      <h2>Когда доставка станет бесплатной</h2>
+      <p>Введите сумму заказа — подскажем, какие тарифы обнуляются и сколько вы экономите.</p>
+    </div>
+    <div class="delivery-calc__widget">
+      <label class="delivery-calc__field">
+        <span>Сумма заказа, ₽</span>
+        <input id="deliveryCalcInput" type="number" inputmode="numeric" min="0" step="100" placeholder="2500">
+      </label>
+      <output class="delivery-calc__output" id="deliveryCalcOutput" aria-live="polite">
+        Введите сумму заказа — покажем доступные варианты.
+      </output>
+    </div>
+  </section>
+
+  <section class="page-section reveal">
+    <header class="page-section__head">
+      <p class="eyebrow">Как это работает</p>
+      <h2>От оформления до получения</h2>
+    </header>
+    <ol class="delivery-steps">
+      <li class="delivery-step">
+        <span class="delivery-step__index">1</span>
+        <span class="delivery-step__icon"><i class="bi bi-bag-check" aria-hidden="true"></i></span>
+        <h3>Оформляете заказ</h3>
+        <p>Выбираете товары и удобный способ доставки. Оплата онлайн или при получении.</p>
+      </li>
+      <li class="delivery-step">
+        <span class="delivery-step__index">2</span>
+        <span class="delivery-step__icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span>
+        <h3>Собираем и упаковываем</h3>
+        <p>Проверяем каждый товар, надёжно пакуем в крафт + воздушная плёнка. В день заказа.</p>
+      </li>
+      <li class="delivery-step">
+        <span class="delivery-step__icon"><i class="bi bi-truck" aria-hidden="true"></i></span>
+        <span class="delivery-step__index">3</span>
+        <h3>Передаём в доставку</h3>
+        <p>Курьеру, в ПВЗ или в почтовую службу. Вы получите SMS с трек-номером.</p>
+      </li>
+      <li class="delivery-step">
+        <span class="delivery-step__index">4</span>
+        <span class="delivery-step__icon"><i class="bi bi-emoji-smile" aria-hidden="true"></i></span>
+        <h3>Получаете заказ</h3>
+        <p>Проверяете комплектность при курьере или в пункте. Если что-то не так — бесплатный возврат.</p>
+      </li>
+    </ol>
   </section>
 
   <section class="page-section reveal">
     <header class="page-section__head">
       <p class="eyebrow">Оплата</p>
-      <h2>Способы оплаты</h2>
+      <h2>Удобные способы оплаты</h2>
     </header>
-    <div class="feature-grid feature-grid--2">
-      <article class="feature">
-        <div class="feature__icon feature__icon--teal"><i class="bi bi-credit-card" aria-hidden="true"></i></div>
-        <h3>Онлайн</h3>
-        <ul class="pay-list">
-          <li><i class="bi bi-check2" aria-hidden="true"></i> Банковская карта (Visa, MasterCard, МИР)</li>
-          <li><i class="bi bi-check2" aria-hidden="true"></i> Система быстрых платежей (СБП)</li>
-          <li><i class="bi bi-check2" aria-hidden="true"></i> Электронные кошельки</li>
-        </ul>
+    <div class="pay-grid">
+      <article class="pay-method">
+        <span class="pay-method__icon pay-method__icon--teal"><i class="bi bi-credit-card-2-back" aria-hidden="true"></i></span>
+        <h3>Банковская карта</h3>
+        <p>Мгновенная оплата через защищённый шлюз. Сохранения карты не происходит.</p>
+        <div class="pay-method__brands">
+          <span class="pay-brand pay-brand--visa">VISA</span>
+          <span class="pay-brand pay-brand--mc">MasterCard</span>
+          <span class="pay-brand pay-brand--mir">МИР</span>
+        </div>
       </article>
-      <article class="feature">
-        <div class="feature__icon feature__icon--amber"><i class="bi bi-wallet2" aria-hidden="true"></i></div>
+
+      <article class="pay-method">
+        <span class="pay-method__icon pay-method__icon--amber"><i class="bi bi-qr-code" aria-hidden="true"></i></span>
+        <h3>Система быстрых платежей</h3>
+        <p>Сканируйте QR-код в банковском приложении и оплатите одним нажатием.</p>
+        <div class="pay-method__brands">
+          <span class="pay-brand pay-brand--sbp"><i class="bi bi-qr-code"></i> СБП</span>
+          <span class="pay-method__perk"><i class="bi bi-check2"></i> без комиссии</span>
+        </div>
+      </article>
+
+      <article class="pay-method">
+        <span class="pay-method__icon pay-method__icon--indigo"><i class="bi bi-wallet2" aria-hidden="true"></i></span>
         <h3>При получении</h3>
-        <ul class="pay-list">
-          <li><i class="bi bi-check2" aria-hidden="true"></i> Наличными курьеру</li>
-          <li><i class="bi bi-check2" aria-hidden="true"></i> Картой курьеру (терминал)</li>
-          <li><i class="bi bi-check2" aria-hidden="true"></i> В пункте выдачи</li>
-        </ul>
+        <p>Оплатите картой или наличными курьеру — в день доставки.</p>
+        <div class="pay-method__brands">
+          <span class="pay-method__perk"><i class="bi bi-cash-coin"></i> наличные</span>
+          <span class="pay-method__perk"><i class="bi bi-credit-card"></i> терминал</span>
+        </div>
+      </article>
+
+      <article class="pay-method">
+        <span class="pay-method__icon pay-method__icon--rose"><i class="bi bi-buildings" aria-hidden="true"></i></span>
+        <h3>По счёту для юрлиц</h3>
+        <p>Выставим счёт с НДС и отгрузим после зачисления. Подойдёт школам, офисам, учебным центрам.</p>
+        <div class="pay-method__brands">
+          <a class="pay-method__link" href="{% url 'wholesale' %}">Оформить заявку →</a>
+        </div>
       </article>
     </div>
+    <p class="page-section__note">
+      <i class="bi bi-shield-lock-fill" aria-hidden="true"></i>
+      Платежи защищены по стандарту PCI DSS. Данные карты не хранятся на сайте.
+    </p>
   </section>
 
   <section class="page-section reveal">
@@ -158,21 +266,59 @@
     </header>
     <div class="faq">
       <details class="faq-item">
-        <summary>Можно ли изменить адрес доставки после оформления?</summary>
-        <p>Да, свяжитесь с нами по телефону или email до момента отгрузки. Мы скорректируем адрес без доплаты.</p>
+        <summary>
+          <span class="faq-item__q"><i class="bi bi-question-circle" aria-hidden="true"></i> Можно ли изменить адрес доставки после оформления?</span>
+        </summary>
+        <p>Да, свяжитесь с нами по телефону или email до момента отгрузки. Мы скорректируем адрес без доплаты. Если заказ уже передан курьеру — поможем связаться с ним напрямую.</p>
       </details>
       <details class="faq-item">
-        <summary>Как отследить заказ?</summary>
-        <p>После отгрузки мы отправим трек-номер на ваш email. Статус заказа также доступен в личном кабинете.</p>
+        <summary>
+          <span class="faq-item__q"><i class="bi bi-question-circle" aria-hidden="true"></i> Как отследить заказ?</span>
+        </summary>
+        <p>После отгрузки мы отправим трек-номер на ваш email и SMS. Статус заказа также доступен в личном кабинете в разделе «История заказов».</p>
       </details>
       <details class="faq-item">
-        <summary>Есть ли доставка в выходные?</summary>
-        <p>Курьерская доставка по Курску работает Пн-Сб. Пункты самовывоза открыты ежедневно, включая воскресенье.</p>
+        <summary>
+          <span class="faq-item__q"><i class="bi bi-question-circle" aria-hidden="true"></i> Есть ли доставка в выходные?</span>
+        </summary>
+        <p>Курьерская доставка по Курску работает Пн–Сб, 9:00–20:00. Пункты самовывоза открыты ежедневно, включая воскресенье.</p>
       </details>
       <details class="faq-item">
-        <summary>Доставляете ли вы оптовые заказы?</summary>
-        <p>Да, для оптовых заказов действуют отдельные тарифы. Свяжитесь с отделом продаж для расчёта стоимости.</p>
+        <summary>
+          <span class="faq-item__q"><i class="bi bi-question-circle" aria-hidden="true"></i> Доставляете ли вы оптовые заказы?</span>
+        </summary>
+        <p>Да, для оптовых заказов действуют отдельные тарифы — свяжитесь с отделом продаж через форму на странице «<a href="{% url 'wholesale' %}">Оптовым клиентам</a>». Крупные партии от 30 000 ₽ доставляем бесплатно.</p>
       </details>
+      <details class="faq-item">
+        <summary>
+          <span class="faq-item__q"><i class="bi bi-question-circle" aria-hidden="true"></i> Что если часть товаров нет в наличии?</span>
+        </summary>
+        <p>Мы свяжемся с вами в течение 30 минут и предложим варианты: дождаться поступления, заменить на аналог или вернуть деньги за недостающую позицию.</p>
+      </details>
+      <details class="faq-item">
+        <summary>
+          <span class="faq-item__q"><i class="bi bi-question-circle" aria-hidden="true"></i> Нужно ли оплачивать доставку заранее?</span>
+        </summary>
+        <p>Нет — оплата происходит вместе с товаром. Выбираете любой удобный способ: онлайн, СБП или при получении.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="delivery-cta reveal">
+    <div class="delivery-cta__icon" aria-hidden="true"><i class="bi bi-lightning-charge-fill"></i></div>
+    <div class="delivery-cta__text">
+      <h2>Готовы оформить заказ?</h2>
+      <p>Выберите товары — мы рассчитаем точную стоимость доставки в корзине.</p>
+    </div>
+    <div class="delivery-cta__actions">
+      <a class="btn btn--primary" href="{% url 'catalog' %}">
+        <i class="bi bi-bag-plus" aria-hidden="true"></i>
+        <span>В каталог</span>
+      </a>
+      <a class="btn btn--ghost" href="{% url 'pickup' %}">
+        <i class="bi bi-geo-alt" aria-hidden="true"></i>
+        <span>Пункты выдачи</span>
+      </a>
     </div>
   </section>
   {% endif %}
