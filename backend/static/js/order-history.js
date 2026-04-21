@@ -1,19 +1,33 @@
-﻿document.addEventListener("DOMContentLoaded", () => {
-  const cartCount = document.getElementById("cartCount");
-  const searchForm = document.getElementById("searchForm");
+document.addEventListener("DOMContentLoaded", () => {
+  const P = window.paperly;
+  const { escapeHtml, formatOrderStatus, apiJson, unwrapList } = P;
+
   const ordersList = document.getElementById("ordersList");
+  const ordersEmpty = document.getElementById("ordersEmpty");
+  const ordersFilterEmpty = document.getElementById("ordersFilterEmpty");
+  const ordersStats = document.getElementById("ordersStats");
+  const ordersFilters = document.getElementById("ordersFilters");
+  const ordersFilterReset = document.getElementById("ordersFilterReset");
+  const statTotal = document.getElementById("ordersStatTotal");
+  const statDone = document.getElementById("ordersStatDone");
+  const statSum = document.getElementById("ordersStatSum");
 
-  function updateCartCount() {
-    const items = JSON.parse(localStorage.getItem("paperly_cart_items") || "[]");
-    const count = items.reduce((sum, item) => sum + item.qty, 0);
-    localStorage.setItem("paperly_cart_count", String(count));
-    if (cartCount) cartCount.textContent = String(count);
-  }
+  P.renderCartCount();
+  const formatMoney = (v) => v == null ? "—" : P.formatMoney(v);
 
-  function formatMoney(value) {
-    if (value === undefined || value === null) return "—";
-    return `${Number(value).toLocaleString("ru-RU")} ₽`;
-  }
+  const STATUS_ICON = {
+    new: "bi-hourglass-split",
+    confirmed: "bi-check-circle",
+    paid: "bi-cash-coin",
+    shipped: "bi-truck",
+    done: "bi-patch-check-fill",
+    canceled: "bi-x-circle",
+  };
+
+  const ACTIVE_STATUSES = new Set(["new", "confirmed", "paid", "shipped"]);
+
+  let allOrders = [];
+  let currentFilter = "all";
 
   function formatDate(dateString) {
     if (!dateString) return "";
@@ -21,129 +35,210 @@
     return d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
   }
 
-  function escapeHtml(value) {
-    return String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
+  function formatDateShort(dateString) {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    return d.toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric" });
   }
 
-  function getStatusText(status) {
-    const map = {
-      new: "Новый",
-      confirmed: "Подтверждён",
-      paid: "Оплачен",
-      shipped: "Отгружен",
-      done: "Завершён",
-      canceled: "Отменён",
+  function formatNoun(n, one, few, many) {
+    const mod10 = n % 10;
+    const mod100 = n % 100;
+    if (mod100 < 10 || mod100 >= 20) {
+      if (mod10 === 1) return `${n} ${one}`;
+      if (mod10 >= 2 && mod10 <= 4) return `${n} ${few}`;
+    }
+    return `${n} ${many}`;
+  }
+
+  function filterOrders(filter) {
+    if (filter === "active") return allOrders.filter((o) => ACTIVE_STATUSES.has(o.status));
+    if (filter === "done") return allOrders.filter((o) => o.status === "done");
+    if (filter === "canceled") return allOrders.filter((o) => o.status === "canceled");
+    return allOrders;
+  }
+
+  function renderOrder(order) {
+    const items = order.items || [];
+    const itemsCount = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+    const icon = STATUS_ICON[order.status] || "bi-box";
+    const isDelivery = order.delivery_type === "courier";
+    const deliveryLabel = isDelivery ? "Курьер" : "Самовывоз";
+    const paymentLabels = {
+      card: "Карта онлайн",
+      sbp: "СБП",
+      cash: "При получении",
+      invoice: "По счёту",
     };
-    return map[status] || status;
-  }
+    const paymentLabel = paymentLabels[order.payment_type] || order.payment_type || "—";
 
-  async function loadOrders() {
-    try {
-      const response = await fetch("/api/orders/", { credentials: "same-origin" });
-      if (!response.ok) {
-        if (response.status === 401) {
-          ordersList.innerHTML = "";
-          ordersList.hidden = true;
-          return;
-        }
-        ordersList.innerHTML = "";
-        return;
-      }
-      const payload = await response.json();
-      console.log("Orders payload:", payload); // для отладки
-      const orders = Array.isArray(payload) ? payload : payload.results || [];
-      if (!orders.length) {
-        ordersList.innerHTML = "";
-        ordersList.hidden = true;
-        return;
-      }
-
-      ordersList.hidden = false;
-
-      ordersList.innerHTML = orders.map(order => {
-        const items = order.items || [];
-        const itemsCount = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
-        const itemsHtml = items.length ? items.map(item => {
-          // защита от undefined
+    const itemsHtml = items.length
+      ? items.map((item) => {
           const title = escapeHtml(item.title_snapshot || "Товар");
           const quantity = Number(item.quantity) || 0;
           const price = Number(item.unit_price) || 0;
           const sum = price * quantity;
+          const productId = item.product;
+          const linkOpen = productId ? `<a href="/product/?id=${productId}">` : "<span>";
+          const linkClose = productId ? "</a>" : "</span>";
           return `
-            <div class="order-item">
-              <div class="order-item-main">
-                <span class="order-item-title">${title}</span>
-                <span class="order-item-meta">x${quantity}</span>
+            <li class="order-item">
+              <div class="order-item__main">
+                <span class="order-item__qty">×${quantity}</span>
+                <span class="order-item__title">${linkOpen}${title}${linkClose}</span>
               </div>
-              <div class="order-item-sum">${formatMoney(sum)}</div>
-            </div>
+              <span class="order-item__price">${formatMoney(price)} <small>за шт.</small></span>
+              <strong class="order-item__sum">${formatMoney(sum)}</strong>
+            </li>
           `;
-        }).join("") : '<div class="order-item order-item--empty">Нет информации о товарах</div>';
+        }).join("")
+      : `<li class="order-item order-item--empty">Нет информации о товарах</li>`;
 
-        return `
-          <article class="order-card">
-            <div class="order-head">
-              <div>
-                <p class="order-number">Заказ №${order.number || order.id}</p>
-                <p class="order-meta">от ${formatDate(order.created_at)}${itemsCount ? ` • ${itemsCount} шт.` : ""}</p>
+    const address = [order.city, order.address].filter(Boolean).join(", ");
+
+    return `
+      <article class="order-card" data-status="${order.status}">
+        <header class="order-card__head">
+          <div class="order-card__id">
+            <div class="order-card__icon order-card__icon--${order.status}">
+              <i class="bi ${icon}" aria-hidden="true"></i>
+            </div>
+            <div>
+              <p class="order-card__number">Заказ №${escapeHtml(String(order.number || order.id))}</p>
+              <p class="order-card__meta">
+                <span>${formatDateShort(order.created_at)}</span>
+                ${itemsCount ? `<span aria-hidden="true">·</span><span>${formatNoun(itemsCount, "товар", "товара", "товаров")}</span>` : ""}
+              </p>
+            </div>
+          </div>
+          <div class="order-card__status-wrap">
+            <span class="order-status status-${order.status}">${escapeHtml(formatOrderStatus(order.status))}</span>
+            <strong class="order-card__total">${formatMoney(order.total)}</strong>
+          </div>
+        </header>
+
+        <details class="order-card__details">
+          <summary class="order-card__toggle">
+            <span class="order-card__toggle-show">Показать состав заказа</span>
+            <span class="order-card__toggle-hide">Свернуть</span>
+            <i class="bi bi-chevron-down" aria-hidden="true"></i>
+          </summary>
+
+          <div class="order-card__body">
+            <ul class="order-items">${itemsHtml}</ul>
+
+            <div class="order-info">
+              <div class="order-info__block">
+                <span class="order-info__label"><i class="bi bi-geo-alt" aria-hidden="true"></i> Доставка</span>
+                <strong>${escapeHtml(deliveryLabel)}</strong>
+                ${address ? `<small>${escapeHtml(address)}</small>` : ""}
               </div>
-              <div class="order-total">
-                <span class="order-status status-${order.status}">${getStatusText(order.status)}</span>
-                <strong>${formatMoney(order.total)}</strong>
+              <div class="order-info__block">
+                <span class="order-info__label"><i class="bi bi-credit-card" aria-hidden="true"></i> Оплата</span>
+                <strong>${escapeHtml(paymentLabel)}</strong>
               </div>
             </div>
-            <div class="order-body">
-              <div class="order-items">
-                ${itemsHtml}
-              </div>
-              <div class="order-summary">
-                <div class="order-summary-row"><span>Сумма</span><span>${formatMoney(order.subtotal)}</span></div>
-                <div class="order-summary-row"><span>Доставка</span><span>${formatMoney(order.delivery_price)}</span></div>
-                <div class="order-summary-row order-summary-total"><span>Итого</span><span>${formatMoney(order.total)}</span></div>
-              </div>
+
+            <div class="order-summary">
+              <div class="order-summary__row"><span>Сумма товаров</span><span>${formatMoney(order.subtotal)}</span></div>
+              <div class="order-summary__row"><span>Доставка</span><span>${formatMoney(order.delivery_price)}</span></div>
+              ${order.discount_amount && Number(order.discount_amount) > 0 ? `<div class="order-summary__row"><span>Скидка</span><span>−${formatMoney(order.discount_amount)}</span></div>` : ""}
+              <div class="order-summary__row order-summary__row--total"><span>Итого</span><span>${formatMoney(order.total)}</span></div>
             </div>
-          </article>
-        `;
-      }).join("");
-    } catch (error) {
-      console.error("Error loading orders:", error);
-    }
+          </div>
+        </details>
+      </article>
+    `;
   }
 
-  function addToCartFromOrderItem(item) {
-    let items = JSON.parse(localStorage.getItem("paperly_cart_items") || "[]");
-    // item.product может быть id, но в order-history мы не храним product id, если не передали.
-    // Можно использовать item.product если он есть, иначе генерировать временный id.
-    const productId = item.product ? item.product.toString() : `temp-${Date.now()}-${Math.random()}`;
-    const existing = items.find(i => i.id === productId);
-    if (existing) {
-      existing.qty += (item.quantity || 1);
-    } else {
-      items.push({
-        id: productId,
-        title: item.title_snapshot || "Товар",
-        price: item.unit_price || 0,
-        img: "", // из истории картинок нет
-        desc: "",
-        qty: item.quantity || 1
-      });
+  function renderOrders(filter = currentFilter) {
+    const filtered = filterOrders(filter);
+    if (!filtered.length) {
+      ordersList.innerHTML = "";
+      ordersList.hidden = true;
+      if (filter === "all") {
+        ordersEmpty.hidden = false;
+        ordersFilterEmpty.hidden = true;
+      } else {
+        ordersEmpty.hidden = true;
+        ordersFilterEmpty.hidden = false;
+      }
+      return;
     }
-    localStorage.setItem("paperly_cart_items", JSON.stringify(items));
+    ordersEmpty.hidden = true;
+    ordersFilterEmpty.hidden = true;
+    ordersList.hidden = false;
+    ordersList.innerHTML = filtered.map(renderOrder).join("");
   }
 
-  searchForm?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const query = searchForm.querySelector("input")?.value.trim();
-    if (query) {
-      window.location.href = `/catalog/?q=${encodeURIComponent(query)}`;
+  function updateStats() {
+    const total = allOrders.length;
+    const done = allOrders.filter((o) => o.status === "done");
+    const sum = done.reduce((s, o) => s + (Number(o.total) || 0), 0);
+
+    if (!total) {
+      ordersStats.hidden = true;
+      ordersFilters.hidden = true;
+      return;
     }
+    ordersStats.hidden = false;
+    ordersFilters.hidden = false;
+    if (statTotal) statTotal.textContent = String(total);
+    if (statDone) statDone.textContent = String(done.length);
+    if (statSum) statSum.textContent = formatMoney(sum);
+
+    const counts = {
+      all: total,
+      active: allOrders.filter((o) => ACTIVE_STATUSES.has(o.status)).length,
+      done: done.length,
+      canceled: allOrders.filter((o) => o.status === "canceled").length,
+    };
+    document.querySelectorAll(".orders-filter__count").forEach((el) => {
+      const key = el.dataset.countFor;
+      el.textContent = String(counts[key] ?? 0);
+    });
+  }
+
+  function setFilter(filter) {
+    currentFilter = filter;
+    document.querySelectorAll(".orders-filter").forEach((btn) => {
+      btn.classList.toggle("is-active", btn.dataset.filter === filter);
+    });
+    renderOrders(filter);
+  }
+
+  ordersFilters?.addEventListener("click", (event) => {
+    const btn = event.target.closest(".orders-filter");
+    if (!btn) return;
+    setFilter(btn.dataset.filter);
   });
 
-  updateCartCount();
+  ordersFilterReset?.addEventListener("click", () => setFilter("all"));
+
+  async function loadOrders() {
+    try {
+      const payload = await apiJson("/api/orders/").catch((err) => {
+        if (err.status === 401 || err.status === 403) {
+          return { notAuthorized: true };
+        }
+        throw err;
+      });
+      if (payload?.notAuthorized) {
+        ordersList.hidden = true;
+        ordersList.innerHTML = "";
+        return;
+      }
+      allOrders = unwrapList(payload);
+      ordersList.innerHTML = "";
+      updateStats();
+      renderOrders();
+    } catch (error) {
+      console.error("Orders load error", error);
+      ordersList.hidden = true;
+      ordersList.innerHTML = "";
+      ordersEmpty.hidden = false;
+    }
+  }
+
   loadOrders();
 });

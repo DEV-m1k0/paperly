@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Вход и регистрация{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — Вход и регистрация{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/auth.css' %}">
 {% endblock %}
 
 {% block content %}
-<main class="container page">
+<div class="container page">
     <div class="breadcrumbs">
       <a href="{% url 'home' %}">Главная</a>
       <span>/</span>
@@ -154,7 +154,7 @@
         <p class="help">Нужна помощь? Напишите на <a href="mailto:support@paperly.ru">support@paperly.ru</a></p>
       </section>
     </section>
-  </main>
+  </div>
 {% endblock %}
 
 {% block page_js %}

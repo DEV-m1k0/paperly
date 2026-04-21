@@ -1,213 +1,227 @@
-﻿document.addEventListener("DOMContentLoaded", () => {
-  const cartCount = document.getElementById("cartCount");
-  const searchForm = document.getElementById("searchForm");
+document.addEventListener("DOMContentLoaded", () => {
+  const P = window.paperly;
+  const { escapeHtml, renderStars, formatPurpose, apiJson, apiFetch, unwrapList } = P;
+
   const favGrid = document.getElementById("favGrid");
+  const favSkeleton = document.getElementById("favSkeleton");
+  const favToolbar = document.getElementById("favToolbar");
+  const favCount = document.getElementById("favCount");
+  const favSort = document.getElementById("favSort");
+  const favAddAll = document.getElementById("favAddAll");
+  const favClearAll = document.getElementById("favClearAll");
   const emptyState = document.getElementById("emptyState");
+  const authState = document.getElementById("authState");
+  const isAuthenticated = P.isAuthenticated();
 
-  // ---------- Вспомогательные ----------
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(";").shift();
-    return "";
-  }
+  P.renderCartCount();
 
-  function escapeHtml(value) {
-    return String(value)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
-  }
+  let items = [];
+  let currentSort = "added-desc";
 
-  function renderStars(rating) {
-    const full = Math.round(Number(rating));
-    return Array.from({ length: 5 }, (_, index) => {
-      return `<i class="bi ${index < full ? "bi-star-fill" : "bi-star"}"></i>`;
-    }).join("");
-  }
-
-  function formatPurpose(value) {
-    const map = {
-      school: "Школа",
-      office: "Офис",
-      creative: "Творчество",
-      universal: "Универсально",
-    };
-    return map[value] || value || "—";
-  }
-
-  // ---------- Корзина (localStorage) ----------
-  function updateCartCount() {
-    const items = JSON.parse(localStorage.getItem("paperly_cart_items") || "[]");
-    const count = items.reduce((sum, item) => sum + item.qty, 0);
-    localStorage.setItem("paperly_cart_count", String(count));
-    cartCount.textContent = String(count);
-    return count;
-  }
-
-  function addToCart(product) {
-    let items = JSON.parse(localStorage.getItem("paperly_cart_items") || "[]");
-    const existing = items.find(item => item.id === product.id);
-    if (existing) {
-      existing.qty += 1;
-    } else {
-      items.push({
-        id: product.id,
-        title: product.title,
-        price: product.price,
-        img: product.img,
-        desc: product.desc,
-        qty: 1
-      });
+  // ────────── Helpers ──────────
+  function formatNoun(n, one, few, many) {
+    const mod10 = n % 10, mod100 = n % 100;
+    if (mod100 < 10 || mod100 >= 20) {
+      if (mod10 === 1) return `${n} ${one}`;
+      if (mod10 >= 2 && mod10 <= 4) return `${n} ${few}`;
     }
-    localStorage.setItem("paperly_cart_items", JSON.stringify(items));
-    updateCartCount();
+    return `${n} ${many}`;
   }
 
-  // ---------- Отображение избранного ----------
-  function updateEmptyState() {
-    const cards = favGrid.querySelectorAll(".product");
-    const isEmpty = cards.length === 0;
-    emptyState.hidden = !isEmpty;
-    favGrid.hidden = isEmpty;
+  function sortItems(list, mode) {
+    const sorted = [...list];
+    switch (mode) {
+      case "added-asc":
+        return sorted.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+      case "price-asc":
+        return sorted.sort((a, b) => Number(a.product_price || 0) - Number(b.product_price || 0));
+      case "price-desc":
+        return sorted.sort((a, b) => Number(b.product_price || 0) - Number(a.product_price || 0));
+      case "name":
+        return sorted.sort((a, b) => (a.product_title || "").localeCompare(b.product_title || "", "ru"));
+      case "added-desc":
+      default:
+        return sorted.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    }
   }
 
-  function renderFavorites(rows) {
-    favGrid.innerHTML = rows
-      .map((item) => {
-        const image = item.product_image || "https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&w=900&q=80";
-        const title = escapeHtml(item.product_title || "Товар");
-        const desc = escapeHtml(item.product_short_description || "");
-        const price = Number(item.product_price || 0);
-        const oldPrice = item.product_old_price ? Number(item.product_old_price) : null;
-        const targetUrl = `/product/?id=${item.product}`;
-        const hasDiscount = Number(oldPrice) > Number(price);
-        const discountPercent = hasDiscount ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
-        const chipText = hasDiscount
-          ? `-${discountPercent}%`
-          : item.product_is_hit
-            ? "Хит"
-            : item.product_is_new
-              ? "Новинка"
-              : "В наличии";
-        const chipClass = hasDiscount ? "chip chip--discount" : "chip";
-        const reviewsCount = Number(item.product_reviews_count || 0);
-        const avgRating = Number(item.product_avg_rating || 0);
-        const ratingDisplay = reviewsCount ? avgRating.toFixed(1) : "—";
-        const stockText = Number(item.product_stock || 0) > 0 ? "Есть на складе" : "Под заказ";
+  // ────────── Render ──────────
+  function renderCard(item) {
+    const image = item.product_image || "";
+    const title = escapeHtml(item.product_title || "Товар");
+    const desc = escapeHtml(item.product_short_description || "");
+    const price = Number(item.product_price || 0);
+    const oldPrice = item.product_old_price ? Number(item.product_old_price) : null;
+    const targetUrl = `/product/?id=${item.product}`;
+    const hasDiscount = Number(oldPrice) > Number(price);
+    const discountPercent = hasDiscount ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
+    const chipText = hasDiscount
+      ? `-${discountPercent}%`
+      : item.product_is_hit ? "Хит" : item.product_is_new ? "Новинка" : "В наличии";
+    const chipClass = hasDiscount ? "chip chip--discount" : "chip";
+    const reviewsCount = Number(item.product_reviews_count || 0);
+    const avgRating = Number(item.product_avg_rating || 0);
+    const ratingDisplay = reviewsCount ? avgRating.toFixed(1) : "—";
+    const stockText = Number(item.product_stock || 0) > 0 ? "Есть на складе" : "Под заказ";
 
-        const brandName = escapeHtml(item.product_brand_name || "");
-        const formatLabel = escapeHtml(item.product_format || "");
-        const sheets = item.product_sheets_count ? `${item.product_sheets_count} л.` : "";
-        const purpose = escapeHtml(formatPurpose(item.product_purpose));
-        const details = [
-          brandName ? `<span>Бренд: <strong>${brandName}</strong></span>` : "",
-          formatLabel ? `<span>Формат: <strong>${formatLabel}</strong></span>` : "",
-          sheets ? `<span>Листы: <strong>${sheets}</strong></span>` : "",
-          purpose ? `<span>Назначение: <strong>${purpose}</strong></span>` : "",
-        ].filter(Boolean).join("");
+    const brandName = escapeHtml(item.product_brand_name || "");
+    const formatLabel = escapeHtml(item.product_format || "");
+    const sheets = item.product_sheets_count ? `${item.product_sheets_count} л.` : "";
+    const purpose = escapeHtml(formatPurpose(item.product_purpose));
+    const details = [
+      brandName ? `<span>Бренд: <strong>${brandName}</strong></span>` : "",
+      formatLabel ? `<span>Формат: <strong>${formatLabel}</strong></span>` : "",
+      sheets ? `<span>Листы: <strong>${sheets}</strong></span>` : "",
+      purpose ? `<span>Назначение: <strong>${purpose}</strong></span>` : "",
+    ].filter(Boolean).join("");
 
-        const categories = Array.isArray(item.product_category_slugs)
-          ? item.product_category_slugs.join(",")
-          : "";
+    const imageMarkup = image
+      ? `<img src="${image}" alt="${title}">`
+      : `<div class="product__placeholder"><i class="bi bi-image"></i></div>`;
 
-        return `
-          <article class="product" 
-            data-fav-id="${item.id}"
-            data-product-id="${item.product}"
-            data-product-title="${title}"
-            data-product-price="${price}"
-            data-product-img="${image}"
-            data-product-desc="${desc}"
-            data-brand="${item.product_brand_slug || ""}"
-            data-categories="${categories}"
-            data-stock="${Number(item.product_stock || 0) > 0 ? "in_stock" : "out_stock"}"
-            data-flag-new="${item.product_is_new ? "true" : "false"}"
-            data-flag-hit="${item.product_is_hit ? "true" : "false"}"
-            data-flag-featured="${item.product_is_featured ? "true" : "false"}"
-            data-flag-discount="${hasDiscount ? "true" : "false"}"
-            data-format="${item.product_format || "other"}"
-            data-sheets="${item.product_sheets_count || ""}"
-            data-purpose="${item.product_purpose || "universal"}"
-            data-price="${price}">
-            <span class="${chipClass}">${chipText}</span>
-            <button class="fav-btn is-active" aria-label="Удалить из избранного" data-fav-id="${item.id}">
-              <i class="bi bi-heart-fill"></i>
-            </button>
-            <a class="product__image" href="${targetUrl}">
-              <img src="${image}" alt="${title}">
-            </a>
-            <div class="product__meta">
-              <span class="rating-stars" aria-label="Рейтинг ${ratingDisplay} из 5">${renderStars(reviewsCount ? avgRating : 0)}</span>
-              <span class="meta-score">${ratingDisplay}</span>
-              <span class="meta-stock">${stockText}</span>
-            </div>
-            <h3><a href="${targetUrl}">${title}</a></h3>
-            <p>${desc || "Товар из каталога"}</p>
-            ${details ? `<div class="product__details">${details}</div>` : ""}
-            <div class="product__bottom">
-              <div class="price-stack${hasDiscount ? " has-discount" : ""}">
-                <strong>${price.toLocaleString("ru-RU")} Руб.</strong>
-                ${hasDiscount ? `<span class="product__old">${Number(oldPrice).toLocaleString("ru-RU")} Руб.</span>` : ""}
-              </div>
-              <button class="add"><i class="bi bi-bag-plus"></i><span>В корзину</span></button>
-            </div>
-          </article>
-        `;
-      })
-      .join("");
-
-    updateEmptyState();
+    return `
+      <article class="product"
+        data-fav-id="${item.id}"
+        data-product-id="${item.product}"
+        data-product-title="${title}"
+        data-product-price="${price}"
+        data-product-img="${image}"
+        data-product-desc="${desc}">
+        <span class="${chipClass}">${chipText}</span>
+        <button class="fav-btn is-active" aria-label="Удалить из избранного" data-fav-id="${item.id}" type="button">
+          <i class="bi bi-heart-fill"></i>
+        </button>
+        <a class="product__image" href="${targetUrl}">
+          ${imageMarkup}
+        </a>
+        <div class="product__meta">
+          <span class="rating-stars" aria-label="Рейтинг ${ratingDisplay} из 5">${renderStars(reviewsCount ? avgRating : 0)}</span>
+          <span class="meta-score">${ratingDisplay}</span>
+          <span class="meta-stock">${stockText}</span>
+        </div>
+        <h3><a href="${targetUrl}">${title}</a></h3>
+        <p>${desc || "Товар из каталога"}</p>
+        ${details ? `<div class="product__details">${details}</div>` : ""}
+        <div class="product__bottom">
+          <div class="price-stack${hasDiscount ? " has-discount" : ""}">
+            <strong>${price.toLocaleString("ru-RU")} Руб.</strong>
+            ${hasDiscount ? `<span class="product__old">${Number(oldPrice).toLocaleString("ru-RU")} Руб.</span>` : ""}
+          </div>
+          <button class="add" type="button"><i class="bi bi-bag-plus"></i><span>В корзину</span></button>
+        </div>
+      </article>
+    `;
   }
 
+  function renderAll() {
+    const sorted = sortItems(items, currentSort);
+    if (!sorted.length) {
+      favGrid.hidden = true;
+      favGrid.innerHTML = "";
+      favToolbar.hidden = true;
+      emptyState.hidden = false;
+      return;
+    }
+    favGrid.hidden = false;
+    emptyState.hidden = true;
+    favToolbar.hidden = false;
+    favCount.textContent = formatNoun(sorted.length, "товар", "товара", "товаров");
+    favGrid.innerHTML = sorted.map(renderCard).join("");
+  }
+
+  function showSkeleton(visible) {
+    if (favSkeleton) favSkeleton.hidden = !visible;
+  }
+
+  // ────────── Load ──────────
   async function loadFavorites() {
+    showSkeleton(true);
     try {
-      const response = await fetch("/api/favorites/", { credentials: "same-origin" });
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          favGrid.innerHTML = "";
-          emptyState.hidden = false;
-          emptyState.innerHTML = '<i class="bi bi-heart"></i><h2>Войдите в аккаунт</h2><p>Чтобы увидеть избранное, необходимо авторизоваться.</p><a href="/auth/" class="btn btn--primary">Войти</a>';
-          favGrid.hidden = true;
-          return;
-        }
-        updateEmptyState();
-        return;
+      if (isAuthenticated) {
+        const payload = await apiJson("/api/favorites/");
+        items = unwrapList(payload);
+      } else {
+        items = await loadLocalFavoritesAsItems();
       }
-
-      const payload = await response.json();
-      const rows = Array.isArray(payload) ? payload : payload.results || [];
-      if (!rows.length) {
-        favGrid.innerHTML = "";
-        updateEmptyState();
-        return;
-      }
-
-      renderFavorites(rows);
     } catch (error) {
       console.error("Favorites API error", error);
-      updateEmptyState();
+      emptyState.hidden = false;
+      showSkeleton(false);
+      return;
+    }
+    showSkeleton(false);
+    renderAll();
+  }
+
+  async function loadLocalFavoritesAsItems() {
+    const localIds = P.readLocalFavorites();
+    if (!localIds.length) return [];
+    // Fetch all products that match — single API call per ID
+    const fetched = await Promise.all(localIds.map((id) =>
+      apiJson(`/api/products/${id}/`).catch(() => null)
+    ));
+    // Clean up stale IDs (product deleted / draft)
+    const valid = [];
+    const validIds = [];
+    fetched.forEach((product, idx) => {
+      if (!product) return;
+      validIds.push(localIds[idx]);
+      valid.push({
+        id: `local-${product.id}`,
+        product: product.id,
+        product_title: product.title,
+        product_short_description: product.short_description || "",
+        product_image: product.images?.[0]?.image_url || "",
+        product_price: product.price,
+        product_old_price: product.old_price,
+        product_brand_name: product.brand_name || "",
+        product_brand_slug: product.brand_slug || "",
+        product_stock: product.stock,
+        product_is_hit: product.is_hit,
+        product_is_new: product.is_new,
+        product_is_featured: product.is_featured,
+        product_format: product.format,
+        product_sheets_count: product.sheets_count,
+        product_purpose: product.purpose,
+        product_avg_rating: product.avg_rating,
+        product_reviews_count: product.reviews_count,
+        created_at: new Date().toISOString(),
+      });
+    });
+    // Prune stale entries in localStorage
+    if (validIds.length !== localIds.length) P.writeLocalFavorites(validIds);
+    return valid;
+  }
+
+  // ────────── Actions ──────────
+  async function removeFavorite(favId, productId) {
+    items = items.filter((x) => String(x.id) !== String(favId));
+    renderAll();
+    if (!isAuthenticated) {
+      P.removeLocalFavorite(productId);
+      P.updateFavoritesCount();
+      return;
+    }
+    try {
+      await apiFetch(`/api/favorites/${favId}/`, { method: "DELETE" });
+      P.updateFavoritesCount();
+    } catch (error) {
+      console.error("Remove favorite error", error);
     }
   }
 
-  // ---------- Обработчики событий ----------
-  favGrid.addEventListener("click", async (event) => {
+  favGrid.addEventListener("click", (event) => {
     const addBtn = event.target.closest(".add");
     if (addBtn) {
       const card = addBtn.closest(".product");
       if (!card) return;
-
-      const product = {
+      P.addCartItem({
         id: card.dataset.productId,
         title: card.dataset.productTitle,
         price: parseFloat(card.dataset.productPrice),
         img: card.dataset.productImg,
         desc: card.dataset.productDesc,
-      };
-      addToCart(product);
-
+      }, 1);
       const initialHtml = addBtn.innerHTML;
       addBtn.innerHTML = `<i class="bi bi-check2"></i><span>Добавлено</span>`;
       addBtn.disabled = true;
@@ -222,31 +236,57 @@
     if (removeBtn) {
       const card = removeBtn.closest(".product");
       const favId = removeBtn.dataset.favId || card?.dataset.favId;
-      if (!favId) return;
-
-      try {
-        await fetch(`/api/favorites/${favId}/`, {
-          method: "DELETE",
-          credentials: "same-origin",
-          headers: { "X-CSRFToken": getCookie("csrftoken") },
-        });
-      } catch (error) {
-        console.error("Remove favorite error", error);
-      }
-      card.remove();
-      updateEmptyState();
+      const productId = card?.dataset.productId;
+      if (favId) removeFavorite(favId, productId);
     }
   });
 
-  searchForm?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const query = searchForm.querySelector("input")?.value.trim();
-    if (query) {
-      window.location.href = `/catalog/?q=${encodeURIComponent(query)}`;
-    }
+  favSort?.addEventListener("change", () => {
+    currentSort = favSort.value || "added-desc";
+    renderAll();
   });
 
-  // Запуск
-  updateCartCount();
+  favAddAll?.addEventListener("click", () => {
+    if (!items.length) return;
+    items.forEach((item) => {
+      if (Number(item.product_stock || 0) <= 0) return;
+      P.addCartItem({
+        id: String(item.product),
+        title: item.product_title,
+        price: Number(item.product_price || 0),
+        img: item.product_image || "",
+        desc: item.product_short_description || "",
+      }, 1);
+    });
+    const initialHtml = favAddAll.innerHTML;
+    favAddAll.innerHTML = `<i class="bi bi-check2"></i><span>Добавлено в корзину</span>`;
+    favAddAll.disabled = true;
+    setTimeout(() => {
+      favAddAll.innerHTML = initialHtml;
+      favAddAll.disabled = false;
+    }, 1600);
+  });
+
+  favClearAll?.addEventListener("click", async () => {
+    if (!items.length) return;
+    if (!confirm("Удалить все товары из избранного?")) return;
+    const previous = [...items];
+    items = [];
+    renderAll();
+    favClearAll.disabled = true;
+    if (!isAuthenticated) {
+      P.clearLocalFavorites();
+      P.updateFavoritesCount();
+    } else {
+      const results = await Promise.allSettled(
+        previous.map((x) => apiFetch(`/api/favorites/${x.id}/`, { method: "DELETE" }))
+      );
+      const failed = results.filter((r) => r.status === "rejected").length;
+      if (failed) console.warn(`Не удалось удалить ${failed} позиций.`);
+      P.updateFavoritesCount();
+    }
+    favClearAll.disabled = false;
+  });
+
   loadFavorites();
 });

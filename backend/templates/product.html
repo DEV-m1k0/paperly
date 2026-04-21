@@ -1,157 +1,184 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Товар{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — Товар{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/product.css' %}">
 {% endblock %}
 
 {% block content %}
-<main class="container page">
-    <div class="breadcrumbs">
-      <a href="{% url 'home' %}">Главная</a>
-      <span>/</span>
-      <a href="{% url 'catalog' %}">Каталог</a>
-      <span>/</span>
-      <span id="productBreadcrumb">Товар</span>
+<div class="container page product-page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <a href="{% url 'catalog' %}">Каталог</a>
+    <span>/</span>
+    <span id="productBreadcrumb">Товар</span>
+  </div>
+
+  <section class="product-hero reveal">
+    <div class="gallery">
+      <div class="gallery__main">
+        <img id="mainImage" src="" alt="">
+        <span class="gallery__badge" id="productBadge" hidden></span>
+      </div>
+      <div class="gallery__thumbs"></div>
     </div>
 
-    <section class="product-hero">
-      <div class="gallery">
-        <div class="gallery__main">
-          <img id="mainImage" src="https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80" alt="Товар">
-        </div>
-        <div class="gallery__thumbs">
-          <button class="thumb is-active" data-image="https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80"><img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=300&q=80" alt="Вид 1"></button>
-          <button class="thumb" data-image="https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&w=1200&q=80"><img src="https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&w=300&q=80" alt="Вид 2"></button>
-          <button class="thumb" data-image="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=1200&q=80"><img src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&w=300&q=80" alt="Вид 3"></button>
-          <button class="thumb" data-image="https://images.unsplash.com/photo-1506784365847-bbad939e9335?auto=format&fit=crop&w=1200&q=80"><img src="https://images.unsplash.com/photo-1506784365847-bbad939e9335?auto=format&fit=crop&w=300&q=80" alt="Вид 4"></button>
-        </div>
+    <article class="product-info">
+      <div class="product-info__head">
+        <span class="product-info__brand" id="productBrand" hidden></span>
+        <h1 id="productTitle">Загрузка...</h1>
+        <p class="product-info__sku" id="productSku"></p>
       </div>
 
-      <article class="product-info">
-        <span class="badge">Хит продаж</span>
-        <h1 id="productTitle">Ежедневник датированный A5, 176 страниц</h1>
-        <p class="sku" id="productSku">Артикул: PL-ED-A5-176-BLK</p>
-
-        <div class="rating-row">
-          <div class="stars" id="ratingStars">
-            <i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
-          </div>
-          <span class="rating-value" id="ratingValue">—</span>
-          <span class="rating-count" id="ratingCount"></span>
+      <div class="product-info__rating">
+        <div class="rating-stars" id="ratingStars">
+          <i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
         </div>
+        <span class="rating-value" id="ratingValue">—</span>
+        <span class="rating-dot">·</span>
+        <span class="rating-count" id="ratingCount">нет оценок</span>
+      </div>
 
-        <div class="price-row">
-          <strong id="productPrice">590 Руб.</strong>
-          <span class="old-price" id="productOldPrice">690 Руб.</span>
-          <span class="economy" id="productDiscount">-14%</span>
+      <div class="price-block" id="priceBlock">
+        <div class="price-block__main">
+          <strong id="productPrice"></strong>
+          <span class="price-block__discount" id="productDiscount" hidden></span>
         </div>
+        <span class="price-block__old" id="productOldPrice" hidden></span>
+      </div>
 
-        <div class="product-facts" id="productFacts"></div>
+      <div class="product-stock" id="productStock"></div>
 
-        <div class="buy-row">
-          <div class="qty" aria-label="Количество">
-            <button id="qtyMinus" aria-label="Уменьшить количество">-</button>
-            <input id="qtyInput" type="number" min="1" value="1">
-            <button id="qtyPlus" aria-label="Увеличить количество">+</button>
-          </div>
-          <button class="btn btn--primary" id="addToCart">В корзину</button>
-          <button class="btn btn--ghost fav-btn fav-btn--main" aria-label="Добавить в избранное"><i class="bi bi-heart"></i></button>
+      <div class="product-facts" id="productFacts"></div>
+
+      <div class="buy-row">
+        <div class="qty" aria-label="Количество">
+          <button id="qtyMinus" type="button" aria-label="Уменьшить"><i class="bi bi-dash"></i></button>
+          <input id="qtyInput" type="number" min="1" value="1" aria-label="Количество">
+          <button id="qtyPlus" type="button" aria-label="Увеличить"><i class="bi bi-plus"></i></button>
         </div>
+        <button class="btn btn--primary buy-row__add" id="addToCart" type="button">
+          <i class="bi bi-bag-plus" aria-hidden="true"></i>
+          <span>В корзину</span>
+        </button>
+        <button class="buy-row__fav fav-btn fav-btn--main" type="button" aria-label="Добавить в избранное">
+          <i class="bi bi-heart"></i>
+        </button>
+      </div>
 
-        <ul class="highlights">
-          <li><i class="bi bi-check2-circle"></i> Плотная бумага 80 г/м2, не просвечивает</li>
-          <li><i class="bi bi-check2-circle"></i> Ляссе и закругленные уголки</li>
-          <li><i class="bi bi-check2-circle"></i> Доставка: завтра или самовывоз сегодня</li>
-        </ul>
+      <ul class="product-highlights">
+        <li><i class="bi bi-truck" aria-hidden="true"></i> Доставка завтра или самовывоз сегодня</li>
+        <li><i class="bi bi-shield-check" aria-hidden="true"></i> Гарантия магазина и возврат в 14 дней</li>
+        <li><i class="bi bi-patch-check" aria-hidden="true"></i> Только оригинальная продукция</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="product-section reveal">
+    <div class="tabs" role="tablist">
+      <button class="tab is-active" data-tab="specs" role="tab" type="button">
+        <i class="bi bi-list-check" aria-hidden="true"></i>
+        <span>Характеристики</span>
+      </button>
+      <button class="tab" data-tab="delivery" role="tab" type="button">
+        <i class="bi bi-truck" aria-hidden="true"></i>
+        <span>Доставка и оплата</span>
+      </button>
+    </div>
+
+    <div class="tab-panels">
+      <article class="tab-panel is-active" id="specs" role="tabpanel">
+        <div class="spec-grid" id="specsGrid">
+          <p class="tab-panel__note">Характеристики появятся после загрузки товара.</p>
+        </div>
       </article>
-    </section>
 
-    <section class="details">
-      <div class="tabs" role="tablist">
-        <button class="tab is-active" data-tab="specs" role="tab">Характеристики</button>
-        <button class="tab" data-tab="delivery" role="tab">Доставка и оплата</button>
-      </div>
-
-      <div class="tab-panels">
-        <article class="panel is-active" id="specs" role="tabpanel">
-          <div class="spec-grid" id="specsGrid">
-            <div><span>Бренд</span><strong>Paperly</strong></div>
-            <div><span>Формат</span><strong>A5</strong></div>
-            <div><span>Количество страниц</span><strong>176</strong></div>
-            <div><span>Тип крепления</span><strong>Книжный блок</strong></div>
-            <div><span>Материал обложки</span><strong>Экокожа</strong></div>
-            <div><span>Страна производства</span><strong>Россия</strong></div>
+      <article class="tab-panel" id="delivery" role="tabpanel">
+        <div class="delivery-grid">
+          <div class="delivery-card">
+            <div class="delivery-card__icon delivery-card__icon--teal"><i class="bi bi-house" aria-hidden="true"></i></div>
+            <div>
+              <h4>Курьером по городу</h4>
+              <p>1–2 дня, от 290 ₽. Бесплатно при заказе от 2&nbsp;500 ₽.</p>
+            </div>
           </div>
-        </article>
-
-        <article class="panel" id="delivery" role="tabpanel">
-          <ul class="delivery-list">
-            <li>Курьером по городу: 1 день, от 290 Руб.</li>
-            <li>Самовывоз: сегодня из 8 пунктов выдачи</li>
-            <li>Оплата: картой онлайн, по счету для юрлиц, наличными при получении</li>
-          </ul>
-        </article>
-      </div>
-    </section>
-
-    <section class="reviews" id="reviews">
-      <div class="section-head">
-        <h2>Отзывы покупателей</h2>
-      </div>
-
-      <div class="reviews-layout">
-        <div class="reviews-list" id="reviewsList">
-          <article class="review-card">
-            <div class="review-card__head">
-              <strong>Анна П.</strong>
-              <span>5/5</span>
+          <div class="delivery-card">
+            <div class="delivery-card__icon delivery-card__icon--amber"><i class="bi bi-shop" aria-hidden="true"></i></div>
+            <div>
+              <h4>Самовывоз</h4>
+              <p>Сегодня бесплатно из одного из {{ pickup_count|default:'наших' }} пунктов выдачи.</p>
             </div>
-            <p>Очень удобный ежедневник. Бумага плотная, чернила не просвечивают, обложка выглядит дорого.</p>
-            <time datetime="2026-02-14">14 февраля 2026</time>
-          </article>
-          <article class="review-card">
-            <div class="review-card__head">
-              <strong>Игорь С.</strong>
-              <span>4/5</span>
+          </div>
+          <div class="delivery-card">
+            <div class="delivery-card__icon delivery-card__icon--indigo"><i class="bi bi-credit-card" aria-hidden="true"></i></div>
+            <div>
+              <h4>Оплата</h4>
+              <p>Картой онлайн, СБП, по счёту для юрлиц или при получении.</p>
             </div>
-            <p>Для офиса отличный вариант. Хотелось бы больше цветов в наличии, но качество супер.</p>
-            <time datetime="2026-01-28">28 января 2026</time>
-          </article>
+          </div>
+          <div class="delivery-card">
+            <div class="delivery-card__icon delivery-card__icon--rose"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></div>
+            <div>
+              <h4>Возврат</h4>
+              <p>14 дней на возврат товара надлежащего качества.</p>
+            </div>
+          </div>
         </div>
+      </article>
+    </div>
+  </section>
 
-        {% if request.user.is_authenticated %}
-        <form class="review-form" id="reviewForm">
-          <h3>Написать отзыв</h3>
-          <label>
-            Оценка
-            <select id="reviewRating" required>
-              <option value="5">5 — Отлично</option>
-              <option value="4">4 — Хорошо</option>
-              <option value="3">3 — Нормально</option>
-              <option value="2">2 — Слабо</option>
-              <option value="1">1 — Плохо</option>
-            </select>
-          </label>
-          <label>
-            Текст отзыва
-            <textarea id="reviewText" rows="4" required placeholder="Расскажите о вашем опыте использования товара"></textarea>
-          </label>
-          <button class="btn btn--primary review-submit" type="submit">Отправить отзыв</button>
-        </form>
-        {% else %}
-        <div class="review-auth" id="reviewAuthNotice">
-          <i class="bi bi-lock"></i>
-          <h3>Отзывы доступны только авторизованным</h3>
-          <p>Войдите в аккаунт, чтобы оставить отзыв о товаре.</p>
-          <a href="{% url 'auth' %}" class="btn btn--primary">Войти</a>
-        </div>
-        {% endif %}
+  <section class="product-section reveal" id="reviews">
+    <header class="product-section__head">
+      <p class="eyebrow">Отзывы</p>
+      <h2>Мнение покупателей</h2>
+    </header>
+
+    <div class="reviews-layout">
+      <div class="reviews-list" id="reviewsList">
+        <p class="reviews-empty" id="reviewsEmpty">Пока нет отзывов — станьте первым.</p>
       </div>
-    </section>
-  </main>
+
+      {% if request.user.is_authenticated %}
+      <form class="review-form" id="reviewForm" novalidate>
+        {% csrf_token %}
+        <h3>Написать отзыв</h3>
+        <label class="review-form__row">
+          <span>Оценка</span>
+          <select id="reviewRating" required>
+            <option value="5">★★★★★ — Отлично</option>
+            <option value="4">★★★★☆ — Хорошо</option>
+            <option value="3">★★★☆☆ — Нормально</option>
+            <option value="2">★★☆☆☆ — Слабо</option>
+            <option value="1">★☆☆☆☆ — Плохо</option>
+          </select>
+        </label>
+        <label class="review-form__row">
+          <span>Текст отзыва</span>
+          <textarea id="reviewText" rows="5" required placeholder="Расскажите о вашем опыте использования товара"></textarea>
+        </label>
+        <button class="btn btn--primary review-form__submit" type="submit">
+          <i class="bi bi-send" aria-hidden="true"></i>
+          <span>Отправить отзыв</span>
+        </button>
+      </form>
+      {% else %}
+      <div class="review-auth">
+        <div class="review-auth__icon"><i class="bi bi-lock" aria-hidden="true"></i></div>
+        <h3>Отзывы только для авторизованных</h3>
+        <p>Войдите в аккаунт, чтобы поделиться впечатлением о товаре.</p>
+        <a href="{% url 'auth' %}" class="btn btn--primary">
+          <i class="bi bi-person" aria-hidden="true"></i>
+          <span>Войти</span>
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+</div>
 {% endblock %}
 
 {% block page_js %}

@@ -1,19 +1,9 @@
 ﻿document.addEventListener("DOMContentLoaded", () => {
-  const cartCount = document.getElementById("cartCount");
+  const { escapeHtml, apiJson, unwrapList } = window.paperly;
+  window.paperly.renderCartCount();
+
   const brandsGrid = document.getElementById("brandsGrid");
   const brandsEmpty = document.getElementById("brandsEmpty");
-
-  let count = Number(localStorage.getItem("paperly_cart_count") || 0);
-  cartCount.textContent = String(count);
-
-  function escapeHtml(value) {
-    return String(value)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
-  }
 
   function renderBrands(rows) {
     if (!rows.length) {
@@ -55,16 +45,8 @@
 
   async function loadBrands() {
     try {
-      const response = await fetch("/api/brands/");
-      if (!response.ok) {
-        brandsGrid.innerHTML = "";
-        brandsEmpty.hidden = false;
-        return;
-      }
-
-      const payload = await response.json();
-      const rows = Array.isArray(payload) ? payload : payload.results || [];
-      renderBrands(rows);
+      const payload = await apiJson("/api/brands/");
+      renderBrands(unwrapList(payload));
     } catch (error) {
       console.error("Brands API error", error);
       brandsGrid.innerHTML = "";

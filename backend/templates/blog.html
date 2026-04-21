@@ -1,60 +1,272 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Новости и блог{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — {% if blog_post %}{{ blog_post.title }}{% else %}Новости и блог{% endif %}{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/blog.css' %}">
 {% endblock %}
 
+{% block page_js %}
+{% if blog_post %}<script src="{% static 'js/blog-detail.js' %}" defer></script>{% endif %}
+{% endblock %}
+
 {% block content %}
-<main class="container page">
-  <div class="blog-head">
-    <div>
-      <h1>Новости и блог</h1>
-      <p class="lead">Полезные статьи для выбора канцелярии, учебы и офиса.</p>
-    </div>
+<div class="container page blog-page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
     {% if blog_post %}
-    <a class="blog-back" href="{% url 'blog' %}">Вернуться к статьям</a>
+      <a href="{% url 'blog' %}">Блог</a>
+      <span>/</span>
+      <span>{{ blog_post.title|truncatechars:48 }}</span>
+    {% else %}
+      <span>Блог</span>
     {% endif %}
   </div>
 
   {% if blog_post %}
-  <article class="blog-detail">
-    {% if blog_post.cover_url %}
-    <div class="blog-detail__cover" style="background-image: url('{{ blog_post.cover_url }}')"></div>
-    {% endif %}
-    <div class="blog-detail__meta">
-      {% if blog_post.published_at %}Опубликовано {{ blog_post.published_at|date:"d E Y" }}{% endif %}
+  {# ================= DETAIL VIEW ================= #}
+  <div class="blog-progress" id="blogProgress" aria-hidden="true"><div class="blog-progress__bar"></div></div>
+
+  <div class="blog-back-bar">
+    <a class="btn btn--ghost" href="{% url 'blog' %}">
+      <i class="bi bi-arrow-left" aria-hidden="true"></i>
+      <span>Все статьи</span>
+    </a>
+  </div>
+
+  <article class="blog-detail reveal" itemscope itemtype="https://schema.org/BlogPosting">
+    {% if blog_post.display_cover_url %}
+    <div class="blog-detail__cover" style="background-image: url('{{ blog_post.display_cover_url }}')">
+      <div class="blog-detail__cover-overlay" aria-hidden="true"></div>
     </div>
-    <h2>{{ blog_post.title }}</h2>
-    <div class="blog-detail__content">{{ blog_post.content|linebreaksbr }}</div>
-  </article>
-  {% else %}
-  <section class="promo-grid" id="blogGrid" aria-live="polite">
-    {% if blog_posts %}
-      {% for post in blog_posts %}
-      <article class="promo-card">
-        {% if post.published_at %}
-        <span class="promo-card__meta">{{ post.published_at|date:"d E Y" }}</span>
-        {% endif %}
-        <h2><a href="{% url 'blog' %}?slug={{ post.slug }}">{{ post.title }}</a></h2>
-        <p>{{ post.excerpt|default:post.content|truncatechars:180 }}</p>
-        <a href="{% url 'blog' %}?slug={{ post.slug }}">Читать статью</a>
-      </article>
-      {% endfor %}
     {% else %}
-      <p class="empty-state">Пока нет публикаций</p>
+    <div class="blog-detail__cover blog-detail__cover--placeholder" aria-hidden="true">
+      <i class="bi bi-journal-text"></i>
+    </div>
     {% endif %}
+    <div class="blog-detail__body">
+      <div class="blog-detail__meta">
+        {% if blog_post.category %}
+        <a class="blog-tag" href="{% url 'blog' %}?category={{ blog_post.category.slug }}">
+          <i class="bi bi-bookmark" aria-hidden="true"></i> {{ blog_post.category.title }}
+        </a>
+        {% endif %}
+        {% if blog_post.published_at %}
+        <span class="blog-detail__date">
+          <i class="bi bi-calendar3" aria-hidden="true"></i>
+          <time datetime="{{ blog_post.published_at|date:'c' }}" itemprop="datePublished">{{ blog_post.published_at|date:"d E Y" }}</time>
+        </span>
+        {% endif %}
+        {% if reading_minutes %}
+        <span class="blog-detail__reading">
+          <i class="bi bi-clock" aria-hidden="true"></i> {{ reading_minutes }} мин.
+        </span>
+        {% endif %}
+      </div>
+      <h1 class="blog-detail__title" itemprop="headline">{{ blog_post.title }}</h1>
+      {% if blog_post.excerpt %}
+      <p class="blog-detail__lead" itemprop="description">{{ blog_post.excerpt }}</p>
+      {% endif %}
+      <div class="blog-detail__content" itemprop="articleBody">{{ blog_post.content|linebreaks }}</div>
+
+      <footer class="blog-detail__footer">
+        <div class="blog-share">
+          <p class="blog-share__title">Понравилась статья? Поделитесь.</p>
+          <div class="blog-share__buttons">
+            <button class="blog-share__btn blog-share__btn--copy" id="blogShareCopy" type="button" data-url="{{ request.build_absolute_uri }}">
+              <i class="bi bi-link-45deg" aria-hidden="true"></i>
+              <span>Скопировать ссылку</span>
+            </button>
+            <a class="blog-share__btn blog-share__btn--tg" href="https://t.me/share/url?url={{ request.build_absolute_uri|urlencode }}&text={{ blog_post.title|urlencode }}" target="_blank" rel="noopener noreferrer">
+              <i class="bi bi-telegram" aria-hidden="true"></i>
+              <span>Telegram</span>
+            </a>
+            <a class="blog-share__btn blog-share__btn--vk" href="https://vk.com/share.php?url={{ request.build_absolute_uri|urlencode }}&title={{ blog_post.title|urlencode }}" target="_blank" rel="noopener noreferrer">
+              <i class="bi bi-share-fill" aria-hidden="true"></i>
+              <span>ВКонтакте</span>
+            </a>
+            <a class="blog-share__btn blog-share__btn--email" href="mailto:?subject={{ blog_post.title|urlencode }}&body={{ request.build_absolute_uri|urlencode }}">
+              <i class="bi bi-envelope" aria-hidden="true"></i>
+              <span>Email</span>
+            </a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </article>
+
+  <aside class="blog-cta reveal">
+    <div class="blog-cta__content">
+      <p class="eyebrow eyebrow--on-dark">Подбор товара</p>
+      <h2>Готовы применить на практике?</h2>
+      <p>Откройте каталог — мы собрали проверенные бренды и инструменты для задач из статьи.</p>
+      <a class="btn btn--on-dark" href="{% url 'catalog' %}{% if blog_post.category %}?category={{ blog_post.category.slug }}{% endif %}">
+        <span>Перейти в каталог</span>
+        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </a>
+    </div>
+    <div class="blog-cta__visual" aria-hidden="true">
+      <i class="bi bi-journal-bookmark"></i>
+      <i class="bi bi-palette"></i>
+      <i class="bi bi-pencil"></i>
+    </div>
+  </aside>
+
+  {% if prev_post or next_post %}
+  <nav class="blog-pager" aria-label="Навигация по статьям">
+    {% if prev_post %}
+    <a class="blog-pager__item blog-pager__item--prev" href="{% url 'blog' %}?slug={{ prev_post.slug }}">
+      <i class="bi bi-arrow-left" aria-hidden="true"></i>
+      <span>
+        <small>Предыдущая</small>
+        <strong>{{ prev_post.title|truncatechars:60 }}</strong>
+      </span>
+    </a>
+    {% else %}<span></span>{% endif %}
+    {% if next_post %}
+    <a class="blog-pager__item blog-pager__item--next" href="{% url 'blog' %}?slug={{ next_post.slug }}">
+      <span>
+        <small>Следующая</small>
+        <strong>{{ next_post.title|truncatechars:60 }}</strong>
+      </span>
+      <i class="bi bi-arrow-right" aria-hidden="true"></i>
+    </a>
+    {% else %}<span></span>{% endif %}
+  </nav>
+  {% endif %}
+
+  {% if related_posts %}
+  <section class="blog-section reveal">
+    <header class="blog-section__head">
+      <p class="eyebrow">Читайте также</p>
+      <h2>Похожие статьи</h2>
+    </header>
+    <div class="blog-grid">
+      {% for post in related_posts %}
+      {% include "components/_blog_card.html" %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% else %}
+  {# ================= LIST VIEW ================= #}
+  <section class="page-hero page-hero--narrow blog-hero reveal">
+    <div class="page-hero__bg" aria-hidden="true">
+      <span class="blob blob--teal"></span>
+      <span class="blob blob--amber"></span>
+    </div>
+    <div class="page-hero__content">
+      <p class="eyebrow">Блог {{ site.site_name|default:"Paperly" }}</p>
+      <h1>Новости и <span class="accent">полезные статьи</span></h1>
+      <p class="page-hero__lead">Советы по выбору канцелярии, обзоры новинок и гайды по оформлению рабочего места.</p>
+
+      <form class="blog-search" method="get" action="{% url 'blog' %}" role="search">
+        {% if active_category %}<input type="hidden" name="category" value="{{ active_category }}">{% endif %}
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input type="search" name="q" value="{{ blog_search_query }}" placeholder="Поиск по статьям..." aria-label="Поиск по блогу">
+        <button class="btn btn--primary" type="submit">Найти</button>
+      </form>
+    </div>
   </section>
 
-  {% if not blog_posts %}
-  <div class="empty">
-    <h2>Пока нет публикаций</h2>
-    <p>Мы скоро добавим полезные статьи о выборе канцелярии.</p>
+  {% if blog_categories %}
+  <div class="blog-categories reveal" role="tablist" aria-label="Категории блога">
+    <a href="{% url 'blog' %}{% if blog_search_query %}?q={{ blog_search_query }}{% endif %}"
+       class="blog-cat {% if not active_category %}is-active{% endif %}">
+      <span>Все</span>
+      <span class="blog-cat__count">{{ blog_total_count }}</span>
+    </a>
+    {% for cat in blog_categories %}
+    <a href="{% url 'blog' %}?category={{ cat.slug }}{% if blog_search_query %}&q={{ blog_search_query }}{% endif %}"
+       class="blog-cat {% if active_category == cat.slug %}is-active{% endif %}">
+      <span>{{ cat.title }}</span>
+      <span class="blog-cat__count">{{ cat.count }}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if blog_search_query %}
+  <p class="blog-results-note">
+    По запросу
+    <strong>«{{ blog_search_query }}»</strong>
+    {% if blog_posts %}найдено {{ blog_posts|length }}{% else %}ничего не найдено{% endif %}.
+    <a href="{% url 'blog' %}{% if active_category %}?category={{ active_category }}{% endif %}">Сбросить поиск</a>
+  </p>
+  {% endif %}
+
+  {% if blog_posts %}
+  {# Featured post = first, если нет поиска и нет фильтра категории #}
+  {% if not blog_search_query and not active_category and blog_posts|length > 2 %}
+  {% with featured=blog_posts.0 %}
+  <a class="blog-featured reveal" href="{% url 'blog' %}?slug={{ featured.slug }}">
+    {% if featured.display_cover_url %}
+    <div class="blog-featured__cover" style="background-image: url('{{ featured.display_cover_url }}')"></div>
+    {% else %}
+    <div class="blog-featured__cover blog-featured__cover--placeholder" aria-hidden="true">
+      <i class="bi bi-journal-richtext"></i>
+    </div>
+    {% endif %}
+    <div class="blog-featured__body">
+      <div class="blog-featured__meta">
+        <span class="blog-featured__badge">Свежее</span>
+        {% if featured.category %}<span class="blog-tag">{{ featured.category.title }}</span>{% endif %}
+        {% if featured.published_at %}
+        <span><i class="bi bi-calendar3" aria-hidden="true"></i> {{ featured.published_at|date:"d E Y" }}</span>
+        {% endif %}
+      </div>
+      <h2>{{ featured.title }}</h2>
+      {% if featured.excerpt or featured.content %}
+      <p>{{ featured.excerpt|default:featured.content|truncatechars:220 }}</p>
+      {% endif %}
+      <span class="blog-featured__link">
+        Читать статью <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </span>
+    </div>
+  </a>
+  {% endwith %}
+  {% endif %}
+
+  <section class="blog-grid reveal">
+    {% for post in blog_posts %}
+      {% if forloop.first and not blog_search_query and not active_category and blog_posts|length > 2 %}{# skip — shown as featured #}{% else %}
+        {% include "components/_blog_card.html" %}
+      {% endif %}
+    {% endfor %}
+  </section>
+  {% else %}
+  <div class="state-empty">
+    <div class="state-empty__visual" aria-hidden="true">
+      <span class="state-empty__orb state-empty__orb--a"></span>
+      <span class="state-empty__orb state-empty__orb--b"></span>
+      <div class="state-empty__icon"><i class="bi bi-journal-text"></i></div>
+    </div>
+    <h2>{% if blog_search_query or active_category %}Ничего не найдено{% else %}Пока нет публикаций{% endif %}</h2>
+    <p>
+      {% if blog_search_query or active_category %}
+        Попробуйте сбросить фильтры или поискать по другому запросу.
+      {% else %}
+        Мы скоро добавим полезные статьи о выборе канцелярии, обзоры новинок и гайды по оформлению рабочего места.
+      {% endif %}
+    </p>
+    <div class="state-empty__actions">
+      {% if blog_search_query or active_category %}
+      <a href="{% url 'blog' %}" class="btn btn--primary">
+        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+        <span>Показать все статьи</span>
+      </a>
+      {% else %}
+      <a href="{% url 'catalog' %}" class="btn btn--primary">
+        <i class="bi bi-grid" aria-hidden="true"></i>
+        <span>В каталог</span>
+      </a>
+      {% endif %}
+    </div>
   </div>
   {% endif %}
   {% endif %}
-</main>
+</div>
 {% endblock %}
-

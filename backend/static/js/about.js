@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     event.preventDefault();
     const query = searchForm.querySelector("input")?.value.trim();
     if (query) {
-      alert(`Поиск: ${query}`);
+      window.location.href = `/catalog/?q=${encodeURIComponent(query)}`;
     }
   });
 

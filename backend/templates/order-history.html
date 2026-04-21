@@ -1,59 +1,155 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — История заказов{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — История заказов{% endblock %}
 
 {% block page_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
 <link rel="stylesheet" href="{% static 'css/order-history.css' %}">
 {% endblock %}
 
 {% block content %}
-<main class="container page">
-    <div class="breadcrumbs">
-      <a href="{% url 'home' %}">Главная</a>
-      <span>/</span>
-      <a href="{% url 'profile' %}">Профиль</a>
-      <span>/</span>
-      <span>История заказов</span>
-    </div>
+<div class="container page profile-page orders-page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <a href="{% url 'profile' %}">Кабинет</a>
+    <span>/</span>
+    <span>История заказов</span>
+  </div>
 
-    <section class="layout">
-      <aside class="sidebar">
+  <section class="profile-layout">
+    <aside class="profile-sidebar">
+      <div class="profile-sidebar__head">
         <p class="eyebrow">Личный кабинет</p>
-        <h1>История заказов</h1>
-        <ul>
-          {% with current=request.resolver_match.url_name %}
-            <li class="{% if current == 'profile' %}is-active{% endif %}"><a href="{% url 'profile' %}">Профиль</a></li>
-            <li class="{% if current == 'order_history' %}is-active{% endif %}"><a href="{% url 'order_history' %}">История заказов</a></li>
-            <li class="{% if current == 'favorites' %}is-active{% endif %}"><a href="{% url 'favorites' %}">Избранное</a></li>
-          {% endwith %}
-        </ul>
-        {% if request.user.is_authenticated %}
-          <form class="logout-form" method="post" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button class="btn btn--ghost btn--logout" type="submit">
-              <i class="bi bi-box-arrow-right"></i>
-              <span>Выйти из аккаунта</span>
-            </button>
-          </form>        
-        {% endif %}
-      </aside>
-
-      <section class="content">
-        <div class="orders" id="ordersList" hidden></div>
-
-        <div class="empty" id="ordersEmpty" hidden>
-          <i class="bi bi-receipt"></i>
-          <h2>Заказов пока нет</h2>
-          <p>Когда вы оформите покупки, они появятся в истории заказов.</p>
-          <a href="{% url 'catalog' %}" class="btn btn--primary">Перейти в каталог</a>
+        <div class="user-card">
+          <div class="user-card__avatar" aria-hidden="true">{{ profile_initials|default:'PL' }}</div>
+          <div class="user-card__body">
+            <strong>
+              {% if request.user.first_name or request.user.last_name %}
+                {{ request.user.first_name }} {{ request.user.last_name }}
+              {% else %}
+                {{ request.user.get_username }}
+              {% endif %}
+            </strong>
+            <span>{{ request.user.email|default:"" }}</span>
+          </div>
         </div>
-      </section>
+      </div>
+
+      <nav class="profile-nav" aria-label="Разделы кабинета">
+        {% with current=request.resolver_match.url_name %}
+        <a class="profile-nav__item {% if current == 'profile' %}is-active{% endif %}" href="{% url 'profile' %}">
+          <i class="bi bi-person-vcard" aria-hidden="true"></i>
+          <span>Профиль</span>
+        </a>
+        <a class="profile-nav__item {% if current == 'order_history' %}is-active{% endif %}" href="{% url 'order_history' %}">
+          <i class="bi bi-receipt" aria-hidden="true"></i>
+          <span>История заказов</span>
+        </a>
+        {% endwith %}
+      </nav>
+
+      {% if request.user.is_authenticated %}
+      <form class="logout-form" method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="btn-logout" type="submit">
+          <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+          <span>Выйти из аккаунта</span>
+        </button>
+      </form>
+      {% endif %}
+    </aside>
+
+    <section class="profile-content">
+      <header class="orders-header">
+        <div>
+          <p class="eyebrow">История</p>
+          <h1>Мои заказы</h1>
+          <p class="orders-header__lead">Следите за статусами, скачивайте чеки и повторяйте удачные покупки.</p>
+        </div>
+        <div class="orders-stats" id="ordersStats" hidden>
+          <div class="orders-stat">
+            <span class="orders-stat__label">Всего</span>
+            <strong id="ordersStatTotal">0</strong>
+          </div>
+          <div class="orders-stat">
+            <span class="orders-stat__label">Завершено</span>
+            <strong id="ordersStatDone">0</strong>
+          </div>
+          <div class="orders-stat">
+            <span class="orders-stat__label">Сумма</span>
+            <strong id="ordersStatSum">—</strong>
+          </div>
+        </div>
+      </header>
+
+      <div class="orders-filters" id="ordersFilters" hidden>
+        <button class="orders-filter is-active" type="button" data-filter="all">
+          <span>Все</span><span class="orders-filter__count" data-count-for="all">0</span>
+        </button>
+        <button class="orders-filter" type="button" data-filter="active">
+          <span>В работе</span><span class="orders-filter__count" data-count-for="active">0</span>
+        </button>
+        <button class="orders-filter" type="button" data-filter="done">
+          <span>Завершённые</span><span class="orders-filter__count" data-count-for="done">0</span>
+        </button>
+        <button class="orders-filter" type="button" data-filter="canceled">
+          <span>Отменённые</span><span class="orders-filter__count" data-count-for="canceled">0</span>
+        </button>
+      </div>
+
+      <div class="orders" id="ordersList" aria-live="polite">
+        <div class="order-skeleton">
+          <div class="order-skeleton__head"></div>
+          <div class="order-skeleton__body"></div>
+        </div>
+        <div class="order-skeleton">
+          <div class="order-skeleton__head"></div>
+          <div class="order-skeleton__body"></div>
+        </div>
+      </div>
+
+      <div class="state-empty" id="ordersEmpty" hidden>
+        <div class="state-empty__visual" aria-hidden="true">
+          <span class="state-empty__orb state-empty__orb--a"></span>
+          <span class="state-empty__orb state-empty__orb--b"></span>
+          <div class="state-empty__icon"><i class="bi bi-receipt"></i></div>
+        </div>
+        <h2>Заказов пока нет</h2>
+        <p>Когда вы оформите покупки, они появятся здесь — с полным составом, суммой и статусом доставки.</p>
+        <div class="state-empty__actions">
+          <a href="{% url 'catalog' %}" class="btn btn--primary">
+            <i class="bi bi-grid" aria-hidden="true"></i>
+            <span>Перейти в каталог</span>
+          </a>
+          <a href="{% url 'favorites' %}" class="btn btn--ghost">
+            <i class="bi bi-heart" aria-hidden="true"></i>
+            <span>Избранное</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="state-empty" id="ordersFilterEmpty" hidden>
+        <div class="state-empty__visual" aria-hidden="true">
+          <span class="state-empty__orb state-empty__orb--a"></span>
+          <span class="state-empty__orb state-empty__orb--b"></span>
+          <div class="state-empty__icon"><i class="bi bi-funnel"></i></div>
+        </div>
+        <h2>По этому фильтру заказов нет</h2>
+        <p>Попробуйте другой фильтр или посмотрите все заказы.</p>
+        <div class="state-empty__actions">
+          <button class="btn btn--primary" type="button" id="ordersFilterReset">
+            <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+            <span>Показать все</span>
+          </button>
+        </div>
+      </div>
     </section>
-  </main>
+  </section>
+</div>
 {% endblock %}
 
 {% block page_js %}
 <script src="{% static 'js/order-history.js' %}"></script>
 {% endblock %}
-

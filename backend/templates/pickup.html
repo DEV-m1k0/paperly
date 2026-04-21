@@ -1,40 +1,107 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Пункты самовывоза{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — {{ page_title|default:"Пункты самовывоза" }}{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/pickup.css' %}">
 {% endblock %}
 
 {% block content %}
-<main class="container page">
+<div class="container page">
     <div class="breadcrumbs">
       <a href="{% url 'home' %}">Главная</a>
       <span>/</span>
       <span>Пункты самовывоза</span>
     </div>
 
-    <section class="hero">
-      <div>
+    {% if page_content %}
+      {{ page_content|safe }}
+    {% else %}
+    <section class="page-hero reveal">
+      <div class="page-hero__bg" aria-hidden="true">
+        <span class="blob blob--teal"></span>
+        <span class="blob blob--amber"></span>
+      </div>
+
+      <div class="page-hero__content">
         <p class="eyebrow">ПВЗ и шоурумы</p>
-        <h1>Пункты самовывоза Paperly</h1>
-        <p class="lead">Выберите ближайший пункт на карте или в списке. Большинство заказов доступно к получению в день комплектации.</p>
+        <h1>Пункты <span class="accent">самовывоза</span> {{ site.site_name|default:"Paperly" }}</h1>
+        <p class="page-hero__lead">
+          Выберите ближайший пункт выдачи на карте или в списке. Большинство заказов доступно к получению в день комплектации.
+        </p>
+        <div class="page-hero__actions">
+          <a class="btn btn--primary" href="{% url 'catalog' %}">
+            <i class="bi bi-grid" aria-hidden="true"></i>
+            <span>В каталог</span>
+          </a>
+          <a class="btn btn--ghost" href="{% url 'delivery' %}">
+            <i class="bi bi-truck" aria-hidden="true"></i>
+            <span>Доставка и оплата</span>
+          </a>
+        </div>
       </div>
-      <div class="hero-note">
-        <h3><i class="bi bi-clock-history"></i> Срок хранения</h3>
-        <p>Заказ хранится в пункте самовывоза 5 календарных дней, затем автоматически отменяется.</p>
-      </div>
+
+      <aside class="page-hero__side">
+        <div class="page-hero__side-head">
+          <i class="bi bi-clock-history" aria-hidden="true"></i>
+          <h3>Срок хранения</h3>
+        </div>
+        <p>Заказ ждёт вас 5 календарных дней. Если не забрали — возвращаем на склад автоматически.</p>
+        <ul>
+          <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Бесплатный самовывоз</li>
+          <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Уведомление по email и телефону</li>
+          <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Возможность переноса срока</li>
+        </ul>
+      </aside>
     </section>
 
-    <section class="layout">
-      <aside class="pickup-list" id="pickupList"></aside>
+    <section class="page-stats reveal" aria-label="Цифры">
+      {% if pickup_points %}
+      <article class="page-stat">
+        <strong>{{ pickup_points|length }}</strong>
+        <span>пунктов выдачи</span>
+      </article>
+      {% endif %}
+      <article class="page-stat">
+        <strong>5 дн.</strong>
+        <span>бесплатное хранение</span>
+      </article>
+      <article class="page-stat">
+        <strong>0 ₽</strong>
+        <span>стоимость самовывоза</span>
+      </article>
+      <article class="page-stat">
+        <strong>1–2 дн.</strong>
+        <span>готовность заказа</span>
+      </article>
+    </section>
+    {% endif %}
 
+    <section class="pickup-layout reveal">
+      <aside class="pickup-panel">
+        <div class="pickup-panel__head">
+          <label class="pickup-search">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search" id="pickupSearch" placeholder="Улица, район, ориентир..." aria-label="Поиск пункта выдачи">
+          </label>
+          <div class="pickup-panel__meta">
+            <span id="pickupCount" class="pickup-panel__count">Загрузка...</span>
+            <button class="pickup-panel__reset" id="pickupReset" type="button" hidden>
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+              <span>Сбросить</span>
+            </button>
+          </div>
+        </div>
+        <div class="pickup-list" id="pickupList">
+          <p class="pickup-skeleton">Загрузка...</p>
+        </div>
+      </aside>
       <section class="map-wrap">
         <div id="pickupMap" class="map"></div>
       </section>
     </section>
-  </main>
+  </div>
 {% endblock %}
 
 {% block page_js %}

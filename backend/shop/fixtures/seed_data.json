@@ -1333,59 +1333,6 @@
   },
 
   {
-    "model": "shop.giftcertificate",
-    "pk": 1,
-    "fields": {
-      "title": "Подарочный сертификат 500 ₽",
-      "slug": "gift-500",
-      "nominal": "500.00",
-      "description": "Электронный подарочный сертификат на 500 рублей. Можно использовать при оплате любого товара в каталоге, срок действия 12 месяцев.",
-      "is_active": true,
-      "created_at": "2026-01-01T00:00:00Z",
-      "updated_at": "2026-01-01T00:00:00Z"
-    }
-  },
-  {
-    "model": "shop.giftcertificate",
-    "pk": 2,
-    "fields": {
-      "title": "Подарочный сертификат 1000 ₽",
-      "slug": "gift-1000",
-      "nominal": "1000.00",
-      "description": "Электронный подарочный сертификат на 1000 рублей. Подходит для покупки нескольких товаров, действует 12 месяцев с момента покупки.",
-      "is_active": true,
-      "created_at": "2026-01-01T00:00:00Z",
-      "updated_at": "2026-01-01T00:00:00Z"
-    }
-  },
-  {
-    "model": "shop.giftcertificate",
-    "pk": 3,
-    "fields": {
-      "title": "Подарочный сертификат 3000 ₽",
-      "slug": "gift-3000",
-      "nominal": "3000.00",
-      "description": "Электронный подарочный сертификат на 3000 рублей. Идеален для крупной закупки канцелярии, можно использовать полностью или частями в течение года.",
-      "is_active": true,
-      "created_at": "2026-01-01T00:00:00Z",
-      "updated_at": "2026-01-01T00:00:00Z"
-    }
-  },
-  {
-    "model": "shop.giftcertificate",
-    "pk": 4,
-    "fields": {
-      "title": "Подарочный сертификат 5000 ₽",
-      "slug": "gift-5000",
-      "nominal": "5000.00",
-      "description": "Электронный подарочный сертификат на 5000 рублей. Подходит для больших закупок, действует 12 месяцев и применяется к любым товарам.",
-      "is_active": true,
-      "created_at": "2026-01-05T00:00:00Z",
-      "updated_at": "2026-01-05T00:00:00Z"
-    }
-  },
-
-  {
     "model": "shop.blogcategory",
     "pk": 1,
     "fields": {
@@ -1486,13 +1433,13 @@
     "pk": 1,
     "fields": {
       "name": "Пункт выдачи «Центральный»",
-      "slug": "punkt-tsentral-msk",
-      "city": "Москва",
-      "address": "ул. Тверская, д. 15, стр. 1",
-      "metro": "Тверская",
-      "latitude": "55.764010",
-      "longitude": "37.605600",
-      "opening_hours": "пн-пт 9:00–21:00, сб-вс 10:00–19:00",
+      "slug": "punkt-tsentralnyy-kursk",
+      "city": "Курск",
+      "address": "ул. Ленина, д. 11",
+      "metro": "",
+      "latitude": "51.730361",
+      "longitude": "36.192647",
+      "opening_hours": "пн-пт 9:00–20:00, сб-вс 10:00–18:00",
       "is_active": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"
@@ -1502,14 +1449,14 @@
     "model": "shop.pickuppoint",
     "pk": 2,
     "fields": {
-      "name": "Пункт выдачи «Южный»",
-      "slug": "punkt-yuzhnyy-msk",
-      "city": "Москва",
-      "address": "Варшавское шоссе, д. 72",
-      "metro": "Нагатинская",
-      "latitude": "55.682500",
-      "longitude": "37.621300",
-      "opening_hours": "пн-пт 10:00–20:00, сб 10:00–17:00",
+      "name": "Пункт выдачи «Северный»",
+      "slug": "punkt-severnyy-kursk",
+      "city": "Курск",
+      "address": "пр-т Победы, д. 44",
+      "metro": "",
+      "latitude": "51.748520",
+      "longitude": "36.186120",
+      "opening_hours": "пн-пт 9:00–20:00, сб 10:00–17:00",
       "is_active": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"
@@ -1519,17 +1466,17 @@
     "model": "shop.pickuppoint",
     "pk": 3,
     "fields": {
-      "name": "Пункт выдачи «Невский»",
-      "slug": "punkt-nevskiy-spb",
-      "city": "Санкт-Петербург",
-      "address": "Невский проспект, д. 100",
-      "metro": "Невский проспект",
-      "latitude": "59.932740",
-      "longitude": "30.350580",
-      "opening_hours": "пн-пт 9:00–20:00, сб 10:00–18:00",
+      "name": "Пункт выдачи «Южный»",
+      "slug": "punkt-yuzhnyy-kursk",
+      "city": "Курск",
+      "address": "ул. Карла Маркса, д. 68",
+      "metro": "",
+      "latitude": "51.719280",
+      "longitude": "36.193340",
+      "opening_hours": "пн-пт 10:00–20:00, сб 10:00–16:00",
       "is_active": true,
-      "created_at": "2026-03-15T00:00:00Z",
-      "updated_at": "2026-03-15T00:00:00Z"
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
     }
   },
 
@@ -1537,11 +1484,11 @@
     "model": "shop.deliverytariff",
     "pk": 1,
     "fields": {
-      "title": "Курьер по Москве",
-      "city": "Москва",
+      "title": "Курьер по Курску",
+      "city": "Курск",
       "delivery_type": "courier",
-      "price": "350.00",
-      "free_from_amount": "3000.00",
+      "price": "250.00",
+      "free_from_amount": "2500.00",
       "eta_min_days": 1,
       "eta_max_days": 2,
       "is_active": true,
@@ -1553,10 +1500,10 @@
     "model": "shop.deliverytariff",
     "pk": 2,
     "fields": {
-      "title": "Экспресс по Москве",
-      "city": "Москва",
+      "title": "Экспресс по Курску",
+      "city": "Курск",
       "delivery_type": "express",
-      "price": "700.00",
+      "price": "490.00",
       "free_from_amount": null,
       "eta_min_days": 1,
       "eta_max_days": 1,
@@ -1569,8 +1516,8 @@
     "model": "shop.deliverytariff",
     "pk": 3,
     "fields": {
-      "title": "Самовывоз Москва",
-      "city": "Москва",
+      "title": "Самовывоз Курск",
+      "city": "Курск",
       "delivery_type": "pickup",
       "price": "0.00",
       "free_from_amount": null,
@@ -1588,7 +1535,7 @@
       "title": "Доставка по России",
       "city": "",
       "delivery_type": "region",
-      "price": "500.00",
+      "price": "450.00",
       "free_from_amount": "5000.00",
       "eta_min_days": 3,
       "eta_max_days": 10,
@@ -1601,16 +1548,16 @@
     "model": "shop.deliverytariff",
     "pk": 5,
     "fields": {
-      "title": "Курьер по СПб",
-      "city": "Санкт-Петербург",
+      "title": "Курьер по Курской области",
+      "city": "Курская область",
       "delivery_type": "courier",
       "price": "350.00",
-      "free_from_amount": "3000.00",
-      "eta_min_days": 1,
-      "eta_max_days": 3,
+      "free_from_amount": "3500.00",
+      "eta_min_days": 2,
+      "eta_max_days": 4,
       "is_active": true,
-      "created_at": "2026-03-15T00:00:00Z",
-      "updated_at": "2026-03-15T00:00:00Z"
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
     }
   },
 
@@ -1647,7 +1594,7 @@
     "fields": {
       "profile": 1,
       "address_type": "shipping",
-      "city": "Москва",
+      "city": "Курск",
       "street": "ул. Ленина, д. 10",
       "entrance": "3",
       "flat_or_office": "45",
@@ -1664,7 +1611,7 @@
     "fields": {
       "profile": 1,
       "address_type": "shipping",
-      "city": "Москва",
+      "city": "Курск",
       "street": "ул. Гагарина, д. 5",
       "entrance": "",
       "flat_or_office": "офис 301",
@@ -1852,7 +1799,7 @@
       "full_name": "Иван Петров",
       "phone": "+79161234567",
       "email": "ivan@example.com",
-      "city": "Москва",
+      "city": "Курск",
       "address": "ул. Ленина, д. 10, кв. 45",
       "comment": "Позвонить за час до доставки",
       "delivery_type": "courier",
@@ -1900,8 +1847,8 @@
       "full_name": "Иван Петров",
       "phone": "+79161234567",
       "email": "ivan@example.com",
-      "city": "Москва",
-      "address": "Самовывоз — Тверская, д. 15",
+      "city": "Курск",
+      "address": "Самовывоз — ул. Ленина, д. 11",
       "comment": "Заберу после обеда",
       "delivery_type": "pickup",
       "payment_type": "cash",
@@ -2159,7 +2106,7 @@
     "model": "shop.wholesalerequest",
     "pk": 2,
     "fields": {
-      "organization_name": "Школа №42 г. Москва",
+      "organization_name": "Школа №42 г. Курск",
       "organization_type": "school",
       "contact_person": "Елена Николаевна Иванова",
       "phone": "+74951234567",
@@ -2239,13 +2186,27 @@
   },
 
   {
+    "model": "shop.sitesetting",
+    "pk": 1,
+    "fields": {
+      "site_name": "Paperly",
+      "tagline": "Канцтовары для школы, офиса и творчества в Курске",
+      "phone": "+7 (4712) 39-00-00",
+      "email": "info@paperly-kursk.ru",
+      "city": "Курск",
+      "address": "г. Курск, ул. Ленина, д. 11, офис 3",
+      "copyright_text": "Все права защищены"
+    }
+  },
+
+  {
     "model": "shop.sitepage",
     "pk": 1,
     "fields": {
       "title": "О магазине",
       "slug": "about",
       "page_type": "about",
-      "content": "# О нас\n\nМы — интернет-магазин тетрадей и канцелярских товаров. Работаем с 2010 года. Прямые поставки от производителей BG, Hatber, Brauberg, ErichKrause и других.\n\n## Наши преимущества\n\n- Низкие цены благодаря прямым контрактам\n- Доставка по всей России\n- Гарантия качества",
+      "content": "<section class=\"hero reveal\">\n  <div>\n    <p class=\"eyebrow\">О компании</p>\n    <h1>Paperly — магазин канцтоваров в Курске</h1>\n    <p class=\"hero__lead\">Мы помогаем жителям Курска и Курской области быстро собирать нужные товары: от тетрадей и ручек до комплексных решений для офисов и учебных центров. Работаем как с розничными покупателями, так и с оптом.</p>\n  </div>\n  <div class=\"hero__card\">\n    <h3>Наша миссия</h3>\n    <p>Сделать покупку канцтоваров в Курске понятной, быстрой и предсказуемой по качеству.</p>\n    <ul>\n      <li><i class=\"bi bi-check2-circle\"></i> Проверенные бренды</li>\n      <li><i class=\"bi bi-check2-circle\"></i> Честные сроки поставки</li>\n      <li><i class=\"bi bi-check2-circle\"></i> Поддержка на всех этапах заказа</li>\n    </ul>\n  </div>\n</section>\n\n<section class=\"stats reveal\">\n  <article><strong>12 000+</strong><span>товаров в каталоге</span></article>\n  <article><strong>8 лет</strong><span>опыта в рынке канцтоваров</span></article>\n  <article><strong>1 200+</strong><span>корпоративных клиентов в Курске</span></article>\n  <article><strong>4.9/5</strong><span>средняя оценка сервиса</span></article>\n</section>\n\n<section class=\"section reveal\">\n  <div class=\"section__head\"><h2>Наши преимущества</h2></div>\n  <div class=\"benefits-grid\">\n    <article><i class=\"bi bi-box-seam\"></i><h3>Широкий ассортимент</h3><p>Полная матрица товаров по категориям и подкатегориям, включая редкие позиции.</p></article>\n    <article><i class=\"bi bi-lightning\"></i><h3>Быстрая отгрузка</h3><p>Большая часть заказов передается в доставку по Курску в течение 24 часов.</p></article>\n    <article><i class=\"bi bi-building\"></i><h3>Экспертиза B2B</h3><p>Работаем с компаниями, школами и вузами Курска и области.</p></article>\n    <article><i class=\"bi bi-shield-check\"></i><h3>Гарантия качества</h3><p>Контроль поставок и прозрачные правила обмена/возврата.</p></article>\n  </div>\n</section>\n\n<section class=\"section reveal\">\n  <div class=\"section__head\"><h2>Опыт и развитие</h2></div>\n  <div class=\"timeline\">\n    <article><span>2018</span><h3>Запуск онлайн-витрины</h3><p>Открыли первые категории бумажной продукции и письменных принадлежностей в Курске.</p></article>\n    <article><span>2020</span><h3>Выход в B2B сегмент</h3><p>Добавили оптовые поставки для офисов, школ и образовательных проектов Курской области.</p></article>\n    <article><span>2023</span><h3>Масштабирование каталога</h3><p>Расширили ассортимент художественных и чертежных товаров.</p></article>\n    <article><span>2026</span><h3>Новая UX-платформа</h3><p>Переработали структуру каталога и карточки товаров для ускорения выбора.</p></article>\n  </div>\n</section>\n\n<section class=\"section section--split reveal\">\n  <article class=\"panel\">\n    <h2>Команда</h2>\n    <p>У нас работают категорийные менеджеры, специалисты по закупкам, логисты и служба клиентского сервиса. Мы регулярно обновляем каталог на основе спроса школ, офисов и творческих студий Курска.</p>\n  </article>\n  <article class=\"panel panel--accent\">\n    <h2>Партнеры</h2>\n    <p>Сотрудничаем с поставщиками и брендами Erich Krause, Brauberg, Maped, Kores и другими производителями канцтоваров.</p>\n  </article>\n</section>",
       "is_published": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"
@@ -2258,7 +2219,7 @@
       "title": "Доставка и оплата",
       "slug": "delivery",
       "page_type": "delivery",
-      "content": "# Доставка\n\n## Москва\n- Курьер: 350 ₽, бесплатно от 3000 ₽\n- Экспресс: 700 ₽\n- Самовывоз: бесплатно\n\n## Регионы\n- СДЭК, Почта России: от 500 ₽, бесплатно от 5000 ₽\n\n# Оплата\n\n- Картой онлайн\n- СБП\n- Наличными при получении\n- Счёт для юридических лиц",
+      "content": "<section class=\"hero\">\n  <div>\n    <p class=\"eyebrow\">Логистика и расчеты</p>\n    <h1>Доставка и оплата в Курске и по России</h1>\n    <p class=\"lead\">Прозрачные тарифы, понятные сроки и отдельные условия для офисов, школ и учебных центров Курска.</p>\n  </div>\n  <div class=\"hero-note\">\n    <h3><i class=\"bi bi-lightning-charge\"></i> Быстрая отгрузка</h3>\n    <p>Заказы, оформленные до 14:00 (МСК), передаем в доставку по Курску в тот же рабочий день.</p>\n  </div>\n</section>\n\n<section class=\"section\">\n  <div class=\"section__head\"><h2>Тарифы и сроки доставки</h2></div>\n  <div class=\"tariff-grid\">\n    <article class=\"tariff-card\">\n      <h3>Курьер по Курску</h3>\n      <ul>\n        <li><span>До 2 500 ₽</span><strong>250 ₽</strong></li>\n        <li><span>От 2 500 ₽</span><strong>Бесплатно</strong></li>\n        <li><span>Срок</span><strong>1-2 рабочих дня</strong></li>\n      </ul>\n    </article>\n    <article class=\"tariff-card\">\n      <h3>Экспресс-доставка</h3>\n      <ul>\n        <li><span>В пределах Курска</span><strong>490 ₽</strong></li>\n        <li><span>Срок</span><strong>3-5 часов</strong></li>\n        <li><span>Окно оформления</span><strong>до 16:00</strong></li>\n      </ul>\n    </article>\n    <article class=\"tariff-card\">\n      <h3>По России</h3>\n      <ul>\n        <li><span>СДЭК/DPD/Почта</span><strong>от 450 ₽</strong></li>\n        <li><span>Срок</span><strong>3-10 дней</strong></li>\n        <li><span>Бесплатно от</span><strong>5 000 ₽</strong></li>\n      </ul>\n    </article>\n  </div>\n</section>\n\n<section class=\"section section--split\">\n  <article class=\"panel\">\n    <h2>Самовывоз</h2>\n    <p>Забрать заказ можно из 3 пунктов выдачи в Курске в день комплектации или на следующий день.</p>\n    <ul>\n      <li><i class=\"bi bi-geo-alt\"></i> 3 пункта выдачи в Курске</li>\n      <li><i class=\"bi bi-clock\"></i> Хранение заказа — 5 дней</li>\n      <li><i class=\"bi bi-cash-coin\"></i> Оплата при получении доступна</li>\n    </ul>\n  </article>\n  <article class=\"panel panel--accent\">\n    <h2>Опт для офисов и юрлиц</h2>\n    <p>Для регулярных закупок канцтоваров предлагаем фиксированные тарифы и персональные условия.</p>\n    <ul>\n      <li>Отсрочка платежа по договору</li>\n      <li>Персональный менеджер</li>\n      <li>Бесплатная доставка от 15 000 ₽</li>\n    </ul>\n  </article>\n</section>\n\n<section class=\"section\">\n  <div class=\"section__head\"><h2>Способы оплаты</h2></div>\n  <div class=\"tabs\" role=\"tablist\">\n    <button class=\"tab is-active\" data-tab=\"retail\" role=\"tab\">Физлица</button>\n    <button class=\"tab\" data-tab=\"business\" role=\"tab\">Юрлица и опт</button>\n  </div>\n  <div class=\"tab-panels\">\n    <article class=\"tab-panel is-active\" id=\"retail\" role=\"tabpanel\">\n      <ul class=\"payment-list\">\n        <li><i class=\"bi bi-credit-card\"></i> Банковская карта онлайн (МИР, Visa, Mastercard)</li>\n        <li><i class=\"bi bi-phone\"></i> СБП и мобильные платежи</li>\n        <li><i class=\"bi bi-cash\"></i> Наличными или картой при получении</li>\n      </ul>\n    </article>\n    <article class=\"tab-panel\" id=\"business\" role=\"tabpanel\">\n      <ul class=\"payment-list\">\n        <li><i class=\"bi bi-receipt\"></i> Безналичный расчет по счету</li>\n        <li><i class=\"bi bi-file-earmark-text\"></i> Закрывающие документы (УПД, счет-фактура)</li>\n        <li><i class=\"bi bi-calendar-check\"></i> Отсрочка платежа для постоянных клиентов</li>\n      </ul>\n    </article>\n  </div>\n</section>\n\n<section class=\"section\">\n  <div class=\"section__head\"><h2>Частые вопросы</h2></div>\n  <div class=\"faq\" id=\"faq\">\n    <article class=\"faq-item\">\n      <button class=\"faq-question\" aria-expanded=\"false\">Можно ли изменить адрес доставки после оформления заказа?</button>\n      <div class=\"faq-answer\">Да, если заказ еще не передан в службу доставки. Свяжитесь с поддержкой как можно раньше.</div>\n    </article>\n    <article class=\"faq-item\">\n      <button class=\"faq-question\" aria-expanded=\"false\">Как оформить оптовый заказ для офиса?</button>\n      <div class=\"faq-answer\">Оформите заказ на сайте и выберите тип клиента «Юридическое лицо» или напишите менеджеру для персонального прайса.</div>\n    </article>\n    <article class=\"faq-item\">\n      <button class=\"faq-question\" aria-expanded=\"false\">Есть ли доставка по выходным?</button>\n      <div class=\"faq-answer\">Да, по Курску действует доставка в субботу. Воскресенье зависит от курьерской службы и адреса.</div>\n    </article>\n  </div>\n</section>",
       "is_published": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"
@@ -2271,7 +2232,7 @@
       "title": "Гарантия и возврат",
       "slug": "guarantee",
       "page_type": "guarantee",
-      "content": "# Гарантия и возврат\n\nВы можете вернуть товар надлежащего качества в течение 14 дней с момента получения.\n\nТовар ненадлежащего качества принимается к возврату в любое время в течение гарантийного срока.\n\nДля оформления возврата перейдите в раздел «Мои заказы» в личном кабинете.",
+      "content": "<section class=\"hero\">\n  <div>\n    <p class=\"eyebrow\">Права покупателя</p>\n    <h1>Гарантия, обмен и возврат канцелярских товаров</h1>\n    <p class=\"lead\">Правила действуют в соответствии с Законом РФ «О защите прав потребителей» (ЗоЗПП) и применимыми подзаконными актами.</p>\n  </div>\n  <article class=\"hero-note\">\n    <h3><i class=\"bi bi-info-circle\"></i> Важно</h3>\n    <p>Для ускорения обработки возврата подготовьте номер заказа, фото товара и описание ситуации.</p>\n  </article>\n</section>\n\n<section class=\"section\">\n  <div class=\"tabs\" role=\"tablist\">\n    <button class=\"tab is-active\" data-tab=\"good\" role=\"tab\">Товар надлежащего качества</button>\n    <button class=\"tab\" data-tab=\"defect\" role=\"tab\">Товар с недостатком</button>\n  </div>\n  <div class=\"tab-panels\">\n    <article class=\"tab-panel is-active\" id=\"good\" role=\"tabpanel\">\n      <h2>Обмен/возврат, если товар не подошел</h2>\n      <ul class=\"rules\">\n        <li><i class=\"bi bi-check2-circle\"></i> Срок обращения: в течение 14 дней, не считая дня покупки (ст. 25 ЗоЗПП).</li>\n        <li><i class=\"bi bi-check2-circle\"></i> Товар не должен быть в употреблении, сохранены товарный вид, пломбы, фабричные ярлыки.</li>\n        <li><i class=\"bi bi-check2-circle\"></i> При отсутствии аналогичного товара для обмена покупатель вправе потребовать возврат денег.</li>\n      </ul>\n      <p class=\"note\">Ряд непродовольственных товаров надлежащего качества не подлежит обмену/возврату согласно Перечню, утв. Постановлением Правительства РФ №2463.</p>\n    </article>\n    <article class=\"tab-panel\" id=\"defect\" role=\"tabpanel\">\n      <h2>Если обнаружен недостаток товара</h2>\n      <ul class=\"rules\">\n        <li><i class=\"bi bi-check2-circle\"></i> Потребитель вправе требовать замену, ремонт, соразмерное уменьшение цены или возврат денег (ст. 18 ЗоЗПП).</li>\n        <li><i class=\"bi bi-check2-circle\"></i> Требования предъявляются в пределах гарантийного срока или срока, установленного законом (ст. 19 ЗоЗПП).</li>\n        <li><i class=\"bi bi-check2-circle\"></i> По требованию продавца может проводиться проверка качества/экспертиза.</li>\n      </ul>\n    </article>\n  </div>\n</section>\n\n<section class=\"section\">\n  <div class=\"section__head\"><h2>Сроки рассмотрения требований</h2></div>\n  <div class=\"terms-grid\">\n    <article class=\"term-card\"><h3>Возврат денежных средств</h3><p>До 10 дней с даты предъявления требования (ст. 22 ЗоЗПП).</p></article>\n    <article class=\"term-card\"><h3>Замена товара</h3><p>До 7 дней, а при необходимости проверки качества — до 20 дней (ст. 21 ЗоЗПП).</p></article>\n    <article class=\"term-card\"><h3>Гарантийный ремонт</h3><p>Срок определяется законом и документами по товару; точный период указывается при приеме.</p></article>\n  </div>\n</section>\n\n<section class=\"section section--split\">\n  <article class=\"panel\">\n    <h2>Как оформить возврат</h2>\n    <ol>\n      <li>Заполните заявку в поддержке или напишите на info@paperly-kursk.ru.</li>\n      <li>Укажите номер заказа и причину возврата.</li>\n      <li>Передайте товар в пункт самовывоза в Курске или курьером.</li>\n      <li>Дождитесь решения и возврата средств на исходный способ оплаты.</li>\n    </ol>\n  </article>\n  <article class=\"panel panel--accent\">\n    <h2>Документы и данные</h2>\n    <ul>\n      <li>Номер заказа</li>\n      <li>ФИО и контакты покупателя</li>\n      <li>Фото товара и упаковки (если есть дефект)</li>\n      <li>Реквизиты для возврата денежных средств</li>\n    </ul>\n  </article>\n</section>\n\n<section class=\"section legal\">\n  <h2>Нормативная база</h2>\n  <ul>\n    <li>Закон РФ от 07.02.1992 №2300-1 «О защите прав потребителей» (ст. 18, 19, 21, 22, 25).</li>\n    <li>Постановление Правительства РФ от 31.12.2020 №2463 (перечень товаров надлежащего качества, не подлежащих обмену/возврату).</li>\n  </ul>\n  <p class=\"legal-note\">Информация на странице носит справочный характер. В спорных ситуациях применяется действующая редакция законодательства РФ.</p>\n</section>",
       "is_published": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"
@@ -2284,7 +2245,7 @@
       "title": "Оптовым клиентам",
       "slug": "wholesale",
       "page_type": "wholesale",
-      "content": "# Оптовым клиентам\n\nМы предлагаем специальные условия для:\n\n- Юридических лиц\n- Школ и образовательных учреждений\n- Университетов\n\nСкачайте прайс-лист или оставьте заявку — мы свяжемся с вами в течение рабочего дня.",
+      "content": "<section class=\"hero\">\n  <div>\n    <p class=\"eyebrow\">B2B и образование</p>\n    <h1>Поставки канцтоваров для юрлиц, школ и университетов Курска</h1>\n    <p class=\"lead\">Работаем по договору, предоставляем персональные цены, закрывающие документы и регулярные поставки по вашему графику.</p>\n    <div class=\"hero__actions\">\n      <a href=\"#priceLists\" class=\"btn btn--primary\">Скачать прайс-листы</a>\n      <a href=\"#request\" class=\"btn btn--ghost\">Оставить заявку</a>\n    </div>\n  </div>\n  <article class=\"hero-card\">\n    <h3><i class=\"bi bi-check2-square\"></i> Что получите</h3>\n    <ul>\n      <li>Оптовые цены от объема и частоты закупок</li>\n      <li>Персональный менеджер и быстрый SLA по заявкам</li>\n      <li>Поставка на склад, в офис или учебные корпуса Курска</li>\n      <li>УПД, счета, акты и помощь с тендерными пакетами</li>\n    </ul>\n  </article>\n</section>\n\n<section class=\"section\">\n  <div class=\"section__head\"><h2>Кому подходит сотрудничество</h2></div>\n  <div class=\"segment-grid\">\n    <article><i class=\"bi bi-building\"></i><h3>Юридическим лицам</h3><p>Офисы, сетевые компании, call-центры, бэк-офисы и производственные подразделения Курска.</p></article>\n    <article><i class=\"bi bi-backpack2\"></i><h3>Школам и колледжам</h3><p>Наборы для классов, методические материалы, расходники для кабинетов и кружков.</p></article>\n    <article><i class=\"bi bi-mortarboard\"></i><h3>Университетам и учебным центрам</h3><p>Комплектация кафедр, лабораторий, библиотек КГУ, ЮЗГУ и других вузов Курска.</p></article>\n  </div>\n</section>\n\n<section class=\"section\" id=\"priceLists\">\n  <div class=\"section__head\"><h2>Прайс-листы</h2></div>\n  <div class=\"price-grid\">\n    <article class=\"price-card\"><h3>Корпоративный прайс</h3><p>Для офисов и коммерческих организаций.</p><a href=\"#\" class=\"download\"><i class=\"bi bi-file-earmark-arrow-down\"></i> Скачать XLSX</a></article>\n    <article class=\"price-card\"><h3>Прайс для школ</h3><p>Базовые позиции и наборы для классов.</p><a href=\"#\" class=\"download\"><i class=\"bi bi-file-earmark-arrow-down\"></i> Скачать XLSX</a></article>\n    <article class=\"price-card\"><h3>Прайс для вузов</h3><p>Категории для кафедр, учебных отделов и кампусов.</p><a href=\"#\" class=\"download\"><i class=\"bi bi-file-earmark-arrow-down\"></i> Скачать XLSX</a></article>\n  </div>\n</section>\n\n<section class=\"section section--split\">\n  <article class=\"panel\">\n    <h2>Условия сотрудничества</h2>\n    <ul>\n      <li><strong>Минимальный заказ:</strong> от 15 000 ₽</li>\n      <li><strong>Доставка:</strong> бесплатно от 20 000 ₽ по Курску</li>\n      <li><strong>Оплата:</strong> безналичный расчет, отсрочка для постоянных клиентов</li>\n      <li><strong>Поставка:</strong> разово, еженедельно или по графику клиента</li>\n    </ul>\n  </article>\n  <article class=\"panel panel--accent\">\n    <h2>Документы</h2>\n    <ul>\n      <li>Договор поставки</li>\n      <li>Счет и УПД</li>\n      <li>Сертификаты и спецификации по запросу</li>\n      <li>Пакет документов для бюджетных учреждений</li>\n    </ul>\n  </article>\n</section>\n\n<section class=\"section\">\n  <div class=\"section__head\"><h2>Как начать работу</h2></div>\n  <div class=\"steps\">\n    <article><span>1</span><h3>Заявка</h3><p>Оставьте контакты и тип организации.</p></article>\n    <article><span>2</span><h3>Аудит потребностей</h3><p>Согласуем ассортимент, объемы и периодичность.</p></article>\n    <article><span>3</span><h3>Коммерческое предложение</h3><p>Подготовим цены, условия и логистику.</p></article>\n    <article><span>4</span><h3>Договор и старт поставок</h3><p>Заключаем договор и запускаем регулярные отгрузки.</p></article>\n  </div>\n</section>",
       "is_published": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"
@@ -2297,7 +2258,7 @@
       "title": "Политика конфиденциальности",
       "slug": "privacy",
       "page_type": "privacy",
-      "content": "Политика конфиденциальности интернет-магазина...",
+      "content": "Политика конфиденциальности интернет-магазина Paperly (г. Курск)...",
       "is_published": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"
@@ -2324,6 +2285,32 @@
       "slug": "offer",
       "page_type": "offer",
       "content": "Настоящий документ является публичной офертой...",
+      "is_published": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.sitepage",
+    "pk": 8,
+    "fields": {
+      "title": "Главная",
+      "slug": "index",
+      "page_type": "index",
+      "content": "<div class=\"hero__content reveal\">\n  <p class=\"eyebrow\">Интернет-магазин канцтоваров в Курске</p>\n  <h1>Соберите идеальный набор для учебы, офиса и творчества</h1>\n  <p class=\"hero__lead\">От повседневных тетрадей до премиальных письменных наборов. Быстрая доставка по Курску, понятный каталог и честные цены.</p>\n  <div class=\"hero__cta\">\n    <a class=\"btn btn--primary\" href=\"/catalog/\">Открыть каталог</a>\n    <a class=\"btn btn--ghost\" href=\"/promotions/\">Смотреть акции</a>\n  </div>\n  <ul class=\"hero__facts\">\n    <li><strong>12 000+</strong> товаров в наличии</li>\n    <li><strong>24 часа</strong> до отгрузки</li>\n    <li><strong>4.9/5</strong> оценка покупателей</li>\n  </ul>\n</div>\n<div class=\"hero__visual reveal reveal-delay\">\n  <div class=\"hero-card hero-card--large\">\n    <span class=\"hero-card__badge\">Снова в школу</span>\n    <h3>Наборы первоклассника</h3>\n    <p>Готовые комплекты с выгодой до 18%</p>\n  </div>\n  <div class=\"hero-card\">\n    <h3>Офис без хаоса</h3>\n    <p>Органайзеры, лотки, архивные решения</p>\n  </div>\n  <div class=\"hero-card hero-card--accent\">\n    <h3>Творческая зона</h3>\n    <p>Краски, скетчбуки, кисти и графика</p>\n  </div>\n</div>",
+      "is_published": true,
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "shop.sitepage",
+    "pk": 9,
+    "fields": {
+      "title": "Пункты самовывоза",
+      "slug": "pickup",
+      "page_type": "pickup",
+      "content": "<section class=\"hero\">\n  <div>\n    <p class=\"eyebrow\">ПВЗ в Курске</p>\n    <h1>Пункты самовывоза Paperly в Курске</h1>\n    <p class=\"lead\">Выберите ближайший пункт на карте или в списке. Большинство заказов доступно к получению в день комплектации.</p>\n  </div>\n  <div class=\"hero-note\">\n    <h3><i class=\"bi bi-clock-history\"></i> Срок хранения</h3>\n    <p>Заказ хранится в пункте самовывоза 5 календарных дней, затем автоматически отменяется.</p>\n  </div>\n</section>",
       "is_published": true,
       "created_at": "2026-01-01T00:00:00Z",
       "updated_at": "2026-01-01T00:00:00Z"

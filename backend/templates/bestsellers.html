@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Хиты продаж{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — Хиты продаж{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/bestsellers.css' %}">
@@ -9,13 +9,13 @@
 {% endblock %}
 
 {% block content %}
-<main class="container page">
+<div class="container page">
   <h1>Хиты продаж</h1>
   <p class="lead">Самые покупаемые товары за последние 3 дня.</p>
   <section class="products" id="bestsellersProducts" aria-live="polite">
     <p class="empty-state">Загрузка хитов продаж...</p>
   </section>
-</main>
+</div>
 {% endblock %}
 
 {% block page_js %}

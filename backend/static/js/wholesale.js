@@ -1,31 +1,50 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const cartCount = document.getElementById("cartCount");
   const searchForm = document.getElementById("searchForm");
   const requestForm = document.getElementById("requestForm");
 
-  const count = Number(localStorage.getItem("paperly_cart_count") || 0);
-  cartCount.textContent = String(count);
+  if (searchForm) {
+    searchForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const query = searchForm.querySelector("input")?.value.trim();
+      if (query) {
+        window.location.href = `/catalog/?q=${encodeURIComponent(query)}`;
+      }
+    });
+  }
 
-  searchForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const query = searchForm.querySelector("input")?.value.trim();
-    if (query) {
-      alert(`Поиск по разделу: ${query}`);
-    }
-  });
+  if (requestForm) {
+    requestForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
 
-  requestForm.addEventListener("submit", (event) => {
-    event.preventDefault();
+      const button = requestForm.querySelector("button[type='submit']");
+      const initialText = button.textContent;
+      button.textContent = "Отправка...";
+      button.disabled = true;
 
-    const button = requestForm.querySelector("button[type='submit']");
-    const initialText = button.textContent;
-    button.textContent = "Заявка отправлена";
-    button.disabled = true;
+      const payload = {
+        organization_name: requestForm.querySelector("input[type='text']")?.value.trim() || "",
+        contact_person: requestForm.querySelectorAll("input[type='text']")[1]?.value.trim() || "",
+        phone: requestForm.querySelector("input[type='tel']")?.value.trim() || "",
+        email: requestForm.querySelector("input[type='email']")?.value.trim() || "",
+        comment: requestForm.querySelector("textarea")?.value.trim() || "",
+      };
 
-    setTimeout(() => {
-      button.textContent = initialText;
-      button.disabled = false;
-      requestForm.reset();
-    }, 1400);
-  });
+      try {
+        await window.paperly.apiJson("/api/wholesale-requests/", { method: "POST", body: payload });
+        button.textContent = "Заявка отправлена!";
+        setTimeout(() => {
+          button.textContent = initialText;
+          button.disabled = false;
+          requestForm.reset();
+        }, 2000);
+      } catch (error) {
+        console.error("Wholesale request error:", error);
+        button.textContent = "Ошибка отправки";
+        setTimeout(() => {
+          button.textContent = initialText;
+          button.disabled = false;
+        }, 2000);
+      }
+    });
+  }
 });

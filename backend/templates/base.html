@@ -4,12 +4,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Paperly{% endblock %}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Prata&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <title>{% block title %}{{ site.site_name|default:"Paperly" }}{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'vendor/fonts/fonts.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/flatpickr/flatpickr.min.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/choices/choices.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+  <link rel="stylesheet" href="{% static 'css/datepicker.css' %}">
+  <link rel="stylesheet" href="{% static 'css/select.css' %}">
+  <link rel="stylesheet" href="{% static 'css/chat.css' %}">
   {% block page_css %}{% endblock %}
   {% block extra_head %}{% endblock %}
 </head>
@@ -42,7 +46,14 @@
   
   {% include "components/footer.html" %}
   
+  <script src="{% static 'vendor/flatpickr/flatpickr.min.js' %}"></script>
+  <script src="{% static 'vendor/flatpickr/ru.js' %}"></script>
+  <script src="{% static 'vendor/choices/choices.min.js' %}"></script>
+  <script src="{% static 'js/utils.js' %}"></script>
+  <script src="{% static 'js/product-grid.js' %}"></script>
   <script src="{% static 'js/base.js' %}"></script>
+  <script src="{% static 'js/header-search.js' %}" defer></script>
+  <script src="{% static 'js/chat.js' %}" defer></script>
   {% block page_js %}{% endblock %}
   {% block extra_js %}{% endblock %}
 </body>

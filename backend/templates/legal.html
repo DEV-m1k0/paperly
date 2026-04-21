@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ site.site_name|default:"Paperly" }} — {{ legal_title }}{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/legal.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container page legal-page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <span>{{ legal_title }}</span>
+  </div>
+
+  <section class="page-hero page-hero--narrow legal-hero reveal">
+    <div class="page-hero__bg" aria-hidden="true">
+      <span class="blob blob--teal"></span>
+      <span class="blob blob--amber"></span>
+    </div>
+    <div class="page-hero__content">
+      <p class="eyebrow">{{ legal_eyebrow }}</p>
+      <h1>{{ legal_title }}</h1>
+      <p class="page-hero__lead">{{ legal_summary }}</p>
+      {% if legal_updated %}
+      <p class="legal-hero__updated">
+        <i class="bi bi-clock-history" aria-hidden="true"></i>
+        <span>Обновлено {{ legal_updated }}</span>
+      </p>
+      {% endif %}
+    </div>
+  </section>
+
+  <article class="legal-article reveal">
+    <aside class="legal-toc" aria-label="Разделы документа">
+      <p class="legal-toc__label">Другие документы</p>
+      <a href="{% url 'legal_privacy' %}" class="legal-toc__link {% if legal_kind == 'privacy' %}is-active{% endif %}">
+        <i class="bi bi-shield-lock" aria-hidden="true"></i>
+        <span>Политика конфиденциальности</span>
+      </a>
+      <a href="{% url 'legal_offer' %}" class="legal-toc__link {% if legal_kind == 'offer' %}is-active{% endif %}">
+        <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+        <span>Публичная оферта</span>
+      </a>
+      <a href="{% url 'legal_cookies' %}" class="legal-toc__link {% if legal_kind == 'cookies' %}is-active{% endif %}">
+        <i class="bi bi-cookie" aria-hidden="true"></i>
+        <span>Политика cookie</span>
+      </a>
+    </aside>
+
+    <div class="legal-content">
+      {{ legal_content|safe }}
+    </div>
+  </article>
+
+  <section class="legal-footer-note reveal">
+    <i class="bi bi-envelope" aria-hidden="true"></i>
+    <div>
+      <strong>Остались вопросы?</strong>
+      <p>Напишите нам — {% if site.email %}<a href="mailto:{{ site.email }}">{{ site.email }}</a>{% else %}<a href="mailto:info@paperly.ru">info@paperly.ru</a>{% endif %} — и мы ответим в рабочее время.</p>
+    </div>
+  </section>
+</div>
+{% endblock %}

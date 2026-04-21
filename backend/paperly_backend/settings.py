@@ -6,8 +6,11 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
+if DEBUG:
+    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
+else:
+    SECRET_KEY = os.environ["SECRET_KEY"]
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 
 INSTALLED_APPS = [
@@ -50,6 +53,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "pages.context_processors.site_settings",
             ],
         },
     },
@@ -90,12 +94,16 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # DRF baseline
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
+        "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
@@ -120,12 +128,12 @@ LOGIN_URL = "/auth/"
 
 # Jazzmin admin customization
 JAZZMIN_SETTINGS = {
-    "site_title": "Paperly Admin",
+    "site_title": "Paperly — Панель управления",
     "site_header": "Paperly",
-    "site_brand": "Paperly Admin",
+    "site_brand": "Paperly",
     "site_logo_classes": "img-circle",
     "welcome_sign": "Панель управления магазином канцтоваров",
-    "copyright": "Paperly",
+    "copyright": "Paperly — Панель управления",
     "search_model": [
         "auth.User",
         "shop.Product",
@@ -144,7 +152,7 @@ JAZZMIN_SETTINGS = {
     "show_sidebar": True,
     "navigation_expanded": True,
     "hide_apps": [],
-    "hide_models": [],
+    "hide_models": ["shop.GiftCertificate"],
     "order_with_respect_to": [
         "shop",
         "shop.Order",
@@ -168,7 +176,6 @@ JAZZMIN_SETTINGS = {
         "shop.productspecification": "fas fa-list-check",
         "shop.productreview": "fas fa-star",
         "shop.promotion": "fas fa-tags",
-        "shop.giftcertificate": "fas fa-gift",
         "shop.blogcategory": "fas fa-folder-open",
         "shop.blogpost": "fas fa-newspaper",
         "shop.pickuppoint": "fas fa-map-marker-alt",
@@ -223,5 +230,22 @@ JAZZMIN_UI_TWEAKS = {
     },
 }
 
+# Production security settings
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 
 
+# AI assistant — fully local by default via Ollama (https://ollama.com).
+# The dev `runserver` auto-starts the daemon and pulls the model on first run.
+# No external API calls, no data leaves the machine.
+AI_API_KEY = os.environ.get("AI_API_KEY", "ollama")
+AI_API_BASE = os.environ.get("AI_API_BASE", "http://localhost:11434/v1")
+AI_MODEL = os.environ.get("AI_MODEL", "llama3.2:3b")
+CHAT_RATE_LIMIT_PER_HOUR = int(os.environ.get("CHAT_RATE_LIMIT_PER_HOUR", "60"))

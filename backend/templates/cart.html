@@ -1,70 +1,312 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Корзина и оформление заказа{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — Корзина и оформление заказа{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/cart.css' %}">
 {% endblock %}
 
 {% block content %}
-<main class="container page">
-    <div class="breadcrumbs">
-      <a href="{% url 'home' %}">Главная</a>
-      <span>/</span>
-      <span>Корзина и оформление заказа</span>
+<div class="container page cart-page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <span>Корзина и оформление заказа</span>
+  </div>
+
+  <section class="cart-layout">
+    <section class="cart-main">
+      <header class="cart-header" id="cartHeader">
+        <div>
+          <p class="eyebrow">Корзина</p>
+          <h1>Ваш заказ</h1>
+          <p class="cart-header__lead">Проверьте товары и заполните данные ниже — мы позаботимся об остальном.</p>
+        </div>
+        <div class="cart-header__badge" id="cartCountBadge">
+          <i class="bi bi-bag" aria-hidden="true"></i>
+          <span id="cartHeaderCount">0 товаров</span>
+        </div>
+      </header>
+
+      <div id="cartItems" class="cart-items"></div>
+
+      <div id="cartEmpty" class="state-empty cart-empty" hidden>
+        <div class="state-empty__visual" aria-hidden="true">
+          <span class="state-empty__orb state-empty__orb--a"></span>
+          <span class="state-empty__orb state-empty__orb--b"></span>
+          <div class="state-empty__icon"><i class="bi bi-bag-heart"></i></div>
+        </div>
+        <h2>Здесь пока пусто</h2>
+        <p>Добавьте товары из каталога, и они появятся в корзине. Мы сохраним выбранное, даже если вы закроете страницу.</p>
+        <div class="state-empty__actions">
+          <a href="{% url 'catalog' %}" class="btn btn--primary">
+            <i class="bi bi-grid" aria-hidden="true"></i>
+            <span>Перейти в каталог</span>
+          </a>
+          <a href="{% url 'favorites' %}" class="btn btn--ghost">
+            <i class="bi bi-heart" aria-hidden="true"></i>
+            <span>Открыть избранное</span>
+          </a>
+        </div>
+        <div class="cart-empty__suggest">
+          <span class="cart-empty__label">Популярное сейчас:</span>
+          <a class="cart-empty__chip" href="{% url 'new_arrivals' %}">
+            <i class="bi bi-stars" aria-hidden="true"></i> Новинки
+          </a>
+          <a class="cart-empty__chip" href="{% url 'bestsellers' %}">
+            <i class="bi bi-trophy" aria-hidden="true"></i> Хиты продаж
+          </a>
+          <a class="cart-empty__chip" href="{% url 'promotions' %}">
+            <i class="bi bi-tag" aria-hidden="true"></i> Акции
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <aside class="checkout" id="checkoutBlock">
+      <form id="checkoutForm" class="checkout-form" novalidate>
+        {% csrf_token %}
+
+        <div class="checkout-section">
+          <div class="checkout-section__head">
+            <span class="checkout-section__step">1</span>
+            <div>
+              <h3>Контактные данные</h3>
+              <p>Нужны для уведомлений о заказе.</p>
+            </div>
+          </div>
+          <div class="checkout-section__body">
+            <label class="field field--full">
+              <span class="field__label"><i class="bi bi-person" aria-hidden="true"></i> Имя и фамилия</span>
+              <input id="fullName" type="text" required placeholder="Иван Иванов">
+            </label>
+            <label class="field">
+              <span class="field__label"><i class="bi bi-telephone" aria-hidden="true"></i> Телефон</span>
+              <input id="phone" type="tel" required placeholder="+7 (...) ...-..-..">
+            </label>
+            <label class="field">
+              <span class="field__label"><i class="bi bi-envelope" aria-hidden="true"></i> Email</span>
+              <input id="email" type="email" required placeholder="mail@example.com">
+            </label>
+          </div>
+        </div>
+
+        <div class="checkout-section">
+          <div class="checkout-section__head">
+            <span class="checkout-section__step">2</span>
+            <div>
+              <h3>Доставка</h3>
+              <p>Куда привезти заказ или где забрать.</p>
+            </div>
+          </div>
+          <div class="checkout-section__body">
+            <label class="field field--full">
+              <span class="field__label"><i class="bi bi-truck" aria-hidden="true"></i> Способ доставки</span>
+              <select id="deliveryType" class="no-choices" required>
+                <option value="courier">Курьер</option>
+                <option value="pickup">Самовывоз</option>
+              </select>
+            </label>
+            <label class="field field--full" data-delivery-field="pickup" hidden>
+              <span class="field__label"><i class="bi bi-geo-alt" aria-hidden="true"></i> Пункт самовывоза</span>
+              <select id="pickupPoint" class="no-choices">
+                <option value="">— Загружаем список...</option>
+              </select>
+              <small class="field__hint">Все пункты в Курске, бесплатно. <a href="{% url 'pickup' %}" target="_blank" rel="noopener">Посмотреть на карте</a></small>
+            </label>
+            <label class="field" data-delivery-field="courier">
+              <span class="field__label"><i class="bi bi-buildings" aria-hidden="true"></i> Город</span>
+              <input id="city" type="text" required placeholder="Курск">
+            </label>
+            <label class="field" data-delivery-field="courier">
+              <span class="field__label"><i class="bi bi-signpost" aria-hidden="true"></i> Адрес</span>
+              <input id="address" type="text" required placeholder="ул. Ленина, 12">
+            </label>
+            <label class="field field--full" data-delivery-field="courier">
+              <span class="field__label"><i class="bi bi-chat-left-text" aria-hidden="true"></i> Комментарий курьеру</span>
+              <textarea id="comment" rows="3" placeholder="Домофон, этаж, ориентир"></textarea>
+            </label>
+          </div>
+        </div>
+
+        {% if not request.user.is_authenticated %}
+        <div class="checkout-section checkout-section--account">
+          <div class="checkout-section__head">
+            <span class="checkout-section__step">3</span>
+            <div>
+              <h3>Аккаунт</h3>
+              <p>Оформите заказ гостем или создайте аккаунт — это займёт секунду.</p>
+            </div>
+          </div>
+          <div class="checkout-section__body">
+            <label class="account-toggle">
+              <input type="checkbox" id="createAccount">
+              <span class="account-toggle__switch"></span>
+              <span class="account-toggle__body">
+                <strong>Создать аккаунт</strong>
+                <small>Будете видеть статус заказов, избранное и адреса на всех устройствах.</small>
+              </span>
+            </label>
+            <div class="account-password" id="accountPasswordWrap" hidden>
+              <label class="field field--full">
+                <span class="field__label"><i class="bi bi-shield-lock" aria-hidden="true"></i> Пароль</span>
+                <input id="accountPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Минимум 8 символов">
+              </label>
+              <p class="account-hint">
+                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                Email для входа — тот, что вы указали выше. Данные профиля заполним автоматически.
+              </p>
+            </div>
+            <div class="account-login-link">
+              Уже есть аккаунт? <a href="{% url 'auth' %}?next={% url 'cart' %}">Войти</a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="checkout-section">
+          <div class="checkout-section__head">
+            <span class="checkout-section__step">{% if request.user.is_authenticated %}3{% else %}4{% endif %}</span>
+            <div>
+              <h3>Оплата</h3>
+              <p>Выберите удобный способ — оплата в один клик.</p>
+            </div>
+          </div>
+          <div class="checkout-section__body">
+            <div class="payment-options">
+              <label class="payment-option">
+                <input type="radio" name="paymentType" id="payCard" value="card" checked>
+                <span class="payment-option__body">
+                  <i class="bi bi-credit-card" aria-hidden="true"></i>
+                  <span>
+                    <strong>Карта онлайн</strong>
+                    <small>Visa, MasterCard, МИР</small>
+                  </span>
+                </span>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="paymentType" id="paySbp" value="sbp">
+                <span class="payment-option__body">
+                  <i class="bi bi-qr-code" aria-hidden="true"></i>
+                  <span>
+                    <strong>СБП</strong>
+                    <small>Система быстрых платежей</small>
+                  </span>
+                </span>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="paymentType" id="payCash" value="cash">
+                <span class="payment-option__body">
+                  <i class="bi bi-wallet2" aria-hidden="true"></i>
+                  <span>
+                    <strong>При получении</strong>
+                    <small>Картой или наличными</small>
+                  </span>
+                </span>
+              </label>
+            </div>
+            <input type="hidden" id="paymentType" value="card">
+          </div>
+        </div>
+      </form>
+
+      <div class="checkout-summary" id="checkoutSummary">
+        <h3><i class="bi bi-receipt-cutoff" aria-hidden="true"></i> Ваш заказ</h3>
+        <div class="summary" id="summary"></div>
+        <button class="btn btn--primary checkout-submit" id="checkoutSubmit" type="submit" form="checkoutForm">
+          <i class="bi bi-check2-circle" aria-hidden="true"></i>
+          <span>Оформить заказ</span>
+        </button>
+        <p class="checkout-summary__note">
+          <i class="bi bi-shield-check" aria-hidden="true"></i>
+          Оплата защищена по стандарту PCI DSS
+        </p>
+      </div>
+    </aside>
+  </section>
+</div>
+
+<!-- Payment Modal -->
+<div class="payment-overlay" id="paymentOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="paymentStepTitle">
+  <div class="payment-modal" id="paymentModal">
+    <button class="payment-modal__close" id="paymentClose" aria-label="Закрыть" type="button">&times;</button>
+
+    <div class="payment-step" id="paymentStepProcessing" role="region" aria-live="polite" hidden>
+      <div class="payment-spinner" aria-hidden="true"></div>
+      <h2 id="paymentStepTitle">Обработка заказа</h2>
+      <p>Пожалуйста, подождите...</p>
     </div>
 
-    <section class="layout">
-      <section>
-        <h1>Корзина</h1>
-        <p class="lead">Проверьте товары и измените количество перед оформлением.</p>
-
-        <div id="cartItems" class="cart-items"></div>
-
-        <div id="cartEmpty" class="empty" hidden>
-          <i class="bi bi-bag-x"></i>
-          <h2>Корзина пуста</h2>
-          <p>Добавьте товары из каталога, чтобы оформить заказ.</p>
-          <a href="{% url 'catalog' %}" class="btn btn--primary">Перейти в каталог</a>
+    <div class="payment-step" id="paymentStepCard" role="region" hidden>
+      <i class="bi bi-credit-card-2-front payment-step__icon" aria-hidden="true"></i>
+      <h2>Оплата картой</h2>
+      <p class="payment-amount" id="paymentCardAmount"></p>
+      <div class="payment-card-form">
+        <label class="field">
+          <span class="field__label"><i class="bi bi-credit-card" aria-hidden="true"></i> Номер карты</span>
+          <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" inputmode="numeric" autocomplete="cc-number">
+        </label>
+        <div class="payment-card-row">
+          <label class="field">
+            <span class="field__label">Срок</span>
+            <input type="text" id="cardExpiry" placeholder="MM/ГГ" maxlength="5" inputmode="numeric" autocomplete="cc-exp">
+          </label>
+          <label class="field">
+            <span class="field__label">CVV</span>
+            <input type="password" id="cardCvv" placeholder="•••" maxlength="3" inputmode="numeric" autocomplete="cc-csc">
+          </label>
         </div>
-      </section>
+        <button class="btn btn--primary btn--block" id="cardPayBtn" type="button">
+          <i class="bi bi-lock-fill" aria-hidden="true"></i>
+          <span>Оплатить</span>
+        </button>
+      </div>
+    </div>
 
-      <aside class="checkout" id="checkoutBlock">
-        <h2>Оформление заказа</h2>
-        <p class="muted">Один шаг: контакты, доставка и оплата.</p>
+    <div class="payment-step" id="paymentStepSbp" role="region" hidden>
+      <i class="bi bi-qr-code payment-step__icon" aria-hidden="true"></i>
+      <h2>Оплата через СБП</h2>
+      <p class="payment-amount" id="paymentSbpAmount"></p>
+      <div class="payment-qr" id="paymentQr" aria-hidden="true"></div>
+      <p class="payment-hint">Отсканируйте QR-код в мобильном приложении вашего банка</p>
+      <div class="payment-timer" aria-live="polite">
+        <i class="bi bi-clock-history" aria-hidden="true"></i>
+        <span>Ожидание оплаты: <strong id="sbpTimer">02:00</strong></span>
+      </div>
+      <button class="btn btn--primary btn--block" id="sbpSimulateBtn" type="button">Подтвердить оплату (тест)</button>
+    </div>
 
-        <div class="summary" id="summary"></div>
+    <div class="payment-step" id="paymentStepCash" role="region" hidden>
+      <i class="bi bi-wallet2 payment-step__icon" aria-hidden="true"></i>
+      <h2>Оплата при получении</h2>
+      <p class="payment-amount" id="paymentCashAmount"></p>
+      <p>Оплатите заказ наличными или картой у курьера или в пункте выдачи.</p>
+      <button class="btn btn--primary btn--block" id="cashConfirmBtn" type="button">
+        <i class="bi bi-check2" aria-hidden="true"></i>
+        <span>Подтвердить заказ</span>
+      </button>
+    </div>
 
-        <form id="checkoutForm" class="checkout-form" novalidate>
-          <label>Имя и фамилия<input id="fullName" type="text" required placeholder="Иван Иванов"></label>
-          <label>Телефон<input id="phone" type="tel" required placeholder="+7 (...) ...-..-.."></label>
-          <label>Email<input id="email" type="email" required placeholder="mail@example.com"></label>
-          <label>Город<input id="city" type="text" required placeholder="Москва"></label>
-          <label>Адрес доставки<input id="address" type="text" required placeholder="ул. Тверская, 12"></label>
-
-          <label>Способ доставки
-            <select id="deliveryType" required>
-              <option value="courier">Курьер</option>
-              <option value="pickup">Самовывоз</option>
-            </select>
-          </label>
-
-          <label>Способ оплаты
-            <select id="paymentType" required>
-              <option value="card">Карта онлайн</option>
-              <option value="sbp">СБП</option>
-              <option value="cash">Картой/наличными при получении</option>
-            </select>
-          </label>
-
-          <label class="full">Комментарий к заказу<textarea id="comment" rows="3" placeholder="Домофон, этаж, ориентир"></textarea></label>
-
-          <button class="btn btn--primary full" type="submit">Оформить заказ</button>
-        </form>
-      </aside>
-    </section>
-  </main>
+    <div class="payment-step" id="paymentStepSuccess" role="region" aria-live="polite" hidden>
+      <div class="payment-success-icon" aria-hidden="true"><i class="bi bi-check-lg"></i></div>
+      <h2>Заказ оформлен!</h2>
+      <p class="payment-order-number" id="paymentOrderNumber"></p>
+      <div class="payment-account-created" id="paymentAccountCreated" hidden>
+        <i class="bi bi-person-check" aria-hidden="true"></i>
+        <div>
+          <strong>Аккаунт создан — вы уже вошли</strong>
+          <span id="paymentAccountEmail"></span>
+        </div>
+      </div>
+      <p>Мы отправили подтверждение на указанный email. Статус заказа доступен в личном кабинете.</p>
+      <button class="btn btn--primary btn--block" id="paymentDoneBtn" type="button">
+        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+        <span id="paymentDoneLabel">Вернуться в каталог</span>
+      </button>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block page_js %}

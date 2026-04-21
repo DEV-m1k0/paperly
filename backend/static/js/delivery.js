@@ -6,13 +6,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const faqButtons = document.querySelectorAll(".faq-question");
 
   const count = Number(localStorage.getItem("paperly_cart_count") || 0);
-  cartCount.textContent = String(count);
+  if (cartCount) cartCount.textContent = String(count);
 
-  searchForm.addEventListener("submit", (event) => {
+  searchForm?.addEventListener("submit", (event) => {
     event.preventDefault();
     const query = searchForm.querySelector("input")?.value.trim();
     if (query) {
-      alert(`Поиск: ${query}`);
+      window.location.href = `/catalog/?q=${encodeURIComponent(query)}`;
     }
   });
 

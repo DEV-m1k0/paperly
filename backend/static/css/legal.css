@@ -1,0 +1,294 @@
+/* Legal pages (privacy / offer / cookies) — use theme.css page-hero */
+
+.legal-page {
+  padding-top: 0.5rem;
+}
+
+.legal-page .breadcrumbs {
+  color: var(--muted);
+  font-size: 0.86rem;
+  margin-bottom: 1.1rem;
+}
+
+.legal-hero {
+  margin-bottom: 1.6rem;
+}
+
+.legal-hero__updated {
+  margin: 0.8rem 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #92400e;
+  font-size: 0.82rem;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.legal-hero__updated i {
+  font-size: 0.82rem;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+ * Article layout: sticky TOC + content
+ * ══════════════════════════════════════════════════════════════════ */
+
+.legal-article {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+  margin-bottom: 2rem;
+}
+
+.legal-toc {
+  position: sticky;
+  top: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 18px 40px -26px rgba(11, 65, 61, 0.2);
+}
+
+.legal-toc__label {
+  margin: 0 0 0.4rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.legal-toc__link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 11px;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.legal-toc__link i {
+  color: var(--muted);
+  font-size: 1rem;
+  width: 20px;
+  text-align: center;
+  transition: color 0.15s ease;
+}
+
+.legal-toc__link:hover {
+  background: rgba(14, 118, 110, 0.08);
+  color: var(--primary-strong);
+}
+
+.legal-toc__link:hover i {
+  color: var(--primary);
+}
+
+.legal-toc__link.is-active {
+  background: linear-gradient(135deg, var(--primary), #14a396);
+  color: #fff;
+  box-shadow: 0 8px 18px -10px rgba(14, 118, 110, 0.5);
+}
+
+.legal-toc__link.is-active i {
+  color: #fff;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+ * Content typography
+ * ══════════════════════════════════════════════════════════════════ */
+
+.legal-content {
+  padding: 1.8rem 2rem 1.6rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: 0 18px 40px -28px rgba(11, 65, 61, 0.2);
+  color: #2f4549;
+  line-height: 1.7;
+  font-size: 0.97rem;
+}
+
+.legal-content > *:first-child { margin-top: 0; }
+.legal-content > *:last-child { margin-bottom: 0; }
+
+.legal-content h2 {
+  margin: 1.8rem 0 0.7rem;
+  font-family: "Prata", serif;
+  font-size: 1.4rem;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  position: relative;
+  padding-left: 0.85rem;
+}
+
+.legal-content h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.45rem;
+  bottom: 0.45rem;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--primary), #14a396);
+}
+
+.legal-content h3 {
+  margin: 1.3rem 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.legal-content p {
+  margin: 0 0 0.9rem;
+}
+
+.legal-content ul,
+.legal-content ol {
+  margin: 0 0 1rem;
+  padding-left: 1.35rem;
+}
+
+.legal-content li {
+  margin-bottom: 0.42rem;
+}
+
+.legal-content li::marker {
+  color: var(--primary);
+}
+
+.legal-content a {
+  color: var(--primary);
+  font-weight: 600;
+  border-bottom: 1px solid rgba(14, 118, 110, 0.35);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.legal-content a:hover {
+  color: var(--primary-strong);
+  border-bottom-color: var(--primary-strong);
+}
+
+.legal-content strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.legal-content blockquote {
+  margin: 1.2rem 0;
+  padding: 0.85rem 1.1rem;
+  background: rgba(14, 118, 110, 0.06);
+  border-left: 3px solid var(--primary);
+  border-radius: 0 14px 14px 0;
+  color: var(--text);
+  font-style: italic;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+ * Footer contact note
+ * ══════════════════════════════════════════════════════════════════ */
+
+.legal-footer-note {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.2rem 1.4rem;
+  background: linear-gradient(135deg, #f0f9f7 0%, #ffffff 70%);
+  border: 1px solid rgba(14, 118, 110, 0.18);
+  border-radius: 18px;
+  margin-bottom: 1rem;
+}
+
+.legal-footer-note > i {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: linear-gradient(135deg, var(--primary), #14a396);
+  color: #fff;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  box-shadow: 0 10px 22px -10px rgba(14, 118, 110, 0.45);
+}
+
+.legal-footer-note strong {
+  display: block;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 800;
+  margin-bottom: 0.15rem;
+}
+
+.legal-footer-note p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.legal-footer-note a {
+  color: var(--primary);
+  font-weight: 700;
+  border-bottom: 1px solid rgba(14, 118, 110, 0.35);
+}
+
+.legal-footer-note a:hover {
+  color: var(--primary-strong);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+ * Responsive
+ * ══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .legal-article {
+    grid-template-columns: 1fr;
+  }
+  .legal-toc {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0.7rem 0.85rem;
+  }
+  .legal-toc__label {
+    flex: 1 0 100%;
+    margin: 0 0 0.25rem;
+  }
+  .legal-toc__link {
+    flex: 1 1 180px;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .legal-content {
+    padding: 1.4rem 1.2rem;
+    border-radius: 18px;
+    font-size: 0.94rem;
+  }
+  .legal-content h2 {
+    font-size: 1.2rem;
+    padding-left: 0.7rem;
+  }
+  .legal-footer-note {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
+    border-radius: 16px;
+  }
+}

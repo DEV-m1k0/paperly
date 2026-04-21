@@ -1,27 +1,27 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Профиль{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — Личный кабинет{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/profile.css' %}">
 {% endblock %}
 
 {% block content %}
-<main class="container page">
-    <div class="breadcrumbs">
-      <a href="{% url 'home' %}">Главная</a>
-      <span>/</span>
-      <span>Профиль</span>
-    </div>
+<div class="container page profile-page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <span>Личный кабинет</span>
+  </div>
 
-    <section class="profile-layout">
-      <aside class="sidebar">
+  <section class="profile-layout">
+    <aside class="profile-sidebar">
+      <div class="profile-sidebar__head">
         <p class="eyebrow">Личный кабинет</p>
-        <h1>Мои данные</h1>
         <div class="user-card">
-          <div class="avatar">{{ profile_initials }}</div>
-          <div>
+          <div class="user-card__avatar" aria-hidden="true">{{ profile_initials }}</div>
+          <div class="user-card__body">
             <strong id="userNamePreview">
               {% if profile_first_name or profile_last_name %}
                 {{ profile_first_name }} {{ profile_last_name }}
@@ -29,71 +29,189 @@
                 {{ request.user.get_username }}
               {% endif %}
             </strong>
-            <p id="userEmailPreview">{{ profile_email|default:"" }}</p>
+            <span id="userEmailPreview">{{ profile_email|default:request.user.email|default:"" }}</span>
+            {% if profile_member_since %}
+            <small><i class="bi bi-calendar-heart" aria-hidden="true"></i> с нами с {{ profile_member_since|date:"F Y" }}</small>
+            {% endif %}
           </div>
         </div>
-        <ul>
-          {% with current=request.resolver_match.url_name %}
-          <li class="{% if current == 'profile' %}is-active{% endif %}"><a href="{% url 'profile' %}">Профиль</a></li>
-          <li class="{% if current == 'order_history' %}is-active{% endif %}"><a href="{% url 'order_history' %}">История заказов</a></li>
-          <li class="{% if current == 'favorites' %}is-active{% endif %}"><a href="{% url 'favorites' %}">Избранное</a></li>
-          {% endwith %}
-        </ul>
-        {% if request.user.is_authenticated %}
-        <form class="logout-form" method="post" action="{% url 'logout' %}">
+
+        <div class="profile-completeness"
+             id="profileCompleteness"
+             data-fields="firstName,lastName,email,phone,birthDate,city,street"
+             {% if profile_completeness == 100 %}hidden{% endif %}
+             title="Заполните профиль полностью для удобного оформления заказов">
+          <div class="profile-completeness__head">
+            <span>Профиль заполнен</span>
+            <strong id="profileCompletenessValue">{{ profile_completeness }}%</strong>
+          </div>
+          <div class="profile-completeness__bar">
+            <span id="profileCompletenessBar" style="width: {{ profile_completeness }}%"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-stats">
+        <a class="profile-stat" href="{% url 'order_history' %}">
+          <div class="profile-stat__icon profile-stat__icon--teal"><i class="bi bi-bag-check" aria-hidden="true"></i></div>
+          <div>
+            <strong>{{ profile_orders_count|default:0 }}</strong>
+            <span>{% if profile_orders_count == 1 %}заказ{% elif profile_orders_count|add:0 < 5 and profile_orders_count|add:0 > 0 %}заказа{% else %}заказов{% endif %}</span>
+          </div>
+        </a>
+        <a class="profile-stat" href="{% url 'favorites' %}">
+          <div class="profile-stat__icon profile-stat__icon--rose"><i class="bi bi-heart-fill" aria-hidden="true"></i></div>
+          <div>
+            <strong>{{ profile_favorites_count|default:0 }}</strong>
+            <span>в избранном</span>
+          </div>
+        </a>
+      </div>
+
+      <nav class="profile-nav" aria-label="Разделы кабинета">
+        {% with current=request.resolver_match.url_name %}
+        <a class="profile-nav__item {% if current == 'profile' %}is-active{% endif %}" href="{% url 'profile' %}">
+          <i class="bi bi-person-vcard" aria-hidden="true"></i>
+          <span>Профиль</span>
+        </a>
+        <a class="profile-nav__item {% if current == 'order_history' %}is-active{% endif %}" href="{% url 'order_history' %}">
+          <i class="bi bi-receipt" aria-hidden="true"></i>
+          <span>История заказов</span>
+        </a>
+        {% endwith %}
+      </nav>
+
+      {% if request.user.is_authenticated %}
+      <form class="logout-form" method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="btn-logout" type="submit">
+          <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+          <span>Выйти из аккаунта</span>
+        </button>
+      </form>
+      {% endif %}
+    </aside>
+
+    <section class="profile-content">
+      <article class="cabinet-card">
+        <div class="cabinet-card__head">
+          <i class="bi bi-person-vcard" aria-hidden="true"></i>
+          <div>
+            <h2>Персональные данные</h2>
+            <p>Имя, контакты и дата рождения — нужны для оформления заказов.</p>
+          </div>
+        </div>
+        <form id="profileForm" class="grid-form" novalidate>
           {% csrf_token %}
-          <button class="btn btn--ghost btn--logout" type="submit">
-            <i class="bi bi-box-arrow-right"></i>
-            <span>Выйти из аккаунта</span>
+          <label class="field">
+            <span class="field__label"><i class="bi bi-person" aria-hidden="true"></i> Имя</span>
+            <input id="firstName" type="text" required placeholder="Иван" value="{{ profile_first_name }}">
+          </label>
+          <label class="field">
+            <span class="field__label"><i class="bi bi-person" aria-hidden="true"></i> Фамилия</span>
+            <input id="lastName" type="text" required placeholder="Иванов" value="{{ profile_last_name }}">
+          </label>
+          <label class="field">
+            <span class="field__label"><i class="bi bi-envelope" aria-hidden="true"></i> Email</span>
+            <input id="email" type="email" required placeholder="mail@example.com" value="{{ profile_email }}">
+          </label>
+          <label class="field">
+            <span class="field__label"><i class="bi bi-telephone" aria-hidden="true"></i> Телефон</span>
+            <input id="phone" type="tel" required placeholder="+7 (___) ___-__-__" value="{{ profile_phone }}">
+          </label>
+          <label class="field field--full">
+            <span class="field__label"><i class="bi bi-calendar-event" aria-hidden="true"></i> Дата рождения</span>
+            <input id="birthDate" type="date" value="{{ profile_birth_date }}">
+          </label>
+          <button class="btn btn--primary field--full" type="submit">
+            <i class="bi bi-check2" aria-hidden="true"></i>
+            <span>Сохранить изменения</span>
           </button>
         </form>
-        {% endif %}
-      </aside>
+      </article>
 
-      <section class="content">
-        <div class="cards">
-          <article class="card">
-            <h2>Персональные данные</h2>
-            <form id="profileForm" class="grid-form" novalidate>
-                         {% csrf_token %}
-              <label>Имя<input id="firstName" type="text" required placeholder="Введите имя" value="{{ profile_first_name }}"></label>
-              <label>Фамилия<input id="lastName" type="text" required placeholder="Введите фамилию" value="{{ profile_last_name }}"></label>
-              <label>Email<input id="email" type="email" required placeholder="mail@example.com" value="{{ profile_email }}"></label>
-              <label>Телефон<input id="phone" type="tel" required placeholder="Введите телефон" value="{{ profile_phone }}"></label>
-              <label class="full">Дата рождения<input id="birthDate" type="date" value="{{ profile_birth_date }}"></label>
-              <button class="btn btn--primary full" type="submit">Сохранить изменения</button>
-            </form>
-          </article>
-
-          <article class="card">
+      <article class="cabinet-card">
+        <div class="cabinet-card__head">
+          <i class="bi bi-geo-alt" aria-hidden="true"></i>
+          <div>
             <h2>Адрес доставки</h2>
-            <form id="addressForm" class="grid-form" novalidate>              {% csrf_token %}
-              <label class="full">Город<input id="city" type="text" required placeholder="Город" value="{{ address_city }}"></label>
-              <label class="full">Улица и дом<input id="street" type="text" required placeholder="Улица и дом" value="{{ address_street }}"></label>
-              <label>Подъезд<input id="entrance" type="text" placeholder="Подъезд" value="{{ address_entrance }}"></label>
-              <label>Квартира / офис<input id="flat" type="text" placeholder="Квартира / офис" value="{{ address_flat }}"></label>
-              <label class="full">Комментарий курьеру<textarea id="comment" rows="3" placeholder="Комментарий для курьера">{{ address_comment }}</textarea></label>
-              <button class="btn btn--primary full" type="submit">Сохранить адрес</button>
-            </form>
-          </article>
-
-          <article class="card">
-            <h2>Уведомления</h2>
-            <form id="notifyForm" class="notify-form" novalidate>              {% csrf_token %}
-              <label><input id="nOrder" type="checkbox" {% if notify_order %}checked{% endif %}> Статусы заказов</label>
-              <label><input id="nPromo" type="checkbox" {% if notify_promo %}checked{% endif %}> Акции и спецпредложения</label>
-              <label><input id="nRestock" type="checkbox" {% if notify_restock %}checked{% endif %}> Появление товара в наличии</label>
-              <button class="btn btn--ghost" type="submit">Сохранить настройки</button>
-            </form>
-          </article>
+            <p>Основной адрес — будет подставлен при оформлении заказа.</p>
+          </div>
         </div>
-      </section>
+        <form id="addressForm" class="grid-form" novalidate>
+          {% csrf_token %}
+          <label class="field field--full">
+            <span class="field__label"><i class="bi bi-buildings" aria-hidden="true"></i> Город</span>
+            <input id="city" type="text" required placeholder="Курск" value="{{ address_city }}">
+          </label>
+          <label class="field field--full">
+            <span class="field__label"><i class="bi bi-signpost" aria-hidden="true"></i> Улица и дом</span>
+            <input id="street" type="text" required placeholder="ул. Ленина, 12" value="{{ address_street }}">
+          </label>
+          <label class="field">
+            <span class="field__label"><i class="bi bi-door-open" aria-hidden="true"></i> Подъезд</span>
+            <input id="entrance" type="text" placeholder="2" value="{{ address_entrance }}">
+          </label>
+          <label class="field">
+            <span class="field__label"><i class="bi bi-house" aria-hidden="true"></i> Квартира / офис</span>
+            <input id="flat" type="text" placeholder="18" value="{{ address_flat }}">
+          </label>
+          <label class="field field--full">
+            <span class="field__label"><i class="bi bi-chat-left-text" aria-hidden="true"></i> Комментарий курьеру</span>
+            <textarea id="comment" rows="3" placeholder="Домофон, этаж, ориентир — любые детали">{{ address_comment }}</textarea>
+          </label>
+          <button class="btn btn--primary field--full" type="submit">
+            <i class="bi bi-check2" aria-hidden="true"></i>
+            <span>Сохранить адрес</span>
+          </button>
+        </form>
+      </article>
+
+      <article class="cabinet-card">
+        <div class="cabinet-card__head">
+          <i class="bi bi-bell" aria-hidden="true"></i>
+          <div>
+            <h2>Уведомления</h2>
+            <p>Только важное. Вы можете отключить любой канал в любой момент.</p>
+          </div>
+        </div>
+        <form id="notifyForm" class="notify-form" novalidate>
+          {% csrf_token %}
+          <label class="toggle">
+            <input id="nOrder" type="checkbox" {% if notify_order %}checked{% endif %}>
+            <span class="toggle__switch"></span>
+            <span class="toggle__body">
+              <strong>Статусы заказов</strong>
+              <small>Уведомим о подтверждении, отгрузке и получении заказа.</small>
+            </span>
+          </label>
+          <label class="toggle">
+            <input id="nPromo" type="checkbox" {% if notify_promo %}checked{% endif %}>
+            <span class="toggle__switch"></span>
+            <span class="toggle__body">
+              <strong>Акции и спецпредложения</strong>
+              <small>Раз в 1–2 недели — подборка скидок и сезонных акций.</small>
+            </span>
+          </label>
+          <label class="toggle">
+            <input id="nRestock" type="checkbox" {% if notify_restock %}checked{% endif %}>
+            <span class="toggle__switch"></span>
+            <span class="toggle__body">
+              <strong>Появление товара в наличии</strong>
+              <small>Дадим знать, как только товар из избранного снова появится.</small>
+            </span>
+          </label>
+          <button class="btn btn--ghost" type="submit">
+            <i class="bi bi-check2" aria-hidden="true"></i>
+            <span>Сохранить настройки</span>
+          </button>
+        </form>
+      </article>
     </section>
-  </main>
+  </section>
+</div>
 {% endblock %}
 
 {% block page_js %}
 <script src="{% static 'js/profile.js' %}"></script>
 {% endblock %}
-
-

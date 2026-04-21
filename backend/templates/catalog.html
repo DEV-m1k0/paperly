@@ -1,51 +1,79 @@
 ﻿{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Каталог канцтоваров{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — Каталог канцтоваров{% endblock %}
 
 {% block page_css %}
+<link rel="stylesheet" href="{% static 'css/product-cards.css' %}">
 <link rel="stylesheet" href="{% static 'css/catalog.css' %}">
 {% endblock %}
 
 
 {% block content %}
-<main class="container page">
-    <div class="breadcrumbs">
-      <a href="{% url 'home' %}">Главная</a>
-      <span>/</span>
-      <span>Каталог</span>
+<div class="container page catalog-page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <span>Каталог</span>
+  </div>
+
+  <section class="page-hero page-hero--narrow catalog-hero reveal">
+    <div class="page-hero__bg" aria-hidden="true">
+      <span class="blob blob--teal"></span>
+      <span class="blob blob--amber"></span>
     </div>
+    <div class="page-hero__content">
+      <p class="eyebrow">Ассортимент</p>
+      <h1>Каталог <span class="accent">канцтоваров</span></h1>
+      <p class="page-hero__lead">
+        Подберите товары по брендам, типу, формату, листам и назначению —
+        удобные фильтры слева помогут сузить выбор.
+      </p>
+    </div>
+  </section>
 
-    <section class="page-head">
-      <div>
-        <h1>Каталог канцтоваров</h1>
-        <p>Подберите товары по брендам, типу, формату, листам и назначению.</p>
-      </div>
-      <button class="filters-toggle" id="openFilters"><i class="bi bi-sliders"></i> Фильтры</button>
-    </section>
-
-    <section class="catalog-layout">
-      <aside class="filters" id="filtersPanel">
-        <div class="filters__head">
-          <h2>Фильтры</h2>
-          <button id="closeFilters" aria-label="Закрыть фильтры"><i class="bi bi-x-lg"></i></button>
+  <section class="catalog-layout">
+    <aside class="filters" id="filtersPanel" aria-label="Фильтры каталога">
+      <div class="filters__head">
+        <div>
+          <h2><i class="bi bi-sliders2" aria-hidden="true"></i> Фильтры</h2>
+          <p class="filters__summary" id="filtersSummary" hidden></p>
         </div>
+        <button class="filters__reset" id="resetFilters" type="button" hidden>
+          <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+          <span>Сбросить</span>
+        </button>
+        <button class="filters__close" id="closeFilters" type="button" aria-label="Закрыть фильтры"><i class="bi bi-x-lg"></i></button>
+      </div>
 
+      <div class="filters__scrollable">
         <div id="dynamicFilters" aria-live="polite">
           <p class="filter-empty">Загрузка...</p>
         </div>
+      </div>
 
-        <div class="filter-actions">
-          <button class="btn btn--primary" id="applyFilters">Применить</button>
-          <button class="btn btn--ghost" id="resetFilters">Сбросить</button>
+      <div class="filter-actions">
+        <button class="btn btn--primary" id="applyFilters" type="button">
+          <i class="bi bi-check2" aria-hidden="true"></i>
+          <span>Показать <span id="applyCountText"></span></span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="catalog-main">
+      <div class="catalog-toolbar">
+        <div class="catalog-toolbar__stat">
+          <i class="bi bi-bag-check" aria-hidden="true"></i>
+          <span id="resultsCount">Найдено: 0 товаров</span>
         </div>
-      </aside>
-
-      <div class="catalog-main">
-        <div class="catalog-toolbar">
-          <p id="resultsCount">Найдено: 0 товаров</p>
-          <label>
-            Сортировка
+        <div class="catalog-toolbar__controls">
+          <button class="filters-toggle" id="openFilters" type="button">
+            <i class="bi bi-sliders" aria-hidden="true"></i>
+            <span>Фильтры</span>
+            <span class="filters-toggle__count" id="filtersToggleCount" hidden>0</span>
+          </button>
+          <label class="sort-select">
+            <span class="sort-select__label">Сортировка</span>
             <select id="sortSelect">
               <option value="popular">По популярности</option>
               <option value="price-asc">Сначала дешевле</option>
@@ -54,13 +82,16 @@
             </select>
           </label>
         </div>
-
-        <div class="products" id="productsGrid" aria-live="polite">
-          <p class="empty-state">Загрузка товаров...</p>
-        </div>
       </div>
-    </section>
-  </main>
+
+      <div class="active-chips" id="activeChips" hidden></div>
+
+      <div class="products" id="productsGrid" aria-live="polite">
+        <p class="empty-state">Загрузка товаров...</p>
+      </div>
+    </div>
+  </section>
+</div>
 {% endblock %}
 
 {% block page_js %}

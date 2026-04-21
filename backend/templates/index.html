@@ -1,125 +1,249 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — канцтовары для школы, офиса и творчества{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — канцтовары для школы, офиса и творчества{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/index.css' %}">
 <link rel="stylesheet" href="{% static 'css/product-cards.css' %}">
 {% endblock %}
 
-{% block pre_content %}
-<div class="bg-orb bg-orb--1" aria-hidden="true"></div>
-  <div class="bg-orb bg-orb--2" aria-hidden="true"></div>
-{% endblock %}
-
 {% block content %}
-<main>
-    <section class="hero container">
-      <div class="hero__content reveal">
-        <p class="eyebrow">Интернет-магазин канцтоваров</p>
-        <h1>Соберите идеальный набор для учебы, офиса и творчества</h1>
-        <p class="hero__lead">От повседневных тетрадей до премиальных письменных наборов. Быстрая доставка, понятный каталог и честные цены.</p>
-        <div class="hero__cta">
-          <a class="btn btn--primary" href="{% url 'catalog' %}">Открыть каталог</a>
-          <a class="btn btn--ghost" href="{% url 'promotions' %}">Смотреть акции</a>
-        </div>
-        <ul class="hero__facts">
-          <li><strong>12 000+</strong> товаров в наличии</li>
-          <li><strong>24 часа</strong> до отгрузки</li>
-          <li><strong>4.9/5</strong> оценка покупателей</li>
-        </ul>
-      </div>
+<div class="container home-page">
+  {% if page_content %}
+  <section class="page-hero reveal">{{ page_content|safe }}</section>
+  {% else %}
 
-      <div class="hero__visual reveal reveal-delay">
-        <div class="hero-card hero-card--large">
-          <span class="hero-card__badge">Снова в школу</span>
-          <h3>Наборы первоклассника</h3>
-          <p>Готовые комплекты с выгодой до 18%</p>
-        </div>
-        <div class="hero-card">
-          <h3>Офис без хаоса</h3>
-          <p>Органайзеры, лотки, архивные решения</p>
-        </div>
-        <div class="hero-card hero-card--accent">
-          <h3>Творческая зона</h3>
-          <p>Краски, скетчбуки, кисти и графика</p>
-        </div>
-      </div>
-    </section>
+  <section class="page-hero home-hero reveal">
+    <div class="page-hero__bg" aria-hidden="true">
+      <span class="blob blob--teal"></span>
+      <span class="blob blob--amber"></span>
+    </div>
 
-    <section class="section container reveal">
-      <div class="section__head">
+    <div class="page-hero__content">
+      <p class="eyebrow">{{ site.site_name|default:"Paperly" }} — канцтовары</p>
+      <h1>Соберите идеальный набор для&nbsp;<span class="accent">учёбы, офиса и творчества</span></h1>
+      <p class="page-hero__lead">
+        От повседневных тетрадей до премиальных письменных наборов.
+        Быстрая доставка, понятный каталог и честные цены.
+      </p>
+      <div class="page-hero__actions">
+        <a class="btn btn--primary" href="{% url 'catalog' %}">
+          <i class="bi bi-grid" aria-hidden="true"></i>
+          <span>Открыть каталог</span>
+        </a>
+        <a class="btn btn--ghost" href="{% url 'promotions' %}">
+          <i class="bi bi-tag" aria-hidden="true"></i>
+          <span>Акции и скидки</span>
+        </a>
+      </div>
+    </div>
+
+    <aside class="page-hero__side home-hero__cards" aria-label="Быстрые ссылки">
+      <a class="home-hero-card home-hero-card--school" href="{% url 'catalog' %}?category=kids">
+        <span class="home-hero-card__badge">Снова в школу</span>
+        <h3>Наборы первоклассника</h3>
+        <p>Готовые комплекты с выгодой до 18%</p>
+        <i class="bi bi-backpack" aria-hidden="true"></i>
+      </a>
+      <a class="home-hero-card home-hero-card--office" href="{% url 'catalog' %}?category=office">
+        <h3>Офис без хаоса</h3>
+        <p>Органайзеры, лотки, архивные решения</p>
+        <i class="bi bi-briefcase" aria-hidden="true"></i>
+      </a>
+      <a class="home-hero-card home-hero-card--art" href="{% url 'catalog' %}?category=art">
+        <h3>Творческая зона</h3>
+        <p>Краски, скетчбуки, кисти и графика</p>
+        <i class="bi bi-palette" aria-hidden="true"></i>
+      </a>
+    </aside>
+  </section>
+
+  {% if home_stats %}
+  <section class="page-stats reveal" aria-label="Цифры о магазине">
+    {% for stat in home_stats %}
+      <article class="page-stat">
+        <strong>{{ stat.value }}</strong>
+        <span>{{ stat.label }}</span>
+      </article>
+    {% endfor %}
+  </section>
+  {% endif %}
+  {% endif %}
+
+  <section class="home-section reveal">
+    <header class="home-section__head">
+      <div>
+        <p class="eyebrow">Каталог</p>
         <h2>Популярные категории</h2>
-        <a href="{% url 'catalog' %}">Все категории <i class="bi bi-arrow-right"></i></a>
       </div>
-      <div class="category-grid">
-        <a class="category" href="{% url 'catalog' %}?category=tetradi,bloknoty"><i class="bi bi-journal-bookmark"></i><span>Тетради и блокноты</span></a>
-        <a class="category" href="{% url 'catalog' %}?category=pismennye-prinadlezhnosti"><i class="bi bi-pencil"></i><span>Письменные принадлежности</span></a>
-        <a class="category" href="{% url 'catalog' %}?category=albomy-dlya-risovaniya"><i class="bi bi-palette"></i><span>Творчество и черчение</span></a>
-        <a class="category" href="{% url 'catalog' %}?category=tovary-dlya-ofisa"><i class="bi bi-briefcase"></i><span>Товары для офиса</span></a>
-        <a class="category" href="{% url 'catalog' %}?category=shkolnye-tetradi"><i class="bi bi-backpack"></i><span>Школа и детям</span></a>
-        <a class="category" href="{% url 'catalog' %}?brand=erich-krause,kores,brauberg,maped,pilot,faber-castell"><i class="bi bi-grid"></i><span>Бренды</span></a>
-      </div>
-    </section>
+      <a class="home-section__link" href="{% url 'catalog' %}">
+        <span>Все категории</span>
+        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </a>
+    </header>
+    <div class="category-grid">
+      <a class="category-card category-card--paper" href="{% url 'catalog' %}?category=paper">
+        <div class="category-card__icon"><i class="bi bi-journal-bookmark" aria-hidden="true"></i></div>
+        <h3>Тетради и блокноты</h3>
+        <span>для учёбы и работы</span>
+      </a>
+      <a class="category-card category-card--writing" href="{% url 'catalog' %}?category=writing">
+        <div class="category-card__icon"><i class="bi bi-pencil" aria-hidden="true"></i></div>
+        <h3>Письменные принадлежности</h3>
+        <span>ручки, карандаши, маркеры</span>
+      </a>
+      <a class="category-card category-card--art" href="{% url 'catalog' %}?category=art">
+        <div class="category-card__icon"><i class="bi bi-palette" aria-hidden="true"></i></div>
+        <h3>Творчество и черчение</h3>
+        <span>краски, кисти, альбомы</span>
+      </a>
+      <a class="category-card category-card--office" href="{% url 'catalog' %}?category=office">
+        <div class="category-card__icon"><i class="bi bi-briefcase" aria-hidden="true"></i></div>
+        <h3>Товары для офиса</h3>
+        <span>архивация и организация</span>
+      </a>
+      <a class="category-card category-card--kids" href="{% url 'catalog' %}?category=kids">
+        <div class="category-card__icon"><i class="bi bi-backpack" aria-hidden="true"></i></div>
+        <h3>Школа и детям</h3>
+        <span>пеналы, ранцы, наборы</span>
+      </a>
+      <a class="category-card category-card--brands" href="{% url 'brands' %}">
+        <div class="category-card__icon"><i class="bi bi-patch-check" aria-hidden="true"></i></div>
+        <h3>Все бренды</h3>
+        <span>проверенные производители</span>
+      </a>
+    </div>
+  </section>
 
-    <section class="section container reveal">
-      <div class="section__head">
+  <section class="home-section reveal">
+    <header class="home-section__head">
+      <div>
+        <p class="eyebrow">Выгода</p>
         <h2>Акции и скидки</h2>
-        <a href="{% url 'promotions' %}">Все акции <i class="bi bi-arrow-right"></i></a>
       </div>
+      <a class="home-section__link" href="{% url 'promotions' %}">
+        <span>Все акции</span>
+        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </a>
+    </header>
+    <div class="slider-wrap">
+      <button class="slider-btn slider-btn--prev" id="promoScrollPrev" type="button" aria-label="Назад"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
       <div class="products products--scroll" id="homePromotionsProducts" aria-live="polite">
         <p class="empty-state">Загрузка товаров...</p>
       </div>
-    </section>
+      <button class="slider-btn slider-btn--next" id="promoScrollNext" type="button" aria-label="Вперёд"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+    </div>
+  </section>
 
-    <section class="section container reveal">
-      <div class="section__head">
+  <section class="home-section reveal">
+    <header class="home-section__head">
+      <div>
+        <p class="eyebrow">Новое</p>
         <h2>Новинки</h2>
-        <a href="{% url 'new_arrivals' %}">Все новинки <i class="bi bi-arrow-right"></i></a>
       </div>
-      <div class="products" id="homeNewProducts" aria-live="polite">
-        <p class="empty-state">Загрузка товаров...</p>
-      </div>
-    </section>
+      <a class="home-section__link" href="{% url 'new_arrivals' %}">
+        <span>Все новинки</span>
+        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </a>
+    </header>
+    <div class="products" id="homeNewProducts" aria-live="polite">
+      <p class="empty-state">Загрузка товаров...</p>
+    </div>
+  </section>
 
-    <section class="section container reveal">
-      <div class="section__head">
+  <section class="home-section home-section--soft reveal">
+    <header class="home-section__head">
+      <div>
+        <p class="eyebrow">Популярное</p>
+        <h2>Хиты продаж</h2>
+      </div>
+      <a class="home-section__link" href="{% url 'bestsellers' %}">
+        <span>Смотреть подборку</span>
+        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </a>
+    </header>
+    <div class="products" id="homeHitProducts" aria-live="polite">
+      <p class="empty-state">Загрузка товаров...</p>
+    </div>
+  </section>
+
+  <section class="home-section reveal">
+    <header class="home-section__head">
+      <div>
+        <p class="eyebrow">Бренды</p>
         <h2>Популярные бренды</h2>
-        <a href="{% url 'brands' %}">Все бренды <i class="bi bi-arrow-right"></i></a>
       </div>
-      <div class="products" id="homeBrands" aria-live="polite">
-        <p class="empty-state">Загрузка брендов...</p>
-      </div>
-    </section>
+      <a class="home-section__link" href="{% url 'brands' %}">
+        <span>Все бренды</span>
+        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </a>
+    </header>
+    <div class="brands-grid" id="homeBrands" aria-live="polite">
+      <p class="empty-state">Загрузка брендов...</p>
+    </div>
+  </section>
 
-    <section class="section section--soft">
-      <div class="container reveal">
-        <div class="section__head">
-          <h2>Хиты продаж</h2>
-          <a href="{% url 'bestsellers' %}">Смотреть подборку <i class="bi bi-arrow-right"></i></a>
-        </div>
-        <div class="products" id="homeHitProducts" aria-live="polite">
-          <p class="empty-state">Загрузка товаров...</p>
-        </div>
+  <section class="home-services reveal" aria-label="Как мы доставляем">
+    <a class="service-card service-card--delivery" href="{% url 'delivery' %}">
+      <div class="service-card__icon"><i class="bi bi-truck" aria-hidden="true"></i></div>
+      <div class="service-card__body">
+        <h3>Доставка и оплата</h3>
+        <p>Курьер, самовывоз, почта. Карта онлайн, СБП или при получении.</p>
       </div>
-    </section>
+      <i class="service-card__arrow bi bi-arrow-right" aria-hidden="true"></i>
+    </a>
+    <a class="service-card service-card--pickup" href="{% url 'pickup' %}">
+      <div class="service-card__icon"><i class="bi bi-geo-alt" aria-hidden="true"></i></div>
+      <div class="service-card__body">
+        <h3>Пункты выдачи</h3>
+        <p>Заберите заказ бесплатно из удобного пункта — хранение 5 дней.</p>
+      </div>
+      <i class="service-card__arrow bi bi-arrow-right" aria-hidden="true"></i>
+    </a>
+    <a class="service-card service-card--wholesale" href="{% url 'wholesale' %}">
+      <div class="service-card__icon"><i class="bi bi-briefcase" aria-hidden="true"></i></div>
+      <div class="service-card__body">
+        <h3>Для организаций</h3>
+        <p>Персональные цены, закрывающие документы, регулярные поставки.</p>
+      </div>
+      <i class="service-card__arrow bi bi-arrow-right" aria-hidden="true"></i>
+    </a>
+  </section>
 
-    <section class="section container reveal">
-      <div class="section__head">
-        <h2>Почему покупают в Paperly</h2>
+  <section class="home-section reveal">
+    <header class="home-section__head">
+      <div>
+        <p class="eyebrow">Почему мы</p>
+        <h2>Почему покупают в {{ site.site_name|default:"Paperly" }}</h2>
       </div>
-      <div class="features">
-        <article><i class="bi bi-box-seam"></i><h3>Широкий ассортимент</h3><p>Категории для школы, офиса и творчества в одном магазине.</p></article>
-        <article><i class="bi bi-lightning"></i><h3>Быстрая отгрузка</h3><p>Передаем заказ в доставку в течение 24 часов.</p></article>
-        <article><i class="bi bi-arrow-repeat"></i><h3>Прозрачный возврат</h3><p>Понятные условия обмена и возврата по ЗоЗПП.</p></article>
-        <article><i class="bi bi-percent"></i><h3>Оптовые условия</h3><p>Спеццены для компаний, школ и учебных центров.</p></article>
-      </div>
-    </section>
-  </main>
+    </header>
+    <div class="feature-grid">
+      <article class="feature">
+        <div class="feature__icon feature__icon--teal"><i class="bi bi-box-seam" aria-hidden="true"></i></div>
+        <h3>Широкий ассортимент</h3>
+        <p>Категории для школы, офиса и творчества в одном магазине.</p>
+      </article>
+      <article class="feature">
+        <div class="feature__icon feature__icon--amber"><i class="bi bi-lightning-charge" aria-hidden="true"></i></div>
+        <h3>Быстрая отгрузка</h3>
+        <p>Передаём заказ в доставку в течение 24 часов.</p>
+      </article>
+      <article class="feature">
+        <div class="feature__icon feature__icon--rose"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></div>
+        <h3>Прозрачный возврат</h3>
+        <p>Понятные условия обмена и возврата по ЗоЗПП.</p>
+      </article>
+      <article class="feature">
+        <div class="feature__icon feature__icon--indigo"><i class="bi bi-percent" aria-hidden="true"></i></div>
+        <h3>Оптовые условия</h3>
+        <p>Спеццены для компаний, школ и учебных центров.</p>
+      </article>
+    </div>
+  </section>
+</div>
 {% endblock %}
 
 {% block page_js %}
 <script src="{% static 'js/index.js' %}"></script>
 {% endblock %}
-

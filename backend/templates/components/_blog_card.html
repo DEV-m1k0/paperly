@@ -1,0 +1,30 @@
+{% load static %}
+<article class="blog-card">
+  <a class="blog-card__cover" href="{% url 'blog' %}?slug={{ post.slug }}">
+    {% if post.display_cover_url %}
+    <img src="{{ post.display_cover_url }}" alt="{{ post.title }}" loading="lazy">
+    {% else %}
+    <div class="blog-card__cover-placeholder" aria-hidden="true">
+      <i class="bi bi-journal-text"></i>
+    </div>
+    {% endif %}
+    {% if post.category %}
+    <span class="blog-card__cat">{{ post.category.title }}</span>
+    {% endif %}
+  </a>
+  <div class="blog-card__body">
+    <div class="blog-card__meta">
+      {% if post.published_at %}
+      <span><i class="bi bi-calendar3" aria-hidden="true"></i> {{ post.published_at|date:"d E Y" }}</span>
+      {% endif %}
+    </div>
+    <h3><a href="{% url 'blog' %}?slug={{ post.slug }}">{{ post.title }}</a></h3>
+    {% if post.excerpt or post.content %}
+    <p>{{ post.excerpt|default:post.content|truncatechars:140 }}</p>
+    {% endif %}
+  </div>
+  <a class="blog-card__link" href="{% url 'blog' %}?slug={{ post.slug }}">
+    <span>Читать статью</span>
+    <i class="bi bi-arrow-right" aria-hidden="true"></i>
+  </a>
+</article>

@@ -226,22 +226,7 @@ h1 {
   color: #17373f;
 }
 
-.btn {
-  min-height: 42px;
-  border-radius: 10px;
-  border: 0;
-  background: var(--primary);
-  color: #fff;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.btn:hover {
-  background: var(--primary-strong);
-}
+/* Button styles come from theme.css */
 
 @media (max-width: 1020px) {
   .promo-grid {

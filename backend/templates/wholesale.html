@@ -1,141 +1,148 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Оптовым клиентам{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — {{ page_title|default:"Оптовым клиентам" }}{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/wholesale.css' %}">
 {% endblock %}
 
 {% block content %}
-<main class="container page">
-    <div class="breadcrumbs">
-      <a href="{% url 'home' %}">Главная</a>
-      <span>/</span>
-      <span>Оптовым клиентам</span>
+<div class="container page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <span>Оптовым клиентам</span>
+  </div>
+
+  {% if page_content %}
+    {{ page_content|safe }}
+  {% else %}
+  <section class="page-hero reveal">
+    <div class="page-hero__bg" aria-hidden="true">
+      <span class="blob blob--teal"></span>
+      <span class="blob blob--amber"></span>
     </div>
 
-    <section class="hero">
-      <div>
-        <p class="eyebrow">B2B и образование</p>
-        <h1>Поставки канцтоваров для юрлиц, школ и университетов</h1>
-        <p class="lead">Работаем по договору, предоставляем персональные цены, закрывающие документы и регулярные поставки по вашему графику.</p>
-        <div class="hero__actions">
-          <a href="#priceLists" class="btn btn--primary">Скачать прайс-листы</a>
-          <a href="#request" class="btn btn--ghost">Оставить заявку</a>
-        </div>
+    <div class="page-hero__content">
+      <p class="eyebrow">B2B и образование</p>
+      <h1>Поставки канцтоваров для <span class="accent">юрлиц, школ и университетов</span></h1>
+      <p class="page-hero__lead">
+        Работаем по договору, предоставляем персональные цены, закрывающие документы и регулярные поставки по вашему графику.
+      </p>
+      <div class="page-hero__actions">
+        <a class="btn btn--primary" href="#request">
+          <i class="bi bi-send" aria-hidden="true"></i>
+          <span>Оставить заявку</span>
+        </a>
+        {% if site.phone %}
+        <a class="btn btn--ghost" href="tel:{{ site.phone }}">
+          <i class="bi bi-telephone" aria-hidden="true"></i>
+          <span>{{ site.phone }}</span>
+        </a>
+        {% endif %}
       </div>
-      <article class="hero-card">
-        <h3><i class="bi bi-check2-square"></i> Что получите</h3>
-        <ul>
-          <li>Оптовые цены от объема и частоты закупок</li>
-          <li>Персональный менеджер и быстрый SLA по заявкам</li>
-          <li>Поставка на склад, в офис или учебные корпуса</li>
-          <li>УПД, счета, акты и помощь с тендерными пакетами</li>
-        </ul>
+    </div>
+
+    <aside class="page-hero__side">
+      <div class="page-hero__side-head">
+        <i class="bi bi-briefcase" aria-hidden="true"></i>
+        <h3>Работаем по договору</h3>
+      </div>
+      <p>Прозрачные условия, закрывающие документы в ЭДО и выделенный менеджер.</p>
+      <ul>
+        <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Персональные цены под объём</li>
+        <li><i class="bi bi-check2-circle" aria-hidden="true"></i> КП в день обращения</li>
+        <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Регулярные поставки по графику</li>
+      </ul>
+    </aside>
+  </section>
+
+  <section class="page-section reveal">
+    <header class="page-section__head">
+      <p class="eyebrow">Что получают партнёры</p>
+      <h2>Условия оптовой работы</h2>
+    </header>
+    <div class="feature-grid">
+      <article class="feature">
+        <div class="feature__icon feature__icon--teal"><i class="bi bi-percent" aria-hidden="true"></i></div>
+        <h3>Персональные цены</h3>
+        <p>Рассчитываем скидки под ваш объём и регулярность заказов.</p>
       </article>
-    </section>
-
-    <section class="section">
-      <div class="section__head">
-        <h2>Кому подходит сотрудничество</h2>
-      </div>
-      <div class="segment-grid">
-        <article>
-          <i class="bi bi-building"></i>
-          <h3>Юридическим лицам</h3>
-          <p>Офисы, сетевые компании, call-центры, бэк-офисы и производственные подразделения.</p>
-        </article>
-        <article>
-          <i class="bi bi-backpack2"></i>
-          <h3>Школам и колледжам</h3>
-          <p>Наборы для классов, методические материалы, расходники для кабинетов и кружков.</p>
-        </article>
-        <article>
-          <i class="bi bi-mortarboard"></i>
-          <h3>Университетам и учебным центрам</h3>
-          <p>Комплектация кафедр, лабораторий, библиотек, канцелярия для административных блоков.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="section" id="priceLists">
-      <div class="section__head">
-        <h2>Прайс-листы</h2>
-      </div>
-      <div class="price-grid">
-        <article class="price-card">
-          <h3>Корпоративный прайс</h3>
-          <p>Для офисов и коммерческих организаций.</p>
-          <a href="#" class="download"><i class="bi bi-file-earmark-arrow-down"></i> Скачать XLSX</a>
-        </article>
-        <article class="price-card">
-          <h3>Прайс для школ</h3>
-          <p>Базовые позиции и наборы для классов.</p>
-          <a href="#" class="download"><i class="bi bi-file-earmark-arrow-down"></i> Скачать XLSX</a>
-        </article>
-        <article class="price-card">
-          <h3>Прайс для вузов</h3>
-          <p>Категории для кафедр, учебных отделов и кампусов.</p>
-          <a href="#" class="download"><i class="bi bi-file-earmark-arrow-down"></i> Скачать XLSX</a>
-        </article>
-      </div>
-    </section>
-
-    <section class="section section--split">
-      <article class="panel">
-        <h2>Условия сотрудничества</h2>
-        <ul>
-          <li><strong>Минимальный заказ:</strong> от 15 000 ₽</li>
-          <li><strong>Доставка:</strong> бесплатно от 20 000 ₽ по городу</li>
-          <li><strong>Оплата:</strong> безналичный расчет, отсрочка для постоянных клиентов</li>
-          <li><strong>Поставка:</strong> разово, еженедельно или по графику клиента</li>
-        </ul>
+      <article class="feature">
+        <div class="feature__icon feature__icon--amber"><i class="bi bi-file-earmark-text" aria-hidden="true"></i></div>
+        <h3>Закрывающие документы</h3>
+        <p>Счета, накладные, УПД — отправляем через ЭДО или почтой.</p>
       </article>
-
-      <article class="panel panel--accent">
-        <h2>Документы</h2>
-        <ul>
-          <li>Договор поставки</li>
-          <li>Счет и УПД</li>
-          <li>Сертификаты и спецификации по запросу</li>
-          <li>Пакет документов для бюджетных учреждений</li>
-        </ul>
+      <article class="feature">
+        <div class="feature__icon feature__icon--indigo"><i class="bi bi-calendar-check" aria-hidden="true"></i></div>
+        <h3>Поставки по графику</h3>
+        <p>Регулярные отгрузки — еженедельно, ежемесячно, по заявке.</p>
       </article>
-    </section>
+      <article class="feature">
+        <div class="feature__icon feature__icon--rose"><i class="bi bi-person-badge" aria-hidden="true"></i></div>
+        <h3>Личный менеджер</h3>
+        <p>Один человек отвечает за ваш заказ — от КП до отгрузки.</p>
+      </article>
+    </div>
+  </section>
 
-    <section class="section">
-      <div class="section__head">
-        <h2>Как начать работу</h2>
-      </div>
-      <div class="steps">
-        <article><span>1</span><h3>Заявка</h3><p>Оставьте контакты и тип организации.</p></article>
-        <article><span>2</span><h3>Аудит потребностей</h3><p>Согласуем ассортимент, объемы и периодичность.</p></article>
-        <article><span>3</span><h3>Коммерческое предложение</h3><p>Подготовим цены, условия и логистику.</p></article>
-        <article><span>4</span><h3>Договор и старт поставок</h3><p>Заключаем договор и запускаем регулярные отгрузки.</p></article>
-      </div>
-    </section>
+  <section class="page-section reveal">
+    <header class="page-section__head">
+      <p class="eyebrow">Процесс</p>
+      <h2>Как начать работу</h2>
+    </header>
+    <ol class="steps-grid">
+      <li class="step">
+        <span class="step__num">1</span>
+        <div><h3>Заявка</h3><p>Заполните форму ниже или позвоните.</p></div>
+      </li>
+      <li class="step">
+        <span class="step__num">2</span>
+        <div><h3>КП и расчёт</h3><p>Готовим персональное предложение в течение дня.</p></div>
+      </li>
+      <li class="step">
+        <span class="step__num">3</span>
+        <div><h3>Договор</h3><p>Подписываем договор или счёт-оферту.</p></div>
+      </li>
+      <li class="step">
+        <span class="step__num">4</span>
+        <div><h3>Поставки</h3><p>Отгружаем по графику с закрывающими документами.</p></div>
+      </li>
+    </ol>
+  </section>
 
-    <section class="section request" id="request">
+  <section class="page-section reveal" id="request">
+    <header class="page-section__head">
+      <p class="eyebrow">Связь</p>
+      <h2>Оставьте заявку</h2>
+    </header>
+    <div class="request-wrap">
       <div class="request__intro">
-        <h2>Запросить оптовое предложение</h2>
-        <p>Ответим в течение рабочего дня. Для срочных заявок — в течение 1 часа в рабочее время.</p>
+        <h3>Ответим в течение рабочего дня</h3>
+        <p>Для срочных заявок — в течение 1 часа в рабочее время.</p>
         <ul>
-          <li><i class="bi bi-check2"></i> Персональные цены под объем</li>
-          <li><i class="bi bi-check2"></i> КП и прайс в день обращения</li>
-          <li><i class="bi bi-check2"></i> Помощь с договором и документами</li>
+          <li><i class="bi bi-clock" aria-hidden="true"></i> Пн–Пт, 9:00–18:00</li>
+          {% if site.phone %}<li><i class="bi bi-telephone" aria-hidden="true"></i> {{ site.phone }}</li>{% endif %}
+          {% if site.email %}<li><i class="bi bi-envelope" aria-hidden="true"></i> {{ site.email }}</li>{% endif %}
         </ul>
       </div>
-      <form id="requestForm" class="request-form">
+      <form id="requestForm" class="request-form" novalidate>
+        {% csrf_token %}
         <label>Название организации<input type="text" required placeholder="ООО / Школа / Университет"></label>
         <label>Контактное лицо<input type="text" required placeholder="ФИО"></label>
         <label>Телефон<input type="tel" required placeholder="+7 (...) ...-..-.."></label>
         <label>Email<input type="email" required placeholder="mail@company.ru"></label>
-        <label>Комментарий<textarea rows="4" placeholder="Категории товаров, примерный объем, адрес доставки"></textarea></label>
-        <button class="btn btn--primary" type="submit">Отправить заявку</button>
+        <label class="request-form__full">Комментарий<textarea rows="4" placeholder="Категории товаров, примерный объём, адрес доставки"></textarea></label>
+        <button class="btn btn--primary request-form__submit" type="submit">
+          <i class="bi bi-send" aria-hidden="true"></i>
+          <span>Отправить заявку</span>
+        </button>
       </form>
-    </section>
-  </main>
+    </div>
+  </section>
+  {% endif %}
+</div>
 {% endblock %}
 
 {% block page_js %}

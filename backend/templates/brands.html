@@ -1,14 +1,14 @@
 ﻿{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Бренды{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — Бренды{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/brands.css' %}">
 {% endblock %}
 
 {% block content %}
-<main class="container page">
+<div class="container page">
   <h1>Бренды</h1>
   <p class="lead">Популярные производители канцелярии с переходом к товарам бренда.</p>
   <section class="products" id="brandsGrid" aria-live="polite">
@@ -19,7 +19,7 @@
     <p>Как только бренды появятся в каталоге, мы покажем их здесь.</p>
     <a href="{% url 'catalog' %}" class="btn">Перейти в каталог</a>
   </div>
-</main>
+</div>
 {% endblock %}
 
 {% block page_js %}

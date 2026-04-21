@@ -1,57 +1,26 @@
-﻿document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
+  const P = window.paperly;
   const isAuthenticated = document.body?.dataset.isAuthenticated === "true";
   const authUrl = document.body?.dataset.authUrl || "/auth/";
   const userId = document.body?.dataset.userId || "";
-  const wishlistCount = document.getElementById("wishlistCount");
-  const cartCount = document.getElementById("cartCount");
   const flashes = document.querySelectorAll(".auth-flash .flash");
   const nav = document.getElementById("nav");
   const burger = document.getElementById("burger");
 
-  // --- Функция обновления счётчика избранного с сервера ---
-  async function updateFavoritesCount() {
-    const favCountSpan = document.getElementById('wishlistCount');
-    if (!favCountSpan) return;
+  // --- Счётчик избранного ---
+  P.updateFavoritesCount();
 
-    if (!isAuthenticated) {
-      favCountSpan.textContent = '0';
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/favorites/', { credentials: 'same-origin' });
-      if (!response.ok) {
-        favCountSpan.textContent = '0';
-        return;
-      }
-      const data = await response.json();
-      const favorites = Array.isArray(data) ? data : data.results || [];
-      favCountSpan.textContent = favorites.length;
-    } catch (error) {
-      console.error('Failed to fetch favorites count', error);
-      favCountSpan.textContent = '0';
-    }
-  }
-
-  // Вызываем при загрузке
-  updateFavoritesCount();
-  window.updateFavoritesCount = updateFavoritesCount; // делаем глобальной
-
-  // --- Синхронизация пользователя (сброс корзины при смене аккаунта) ---
+  // --- Сброс корзины при смене пользователя ---
   if (isAuthenticated && userId) {
     const storedUser = localStorage.getItem("paperly_user_id");
-    if (storedUser !== userId) {
-      localStorage.setItem("paperly_cart_count", "0");
-      localStorage.setItem("paperly_cart_items", "[]");
+    if (storedUser && storedUser !== userId) {
+      P.clearCart();
     }
     localStorage.setItem("paperly_user_id", userId);
   }
 
-  // Инициализация счётчика корзины из localStorage
-  if (cartCount) {
-    const savedCount = localStorage.getItem("paperly_cart_count");
-    cartCount.textContent = savedCount || "0";
-  }
+  // --- Счётчик корзины ---
+  P.renderCartCount();
 
   if (flashes.length) {
     flashes.forEach((flash) => {
@@ -77,52 +46,20 @@
     });
   });
 
-  // --- Защита: неавторизованные пользователи не могут добавлять в корзину ---
-  document.addEventListener(
-    "click",
-    (event) => {
-      const trigger = event.target.closest("button.add, button.add-to-cart, button.add-btn, #addToCart, .add");
-      if (!trigger || isAuthenticated) return;
-
-      event.preventDefault();
-      event.stopImmediatePropagation();
-
-      const next = encodeURIComponent(
-        `${window.location.pathname}${window.location.search}${window.location.hash}`
-      );
-      window.location.href = `${authUrl}?next=${next}`;
-    },
-    true
-  );
-
-  // --- Работа с корзиной (localStorage) ---
-  function readCartItems() {
-    try {
-      return JSON.parse(localStorage.getItem("paperly_cart_items") || "[]");
-    } catch {
-      return [];
-    }
+  // Guests могут добавлять товары в корзину и избранное без аккаунта —
+  // создание аккаунта предлагается на шаге оформления заказа.
+  // Если был localStorage-избранного гостя, мёрджим его на сервер после логина.
+  if (isAuthenticated) {
+    P.mergeLocalFavoritesToServer?.();
   }
 
-  function saveCartItems(items) {
-    localStorage.setItem("paperly_cart_items", JSON.stringify(items));
-  }
-
-  function updateCartCountDisplay() {
-    const items = readCartItems();
-    const count = items.reduce((sum, item) => sum + (item.qty || 0), 0);
-    localStorage.setItem("paperly_cart_count", String(count));
-    if (cartCount) cartCount.textContent = String(count);
-    return count;
-  }
-
+  // --- Извлечение данных товара из карточки ---
   function parsePrice(text) {
-    const raw = String(text || "");
-    const digits = raw.replace(/[^0-9]/g, "");
+    const digits = String(text || "").replace(/[^0-9]/g, "");
     return digits ? Number(digits) : 0;
   }
 
-  function addItemFromTrigger(trigger, quantity = 1) {
+  function productFromTrigger(trigger) {
     const card = trigger.closest(".product, .fav-card") || trigger.closest("article") || document;
     const link = card.querySelector("h3 a, h2 a, a.product__image, a.fav-image");
     const title = trigger.dataset.title || link?.textContent?.trim() || card.querySelector("h3, h2")?.textContent?.trim() || "Товар";
@@ -139,36 +76,36 @@
         productId = "";
       }
     }
-    const id = productId || title;
-    const items = readCartItems();
-    const existing = items.find((item) => item.id === id);
-    if (existing) {
-      existing.qty += quantity;
-    } else {
-      items.push({ id, title, desc, price, qty: quantity, img: image });
-    }
-    saveCartItems(items);
-    return updateCartCountDisplay();
+    return {
+      id: productId || title,
+      title,
+      desc,
+      price,
+      img: image,
+    };
+  }
+
+  function addItemFromTrigger(trigger, quantity = 1) {
+    const product = productFromTrigger(trigger);
+    return P.addCartItem(product, quantity);
   }
   window.paperlyAddToCart = addItemFromTrigger;
 
-  // --- Fallback для кнопок корзины, не обработанных в конкретных скриптах ---
+  // --- Fallback для кнопок корзины ---
   document.addEventListener(
     "click",
     (event) => {
       const trigger = event.target.closest("button.add, button.add-to-cart, button.add-btn, #addToCart, .add");
       if (!trigger || trigger.dataset.cartBound === "true" || event.defaultPrevented) return;
-      if (!isAuthenticated) return;
 
-      // Проверяем, есть ли data-атрибут quantity (для страницы товара)
       let quantity = 1;
-      if (trigger.id === 'addToCart') {
-        const qtyInput = document.getElementById('qtyInput');
+      if (trigger.id === "addToCart") {
+        const qtyInput = document.getElementById("qtyInput");
         if (qtyInput) quantity = Math.max(1, Number(qtyInput.value) || 1);
       }
 
-      const qty = addItemFromTrigger(trigger, quantity);
-      
+      addItemFromTrigger(trigger, quantity);
+
       const initial = trigger.dataset.cartInitial || trigger.innerHTML;
       trigger.dataset.cartInitial = initial;
       trigger.innerHTML = '<i class="bi bi-check2"></i><span>Добавлено</span>';
@@ -181,15 +118,12 @@
     true
   );
 
-  // --- Анимации (AOS) ---
+  // --- Animations on scroll ---
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
   const candidates = Array.from(
-    document.querySelectorAll(
-      "main > *, main section, main article, .site-footer"
-    )
+    document.querySelectorAll("main > *, main section, main article, .site-footer")
   );
-
   if (!candidates.length) return;
 
   const unique = Array.from(new Set(candidates));
@@ -219,4 +153,39 @@
   setTimeout(() => {
     unique.forEach((node) => node.classList.add("is-in-view"));
   }, 1200);
+
+  // --- Flatpickr ---
+  if (typeof flatpickr !== "undefined") {
+    document.querySelectorAll('input[type="date"]').forEach((input) => {
+      flatpickr(input, {
+        locale: typeof flatpickr.l10ns?.ru !== "undefined" ? "ru" : "default",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "j F Y",
+        allowInput: true,
+        disableMobile: true,
+        monthSelectorType: "dropdown",
+        prevArrow: '<svg width="14" height="14" viewBox="0 0 16 16"><path d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z" fill="currentColor"/></svg>',
+        nextArrow: '<svg width="14" height="14" viewBox="0 0 16 16"><path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" fill="currentColor"/></svg>',
+      });
+    });
+  }
+
+  // --- Choices.js ---
+  if (typeof Choices !== "undefined") {
+    document.querySelectorAll("select:not(.no-choices)").forEach((select) => {
+      new Choices(select, {
+        searchEnabled: select.options.length > 6,
+        searchPlaceholderValue: "Поиск...",
+        itemSelectText: "",
+        noResultsText: "Ничего не найдено",
+        noChoicesText: "Нет вариантов",
+        shouldSort: false,
+        allowHTML: false,
+      });
+    });
+  }
 });
+
+// Global helper for back-compat
+window.updateFavoritesCount = () => window.paperly?.updateFavoritesCount?.();

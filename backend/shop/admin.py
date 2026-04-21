@@ -110,7 +110,7 @@ class ProductSpecificationInline(admin.TabularInline):
 
 @admin.register(models.Product)
 class ProductAdmin(BaseAdmin):
-    list_display = ("title", "sku", "brand", "format", "purpose", "price", "stock", "status", "is_new", "is_hit")
+    list_display = ("title", "sku", "brand", "format", "purpose", "price", "stock", "max_order_quantity", "status", "is_new", "is_hit")
     list_filter = ("status", "is_new", "is_hit", "is_featured", "brand", "format", "purpose")
     search_fields = ("title", "sku", "slug")
     inlines = (ProductImageInline, ProductSpecificationInline)
@@ -137,13 +137,6 @@ class PromotionAdmin(BaseAdmin):
     prepopulated_fields = {"slug": ("title",)}
     date_hierarchy = "start_at"
 
-
-@admin.register(models.GiftCertificate)
-class GiftCertificateAdmin(BaseAdmin):
-    list_display = ("title", "nominal", "is_active")
-    list_filter = ("is_active",)
-    prepopulated_fields = {"slug": ("title",)}
-    list_editable = ("is_active",)
 
 
 @admin.register(models.BlogCategory)
@@ -283,3 +276,18 @@ class SitePageAdmin(BaseAdmin):
     search_fields = ("title", "slug")
     prepopulated_fields = {"slug": ("title",)}
     list_editable = ("is_published",)
+
+
+@admin.register(models.SiteSetting)
+class SiteSettingAdmin(admin.ModelAdmin):
+    fieldsets = (
+        ("Основное", {"fields": ("site_name", "tagline")}),
+        ("Контакты", {"fields": ("phone", "email", "city", "address")}),
+        ("Прочее", {"fields": ("copyright_text",)}),
+    )
+
+    def has_add_permission(self, request):
+        return not models.SiteSetting.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False

@@ -1,298 +1,416 @@
-:root {
-  --bg: #f5f8f8;
-  --surface: #fff;
-  --text: #1e2e33;
-  --muted: #60757b;
-  --primary: #0e766e;
-  --primary-strong: #0a5f58;
-  --accent: #f59e0b;
-  --line: #dbe6e8;
-}
+/* Pickup page — hero/stats/buttons use theme.css; here only layout + list items. */
 
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  font-family: "Manrope", sans-serif;
-  color: var(--text);
-  background: linear-gradient(180deg, #e8f3f2 0%, var(--bg) 240px);
-}
-
-a { color: inherit; text-decoration: none; }
-
-h1,h2,h3,p { margin: 0; }
-
-.container {
-  width: min(1180px, calc(100% - 2rem));
-  margin-inline: auto;
-}
-
-.header {
-  position: sticky;
-  top: 0;
-  z-index: 25;
-  background: rgba(245, 248, 248, 0.94);
-  border-bottom: 1px solid var(--line);
-  backdrop-filter: blur(8px);
-}
-
-.header__main {
+.pickup-layout {
+  margin-top: 2rem;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: minmax(320px, 380px) 1fr;
   gap: 1rem;
-  align-items: center;
-  padding: 0.85rem 0;
+  align-items: start;
 }
 
-.logo {
-  display: inline-flex;
-  gap: 0.5rem;
-  align-items: center;
-  font-size: 1.35rem;
-  font-weight: 800;
+/* ───────────── List panel ───────────── */
+
+.pickup-panel {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 120px);
+  box-shadow: 0 20px 40px -28px rgba(11, 65, 61, 0.22);
+  position: sticky;
+  top: 96px;
 }
 
-.logo__dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--accent), #f97316);
+.pickup-panel__head {
+  padding: 1rem 1.1rem 0.85rem;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, #fbfdfd 0%, #fff 100%);
 }
 
-.search {
+.pickup-search {
   display: flex;
   align-items: center;
-  gap: 0.58rem;
+  gap: 0.5rem;
+  background: #f4f8f9;
   border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #fff;
-  height: 45px;
-  padding: 0 0.9rem;
+  border-radius: 12px;
+  padding: 0 0.85rem;
+  height: 42px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
-.search input {
-  width: 100%;
+.pickup-search:focus-within {
+  background: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(14, 118, 110, 0.12);
+}
+
+.pickup-search > i {
+  color: var(--muted);
+  font-size: 0.96rem;
+  flex-shrink: 0;
+}
+
+.pickup-search:focus-within > i {
+  color: var(--primary);
+}
+
+.pickup-search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
   border: 0;
   outline: none;
   font: inherit;
-  background: transparent;
+  font-size: 0.92rem;
+  color: var(--text);
+  padding: 0.5rem 0;
 }
 
-.actions { display: flex; gap: 0.38rem; }
-
-.actions a {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: #fff;
-  display: grid;
-  place-items: center;
-}
-
-.cart-link { position: relative; }
-
-.cart-count {
-  position: absolute;
-  top: -5px;
-  right: -4px;
-  width: 19px;
-  height: 19px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #fff;
-  background: var(--accent);
-}
-
-.nav {
+.pickup-panel__meta {
   display: flex;
-  gap: 0.48rem;
-  overflow-x: auto;
-  padding: 0.15rem 0 0.9rem;
-}
-
-.nav a {
-  white-space: nowrap;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #fff;
-  padding: 0.48rem 0.84rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.nav a.is-active {
-  border-color: #b5dad6;
-  background: #e8f6f4;
-  color: #0b635b;
-}
-
-.page {
-  padding-top: 1rem;
-  padding-bottom: 2rem;
-}
-
-.breadcrumbs {
-  color: #6f8389;
-  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
+  margin-top: 0.7rem;
+  font-size: 0.86rem;
+}
+
+.pickup-panel__count {
+  color: var(--primary-strong);
+  font-weight: 700;
+}
+
+.pickup-panel__reset {
+  display: inline-flex;
   align-items: center;
-  font-size: 0.9rem;
-  margin-bottom: 0.95rem;
-}
-
-.hero {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 0.8rem;
-}
-
-.eyebrow {
-  color: var(--primary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 0.76rem;
-  font-weight: 800;
-}
-
-.hero h1 {
-  margin-top: 0.55rem;
-  font-family: "Prata", serif;
-  font-size: clamp(1.85rem, 3.6vw, 2.8rem);
-  line-height: 1.16;
-}
-
-.lead {
-  margin-top: 0.75rem;
+  gap: 0.3rem;
+  background: none;
+  border: 0;
+  padding: 0.3rem 0.5rem;
+  border-radius: 8px;
   color: var(--muted);
-  max-width: 56ch;
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.hero-note {
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: #fff;
-  padding: 0.9rem;
+.pickup-panel__reset:hover {
+  background: rgba(14, 118, 110, 0.08);
+  color: var(--primary-strong);
 }
 
-.hero-note h3 {
-  display: flex;
-  gap: 0.45rem;
-  align-items: center;
-  font-size: 1.06rem;
+.pickup-panel__reset i {
+  font-size: 0.7rem;
 }
 
-.hero-note i { color: var(--primary); }
-
-.hero-note p {
-  margin-top: 0.45rem;
-  color: #5f747a;
-}
-
-.layout {
-  margin-top: 1rem;
-  display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 0.8rem;
-}
+/* ───────────── List items ───────────── */
 
 .pickup-list {
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: #fff;
-  padding: 0.7rem;
-  max-height: 680px;
-  overflow: auto;
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.6rem;
+  scrollbar-width: thin;
+  scrollbar-color: #c4d6da transparent;
+}
+
+.pickup-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pickup-list::-webkit-scrollbar-thumb {
+  background: #c4d6da;
+  border-radius: 3px;
+}
+
+.pickup-skeleton {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.92rem;
 }
 
 .pickup-item {
-  border: 1px solid #e8eff1;
-  border-radius: 12px;
-  padding: 0.68rem;
-  background: #fcfefe;
+  position: relative;
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.85rem 0.9rem 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, transform 0.18s ease;
+  overflow: hidden;
 }
 
-.pickup-item + .pickup-item {
-  margin-top: 0.55rem;
+.pickup-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: transparent;
+  transition: background 0.18s ease;
+}
+
+.pickup-item:hover {
+  border-color: rgba(14, 118, 110, 0.32);
+  box-shadow: 0 14px 24px -18px rgba(11, 65, 61, 0.25);
+  transform: translateY(-1px);
 }
 
 .pickup-item.is-active {
-  border-color: #9fd1cb;
-  background: #eef9f7;
+  border-color: rgba(14, 118, 110, 0.4);
+  background: linear-gradient(180deg, #f0faf8 0%, #ffffff 100%);
+  box-shadow: 0 14px 28px -18px rgba(11, 65, 61, 0.28);
+}
+
+.pickup-item.is-active::before {
+  background: linear-gradient(180deg, var(--primary), #14a396);
+}
+
+.pickup-item__icon {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(14, 118, 110, 0.1);
+  color: var(--primary);
+  font-size: 1.05rem;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.pickup-item.is-active .pickup-item__icon {
+  background: var(--primary);
+  color: #fff;
+}
+
+.pickup-item__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .pickup-item h3 {
+  margin: 0 0 0.1rem;
   font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.3;
 }
 
-.pickup-meta {
-  margin-top: 0.35rem;
-  color: #5f757b;
-  font-size: 0.88rem;
+.pickup-item__info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.85rem;
   line-height: 1.4;
 }
 
+.pickup-item__info i {
+  color: var(--primary);
+  font-size: 0.85rem;
+  margin-top: 0.12rem;
+  flex-shrink: 0;
+}
+
+.pickup-item__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  width: fit-content;
+  margin-top: 0.15rem;
+}
+
+.pickup-item__status i {
+  font-size: 0.5rem;
+}
+
+.pickup-item__status.is-open {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+}
+
+.pickup-item__status.is-closed {
+  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+}
+
+/* ───────────── Action buttons ───────────── */
+
 .pickup-actions {
-  margin-top: 0.52rem;
   display: flex;
-  gap: 0.4rem;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
 }
 
 .pickup-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   min-height: 36px;
-  height: 100%;
+  padding: 0 0.65rem;
   border-radius: 10px;
   border: 1px solid var(--line);
   background: #fff;
-  padding: 0 0.68rem;
-  font-size: 0.83rem;
+  color: var(--text);
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
-  align-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.pickup-btn i {
+  font-size: 0.88rem;
+}
+
+.pickup-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .pickup-btn--main {
   border-color: var(--primary);
   background: var(--primary);
   color: #fff;
+  box-shadow: 0 8px 18px -10px rgba(14, 118, 110, 0.45);
 }
 
 .pickup-btn--main:hover {
   background: var(--primary-strong);
+  color: #fff;
+  border-color: var(--primary-strong);
+  transform: translateY(-1px);
 }
+
+.pickup-btn--icon {
+  flex: 0 0 36px;
+  padding: 0;
+}
+
+.pickup-btn--icon.is-copied {
+  border-color: var(--primary);
+  background: rgba(14, 118, 110, 0.08);
+  color: var(--primary);
+}
+
+/* ───────────── Empty & error states ───────────── */
+
+.pickup-empty {
+  margin: 1rem 0.4rem;
+  padding: 2rem 1.2rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f6fbfa 0%, #fff 100%);
+  border: 1px dashed rgba(14, 118, 110, 0.25);
+  text-align: center;
+  color: var(--muted);
+}
+
+.pickup-empty i {
+  font-size: 2rem;
+  color: rgba(14, 118, 110, 0.4);
+}
+
+.pickup-empty h3 {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 1.05rem;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.pickup-empty p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* ───────────── Map ───────────── */
 
 .map-wrap {
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 22px;
   background: #fff;
-  padding: 0.52rem;
+  padding: 0.55rem;
+  box-shadow: 0 20px 40px -28px rgba(11, 65, 61, 0.22);
 }
 
 .map {
   width: 100%;
-  height: 680px;
-  border-radius: 12px;
+  height: calc(100vh - 140px);
+  min-height: 480px;
+  max-height: 720px;
+  border-radius: 18px;
   overflow: hidden;
+  background: #eaf2f2;
 }
 
+.pickup-map-error {
+  padding: 1rem 1.2rem;
+  color: var(--muted);
+  text-align: center;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.pickup-map-error i {
+  color: var(--accent);
+  font-size: 1.4rem;
+}
+
+/* ───────────── Responsive ───────────── */
+
 @media (max-width: 1100px) {
-  .layout {
+  .pickup-layout {
     grid-template-columns: 1fr;
+  }
+
+  .pickup-panel {
+    position: static;
+    max-height: none;
+    order: 2;
+  }
+
+  .pickup-list {
+    max-height: 420px;
+  }
+
+  .map-wrap {
+    order: 1;
   }
 
   .map {
-    height: 520px;
+    height: 420px;
+    min-height: 320px;
   }
 }
 
-@media (max-width: 760px) {
-  .search { display: none; }
+@media (max-width: 720px) {
+  .pickup-layout {
+    gap: 0.75rem;
+  }
 
-  .hero {
-    grid-template-columns: 1fr;
+  .map {
+    height: 360px;
+  }
+
+  .pickup-list {
+    max-height: 380px;
   }
 
   .pickup-actions {
@@ -300,10 +418,49 @@ h1,h2,h3,p { margin: 0; }
   }
 
   .pickup-btn {
-    width: 100%;
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pickup-panel {
+    border-radius: 18px;
+  }
+
+  .map-wrap {
+    border-radius: 18px;
+    padding: 0.4rem;
   }
 
   .map {
-    height: 420px;
+    height: 280px;
+    border-radius: 14px;
+  }
+
+  .pickup-item {
+    gap: 0.6rem;
+    padding: 0.75rem 0.8rem;
+  }
+
+  .pickup-item__icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .pickup-item h3 {
+    font-size: 0.94rem;
+  }
+
+  .pickup-item__info {
+    font-size: 0.8rem;
+  }
+
+  .pickup-btn span {
+    display: none;
+  }
+
+  .pickup-btn {
+    padding: 0 0.6rem;
   }
 }

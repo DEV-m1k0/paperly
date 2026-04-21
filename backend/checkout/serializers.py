@@ -1,16 +1,51 @@
 from decimal import Decimal
 
-from django.db import transaction
+from django.contrib.auth import get_user_model, login
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import IntegrityError, transaction
 from django.db.models import F
 from rest_framework import serializers
 
-from shop.models import Cart, CartItem, Order, OrderItem, Product
+from shop.models import Cart, CartItem, CustomerProfile, Order, OrderItem, Product
+
+User = get_user_model()
 
 
 class CartItemSerializer(serializers.ModelSerializer):
+    product_title = serializers.CharField(source="product.title", read_only=True)
+    product_short_description = serializers.CharField(source="product.short_description", read_only=True)
+    product_image = serializers.SerializerMethodField()
+
     class Meta:
         model = CartItem
-        fields = "__all__"
+        fields = [
+            "id", "cart", "product", "quantity", "price_snapshot",
+            "product_title", "product_short_description", "product_image",
+        ]
+
+    def get_product_image(self, obj):
+        image = obj.product.images.first() if obj.product_id else None
+        if not image:
+            return ""
+        if image.image:
+            return image.image.url
+        return image.image_url or ""
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        cart = attrs.get("cart") or getattr(self.instance, "cart", None)
+        if cart and request and request.user.is_authenticated and cart.user_id != request.user.id:
+            raise serializers.ValidationError("Корзина принадлежит другому пользователю.")
+        product = attrs.get("product") or getattr(self.instance, "product", None)
+        quantity = attrs.get("quantity", getattr(self.instance, "quantity", 1))
+        if product and product.max_order_quantity and quantity > product.max_order_quantity:
+            raise serializers.ValidationError(
+                f'Максимальное количество товара "{product.title}" — {product.max_order_quantity} шт.'
+            )
+        if not attrs.get("price_snapshot") and product:
+            attrs["price_snapshot"] = product.price
+        return attrs
 
 
 class CartSerializer(serializers.ModelSerializer):
@@ -18,14 +53,17 @@ class CartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cart
-        fields = "__all__"
+        fields = ["id", "user", "session_key", "is_active", "items"]
         read_only_fields = ("user",)
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = '__all__'
+        fields = [
+            "id", "order", "product", "title_snapshot",
+            "sku_snapshot", "quantity", "unit_price",
+        ]
         extra_kwargs = {
             'order': {'required': False},
             'title_snapshot': {'required': False, 'allow_blank': True},
@@ -34,19 +72,32 @@ class OrderItemSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        if not validated_data.get('title_snapshot') and validated_data.get('product'):
-            validated_data['title_snapshot'] = validated_data['product'].title
-        if not validated_data.get('sku_snapshot') and validated_data.get('product'):
-            validated_data['sku_snapshot'] = validated_data['product'].sku
+        product = validated_data.get('product')
+        if product:
+            if not validated_data.get('title_snapshot'):
+                validated_data['title_snapshot'] = product.title
+            if not validated_data.get('sku_snapshot'):
+                validated_data['sku_snapshot'] = product.sku
+            if not validated_data.get('unit_price'):
+                validated_data['unit_price'] = product.price
         return super().create(validated_data)
 
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
+    create_account = serializers.BooleanField(required=False, default=False, write_only=True)
+    account_password = serializers.CharField(required=False, allow_blank=True, write_only=True, trim_whitespace=False)
+    account_created = serializers.BooleanField(read_only=True, required=False)
 
     class Meta:
         model = Order
-        fields = '__all__'
+        fields = [
+            "id", "user", "number", "status", "full_name", "phone", "email",
+            "city", "address", "comment", "delivery_type", "payment_type",
+            "pickup_point", "subtotal", "delivery_price", "discount_amount",
+            "total", "items", "created_at",
+            "create_account", "account_password", "account_created",
+        ]
         read_only_fields = ('user', 'number', 'subtotal', 'total')
 
     def validate_items(self, items_data):
@@ -64,6 +115,11 @@ class OrderSerializer(serializers.ModelSerializer):
                     f'Недостаточно товара "{product.title}" на складе '
                     f'(доступно: {product.stock}, запрошено: {quantity}).'
                 )
+            if product.max_order_quantity > 0 and quantity > product.max_order_quantity:
+                raise serializers.ValidationError(
+                    f'Максимальное количество товара "{product.title}" в заказе — '
+                    f'{product.max_order_quantity} шт.'
+                )
         return items_data
 
     def validate(self, attrs):
@@ -73,22 +129,96 @@ class OrderSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"pickup_point": "Укажите пункт самовывоза для типа доставки «Самовывоз»."}
             )
+
+        request = self.context.get("request")
+        is_auth = request and request.user.is_authenticated
+        create_account = attrs.get("create_account", False)
+        password = attrs.get("account_password", "") or ""
+        email = (attrs.get("email") or "").strip().lower()
+
+        if create_account and is_auth:
+            # Already logged in — ignore create_account flag silently.
+            attrs["create_account"] = False
+        elif create_account:
+            if not email:
+                raise serializers.ValidationError({"email": "Укажите email для создания аккаунта."})
+            if len(password) < 8:
+                raise serializers.ValidationError(
+                    {"account_password": "Пароль должен содержать минимум 8 символов."}
+                )
+            if User.objects.filter(email__iexact=email).exists():
+                raise serializers.ValidationError(
+                    {"email": "Пользователь с таким email уже зарегистрирован. Войдите в аккаунт перед оформлением."}
+                )
+            # Validate password against Django's configured validators (common, numeric, length).
+            try:
+                validate_password(password)
+            except DjangoValidationError as exc:
+                raise serializers.ValidationError({"account_password": list(exc.messages)})
+
         return attrs
 
     @transaction.atomic
     def create(self, validated_data):
         items_data = validated_data.pop('items')
+        create_account = validated_data.pop('create_account', False)
+        password = validated_data.pop('account_password', '') or ''
+        request = self.context.get("request")
 
-        last_order = Order.objects.order_by('-id').values_list('id', flat=True).first()
-        next_num = (last_order or 0) + 1
-        validated_data['number'] = f"ORD-{next_num:06d}"
+        # ───── Optional: создаём аккаунт + логиним пользователя в сессию ─────
+        account_created = False
+        if create_account and request and not request.user.is_authenticated:
+            email = validated_data.get('email', '').strip().lower()
+            full_name = validated_data.get('full_name', '').strip()
+            first_name, _, last_name = full_name.partition(' ')
 
+            base_username = email.split('@')[0] or 'user'
+            username = base_username
+            suffix = 1
+            while User.objects.filter(username__iexact=username).exists():
+                suffix += 1
+                username = f"{base_username}{suffix}"
+
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name or '',
+                last_name=last_name or '',
+            )
+            CustomerProfile.objects.get_or_create(
+                user=user,
+                defaults={
+                    'first_name': first_name or '',
+                    'last_name': last_name or '',
+                    'phone': validated_data.get('phone', '') or '',
+                },
+            )
+            # Log them in using the session backend so subsequent requests are authenticated.
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            login(request, user)
+            validated_data['user'] = user
+            account_created = True
+        elif request and request.user.is_authenticated:
+            validated_data['user'] = request.user
+
+        # Generate unique order number
+        last_id = Order.objects.select_for_update().order_by('-id').values_list('id', flat=True).first()
+        validated_data['number'] = f"ORD-{(last_id or 0) + 1:06d}"
+
+        # Lock products and re-validate stock inside transaction
         subtotal = Decimal('0')
         for item in items_data:
-            product = item['product']
+            product = Product.objects.select_for_update().get(pk=item['product'].pk)
             quantity = item.get('quantity', 1)
+            if product.stock < quantity:
+                raise serializers.ValidationError(
+                    f'Недостаточно товара "{product.title}" на складе '
+                    f'(доступно: {product.stock}, запрошено: {quantity}).'
+                )
             unit_price = product.price
             item['unit_price'] = unit_price
+            item['product'] = product
             subtotal += unit_price * quantity
 
         validated_data['subtotal'] = subtotal
@@ -96,7 +226,13 @@ class OrderSerializer(serializers.ModelSerializer):
         discount_amount = validated_data.get('discount_amount', Decimal('0'))
         validated_data['total'] = subtotal + delivery_price - discount_amount
 
-        order = Order.objects.create(**validated_data)
+        try:
+            order = Order.objects.create(**validated_data)
+        except IntegrityError:
+            # Order number collision — regenerate
+            last_id = Order.objects.order_by('-id').values_list('id', flat=True).first()
+            validated_data['number'] = f"ORD-{(last_id or 0) + 1:06d}"
+            order = Order.objects.create(**validated_data)
 
         for item_data in items_data:
             product = item_data['product']
@@ -108,4 +244,6 @@ class OrderSerializer(serializers.ModelSerializer):
             OrderItem.objects.create(order=order, **item_data)
             Product.objects.filter(pk=product.pk).update(stock=F('stock') - quantity)
 
+        # Stash flag on instance so serializer renders `account_created` in response.
+        order.account_created = account_created  # type: ignore[attr-defined]
         return order

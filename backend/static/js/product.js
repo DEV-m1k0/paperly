@@ -5,7 +5,11 @@
   const qtyMinus = document.getElementById("qtyMinus");
   const qtyPlus = document.getElementById("qtyPlus");
   const tabs = document.querySelectorAll(".tab");
-  const panels = document.querySelectorAll(".panel");
+  const panels = document.querySelectorAll(".tab-panel");
+  const productBadge = document.getElementById("productBadge");
+  const productBrand = document.getElementById("productBrand");
+  const productStock = document.getElementById("productStock");
+  const reviewsEmpty = document.getElementById("reviewsEmpty");
   const favoriteButtons = document.querySelectorAll(".fav-btn");
   const searchForm = document.getElementById("searchForm");
   const reviewForm = document.getElementById("reviewForm");
@@ -27,27 +31,9 @@
   let currentProductId = null;
   let currentProductData = null; // для хранения данных товара
 
-  // ---------- Вспомогательные функции ----------
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(";").shift();
-    return "";
-  }
-
-  function escapeHtml(value) {
-    return String(value)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
-  }
-
-  function formatMoney(value) {
-    const num = Number(value || 0);
-    return `${num.toLocaleString("ru-RU")} Руб.`;
-  }
+  // ---------- Shared helpers ----------
+  const { getCookie, escapeHtml, apiFetch, apiJson, unwrapList } = window.paperly;
+  const formatMoney = (value) => window.paperly.formatMoney(value, "Руб.");
 
   function updateDiscountDisplay(price, oldPrice) {
     if (!productOldPrice || !productDiscount) return;
@@ -58,70 +44,84 @@
     if (hasDiscount) {
       const percent = Math.round(((numericOld - numericPrice) / numericOld) * 100);
       productOldPrice.textContent = formatMoney(numericOld);
-      productOldPrice.style.display = "inline";
-      productDiscount.textContent = `-${percent}%`;
-      productDiscount.style.display = "inline";
+      productOldPrice.hidden = false;
+      productDiscount.textContent = `−${percent}%`;
+      productDiscount.hidden = false;
     } else {
-      productOldPrice.style.display = "none";
-      productDiscount.style.display = "none";
+      productOldPrice.hidden = true;
+      productDiscount.hidden = true;
     }
   }
 
-  // ---------- Корзина (localStorage) ----------
-  function updateCartCount() {
-    const items = JSON.parse(localStorage.getItem("paperly_cart_items") || "[]");
-    const count = items.reduce((sum, item) => sum + item.qty, 0);
-    localStorage.setItem("paperly_cart_count", String(count));
-    cartCount.textContent = String(count);
-    return count;
+  function updateBadge(product) {
+    if (!productBadge) return;
+    if (product.is_hit) {
+      productBadge.textContent = "Хит продаж";
+      productBadge.className = "gallery__badge gallery__badge--hit";
+      productBadge.hidden = false;
+    } else if (product.is_new) {
+      productBadge.textContent = "Новинка";
+      productBadge.className = "gallery__badge gallery__badge--new";
+      productBadge.hidden = false;
+    } else if (Number(product.old_price) > Number(product.price)) {
+      productBadge.textContent = "Скидка";
+      productBadge.className = "gallery__badge gallery__badge--sale";
+      productBadge.hidden = false;
+    } else {
+      productBadge.hidden = true;
+    }
   }
 
-  function addToCart(product, quantity = 1) {
-    let items = JSON.parse(localStorage.getItem("paperly_cart_items") || "[]");
-    const existing = items.find(item => item.id === product.id);
-    if (existing) {
-      existing.qty += quantity;
+  function updateBrand(product) {
+    if (!productBrand) return;
+    if (product.brand_name) {
+      productBrand.innerHTML = `<i class="bi bi-patch-check" aria-hidden="true"></i> ${escapeHtml(product.brand_name)}`;
+      productBrand.hidden = false;
     } else {
-      items.push({
-        id: product.id,
-        title: product.title,
-        price: product.price,
-        img: product.img,
-        desc: product.desc,
-        qty: quantity
-      });
+      productBrand.hidden = true;
     }
-    localStorage.setItem("paperly_cart_items", JSON.stringify(items));
-    updateCartCount();
   }
+
+  function updateStock(product) {
+    if (!productStock) return;
+    const stock = Number(product.stock || 0);
+    if (stock > 10) {
+      productStock.className = "product-stock is-in";
+      productStock.innerHTML = `<i class="bi bi-check-circle-fill" aria-hidden="true"></i> В наличии`;
+    } else if (stock > 0) {
+      productStock.className = "product-stock is-low";
+      productStock.innerHTML = `<i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i> Осталось ${stock} шт.`;
+    } else {
+      productStock.className = "product-stock is-out";
+      productStock.innerHTML = `<i class="bi bi-clock-history" aria-hidden="true"></i> Под заказ`;
+    }
+  }
+
+  // ---------- Корзина ----------
+  const updateCartCount = () => window.paperly.renderCartCount();
+  const addToCart = (product, quantity = 1) => window.paperly.addCartItem(product, quantity);
 
   // ---------- Избранное (API) ----------
+  function setFavButtonState(isFav) {
+    favoriteButtons.forEach(btn => {
+      btn.classList.toggle("is-active", isFav);
+      const icon = btn.querySelector("i");
+      if (icon) {
+        icon.classList.toggle("bi-heart", !isFav);
+        icon.classList.toggle("bi-heart-fill", isFav);
+      }
+    });
+  }
+
   async function syncFavoriteButton() {
     if (!currentProductId) return;
+    if (!window.paperly.isAuthenticated()) {
+      setFavButtonState(window.paperly.isLocalFavorite(currentProductId));
+      return;
+    }
     try {
-      const response = await fetch("/api/favorites/", { credentials: "same-origin" });
-      if (!response.ok) return;
-      const payload = await response.json();
-      const favorites = Array.isArray(payload) ? payload : payload.results || [];
-      const isFav = favorites.some(f => String(f.product) === String(currentProductId));
-
-      favoriteButtons.forEach(btn => {
-        if (isFav) {
-          btn.classList.add("is-active");
-          const icon = btn.querySelector("i");
-          if (icon) {
-            icon.classList.remove("bi-heart");
-            icon.classList.add("bi-heart-fill");
-          }
-        } else {
-          btn.classList.remove("is-active");
-          const icon = btn.querySelector("i");
-          if (icon) {
-            icon.classList.remove("bi-heart-fill");
-            icon.classList.add("bi-heart");
-          }
-        }
-      });
+      const favs = await window.paperly.fetchFavorites();
+      setFavButtonState(favs.some(f => String(f.product) === String(currentProductId)));
     } catch (error) {
       console.error("Sync favorite error", error);
     }
@@ -129,44 +129,34 @@
 
   async function toggleFavorite() {
     if (!currentProductId) return;
-
     const isActive = favoriteButtons[0]?.classList.contains("is-active");
-    const csrfToken = getCookie("csrftoken");
+    const nextFav = !isActive;
+    setFavButtonState(nextFav);
+
+    if (!window.paperly.isAuthenticated()) {
+      if (nextFav) window.paperly.addLocalFavorite(currentProductId);
+      else window.paperly.removeLocalFavorite(currentProductId);
+      window.paperly.updateFavoritesCount();
+      return;
+    }
 
     try {
-      if (!isActive) {
-        // Добавить
-        const response = await fetch("/api/favorites/", {
+      if (nextFav) {
+        await window.paperly.apiJson("/api/favorites/", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken,
-          },
-          body: JSON.stringify({ product: currentProductId }),
-          credentials: "same-origin",
+          body: { product: currentProductId },
         });
-        if (!response.ok) {
-          if (response.status === 401) alert("Войдите, чтобы добавить в избранное");
-          return;
-        }
       } else {
-        // Удалить – нужно узнать ID записи
-        const listResponse = await fetch("/api/favorites/", { credentials: "same-origin" });
-        if (!listResponse.ok) return;
-        const payload = await listResponse.json();
-        const favorites = Array.isArray(payload) ? payload : payload.results || [];
-        const fav = favorites.find(f => String(f.product) === String(currentProductId));
-        if (!fav) return;
-        await fetch(`/api/favorites/${fav.id}/`, {
-          method: "DELETE",
-          headers: { "X-CSRFToken": csrfToken },
-          credentials: "same-origin",
-        });
+        const favs = await window.paperly.fetchFavorites();
+        const fav = favs.find(f => String(f.product) === String(currentProductId));
+        if (fav) {
+          await window.paperly.apiFetch(`/api/favorites/${fav.id}/`, { method: "DELETE" });
+        }
       }
-      // Обновляем кнопки
-      await syncFavoriteButton();
+      window.paperly.updateFavoritesCount();
     } catch (error) {
       console.error("Toggle favorite error", error);
+      setFavButtonState(isActive); // revert
     }
   }
 
@@ -235,6 +225,11 @@
   }
 
   function renderReviews(reviews) {
+    if (!reviews.length) {
+      reviewsList.innerHTML = `<p class="reviews-empty">Пока нет отзывов — станьте первым.</p>`;
+      updateRating([]);
+      return;
+    }
     reviewsList.innerHTML = reviews
       .map((review) => {
         const created = review.created_at ? new Date(review.created_at) : new Date();
@@ -243,15 +238,23 @@
           month: "long",
           year: "numeric",
         });
+        const rating = Math.round(Number(review.rating || 0));
+        const authorInitial = (review.author_name || "П").trim().charAt(0).toUpperCase();
+        const starsHtml = Array.from({ length: 5 }, (_, i) =>
+          `<i class="bi ${i < rating ? "bi-star-fill" : "bi-star"}"></i>`
+        ).join("");
 
         return `
           <article class="review-card">
-            <div class="review-card__head">
-              <strong>${escapeHtml(review.author_name || "Покупатель")}</strong>
-              <span>${review.rating}/5</span>
+            <div class="review-card__author">
+              <span class="review-card__avatar">${escapeHtml(authorInitial)}</span>
+              <div>
+                <strong>${escapeHtml(review.author_name || "Покупатель")}</strong>
+                <time datetime="${created.toISOString().slice(0, 10)}">${dateText}</time>
+              </div>
+              <span class="review-card__stars">${starsHtml}</span>
             </div>
             <p>${escapeHtml(review.text || "")}</p>
-            <time datetime="${created.toISOString().slice(0, 10)}">${dateText}</time>
           </article>
         `;
       })
@@ -308,9 +311,12 @@
       document.title = `Paperly — ${product.title}`;
       productTitle.textContent = product.title;
       productBreadcrumb.textContent = product.title;
-      productSku.textContent = `Артикул: ${product.sku}`;
+      productSku.textContent = product.sku ? `Артикул: ${product.sku}` : "";
       productPrice.textContent = formatMoney(product.price);
       updateDiscountDisplay(product.price, product.old_price);
+      updateBadge(product);
+      updateBrand(product);
+      updateStock(product);
 
       renderFacts(product);
 
@@ -378,13 +384,13 @@
     const quantity = Math.max(1, Number(qtyInput.value) || 1);
     addToCart(currentProductData, quantity);
 
-    const initialText = addToCartBtn.textContent;
-    addToCartBtn.textContent = "Добавлено";
+    const initialHtml = addToCartBtn.innerHTML;
+    addToCartBtn.innerHTML = `<i class="bi bi-check2" aria-hidden="true"></i><span>Добавлено</span>`;
     addToCartBtn.disabled = true;
     setTimeout(() => {
-      addToCartBtn.textContent = initialText;
+      addToCartBtn.innerHTML = initialHtml;
       addToCartBtn.disabled = false;
-    }, 900);
+    }, 1000);
   });
 
   favoriteButtons.forEach((button) => {

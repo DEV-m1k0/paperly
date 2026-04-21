@@ -39,12 +39,14 @@ class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = "__all__"
+        read_only_fields = ("profile",)
 
 
 class NotificationSettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotificationSetting
         fields = "__all__"
+        read_only_fields = ("profile",)
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
@@ -81,5 +83,14 @@ class FavoriteSerializer(serializers.ModelSerializer):
         read_only_fields = ("user",)
 
     def get_product_image(self, obj):
-        image = obj.product.images.first() if obj.product else None
-        return image.image_url if image else ""
+        if not obj.product:
+            return ""
+        image = obj.product.images.first()
+        if not image:
+            return ""
+        if image.image:
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(image.image.url)
+            return image.image.url
+        return image.image_url or ""

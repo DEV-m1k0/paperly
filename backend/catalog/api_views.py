@@ -1,18 +1,17 @@
 ﻿from datetime import timedelta
 
 from django.db import models
-from django.db.models import Prefetch
 from django.utils import timezone
 from rest_framework import permissions, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from shop.models import Brand, CatalogFilterGroup, CatalogFilterOption, Category, Order, Product, ProductReview
+from shop.models import Brand, Category, Order, Product, ProductReview
 
+from .filter_schema import build_full_schema
 from .serializers import (
     BrandSerializer,
-    CatalogFilterGroupSerializer,
     CategorySerializer,
     ProductReviewSerializer,
     ProductSerializer,
@@ -22,6 +21,7 @@ from .serializers import (
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.filter(is_active=True)
     serializer_class = CategorySerializer
+    permission_classes = [permissions.AllowAny]
 
 
 class BrandViewSet(viewsets.ReadOnlyModelViewSet):
@@ -37,18 +37,20 @@ class BrandViewSet(viewsets.ReadOnlyModelViewSet):
         .order_by("-product_count", "name")
     )
     serializer_class = BrandSerializer
+    permission_classes = [permissions.AllowAny]
 
 
-class CatalogFilterGroupViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = CatalogFilterGroupSerializer
+class CatalogFiltersSchemaAPIView(APIView):
+    """Returns the catalog filter schema (groups + options) for the frontend.
 
-    def get_queryset(self):
-        return CatalogFilterGroup.objects.filter(is_active=True).prefetch_related(
-            Prefetch(
-                "options",
-                queryset=CatalogFilterOption.objects.filter(is_active=True).order_by("sort_order", "label"),
-            )
-        ).order_by("sort_order", "title")
+    Options are pulled live from DB for well-known query_params; admin-defined
+    CatalogFilterGroup entries with custom query_params merge in after.
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        return Response({"results": build_full_schema()})
 
 
 class CatalogMetaAPIView(APIView):
@@ -284,4 +286,5 @@ class ProductReviewViewSet(viewsets.ModelViewSet):
             author_name = user.get_full_name() or user.get_username() or "Покупатель"
             serializer.save(user=user, author_name=author_name)
             return
-        serializer.save()
+        author_name = serializer.validated_data.get('author_name') or "Покупатель"
+        serializer.save(author_name=author_name)

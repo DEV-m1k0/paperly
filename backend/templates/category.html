@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Раздел каталога{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — Раздел каталога{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/category.css' %}">
 {% endblock %}
 
 {% block content %}
-<main class="container page">
+<div class="container page">
     <div class="breadcrumbs" id="breadcrumbs"></div>
 
     <section class="layout">
@@ -28,7 +28,7 @@
         </div>
       </section>
     </section>
-  </main>
+  </div>
 {% endblock %}
 
 {% block page_js %}

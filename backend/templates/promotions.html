@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Акции и скидки{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — Акции и скидки{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/promotions.css' %}">
@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-<main class="container page">
+<div class="container page">
     <h1>Акции и скидки</h1>
     <p class="lead">Все текущие спецпредложения для школы, офиса и творчества.</p>
 
@@ -37,7 +37,7 @@
     <section class="products" id="promotionsProducts" aria-live="polite">
       <p class="empty-state">Загрузка акционных товаров...</p>
     </section>
-  </main>
+  </div>
 {% endblock %}
 
 {% block page_js %}

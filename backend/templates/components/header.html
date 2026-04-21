@@ -1,41 +1,95 @@
-<div class="site-header">
+<header class="site-header" role="banner">
   <div class="container site-header__row">
-    <a class="site-logo" href="{% url 'home' %}"><span></span>Paperly</a>
-    <form class="site-search" id="searchForm" role="search">
-      <input type="search" placeholder="Поиск по каталогу">
-    </form>
+    <a class="site-logo" href="{% url 'home' %}" aria-label="{{ site.site_name|default:'Paperly' }} — главная">
+      <span class="site-logo__mark" aria-hidden="true">
+        <i class="bi bi-journal-bookmark-fill"></i>
+      </span>
+      <span class="site-logo__text">{{ site.site_name|default:"Paperly" }}</span>
+    </a>
+
+    <div class="site-search-wrap" id="siteSearchWrap">
+      <form class="site-search" id="searchForm" role="search" action="{% url 'catalog' %}" method="get">
+        <i class="bi bi-search site-search__icon" aria-hidden="true"></i>
+        <input
+          id="siteSearchInput"
+          type="search"
+          name="q"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Тетради, ручки, блокноты..."
+          aria-label="Поиск по каталогу"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded="false"
+          aria-controls="siteSearchDropdown"
+          aria-haspopup="listbox"
+        >
+        <button type="button" class="site-search__clear" id="siteSearchClear" aria-label="Очистить поиск" hidden>
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+        <kbd class="site-search__hint" aria-hidden="true">Enter</kbd>
+      </form>
+
+      <div class="site-search-dropdown" id="siteSearchDropdown" role="listbox" aria-label="Результаты поиска" hidden></div>
+    </div>
+
     <div class="site-header__actions">
-      {% if request.user.is_authenticated %}
-      <a class="site-wishlist" href="{% url 'favorites' %}" aria-label="Избранное">
-        <i class="bi bi-heart"></i>
-        <span id="wishlistCount">0</span>
+      <a class="site-chip site-chip--fav" href="{% url 'favorites' %}" aria-label="Избранное">
+        <i class="bi bi-heart" aria-hidden="true"></i>
+        <span class="site-chip__label">Избранное</span>
+        <span class="site-chip__count" id="wishlistCount">0</span>
       </a>
-      <a class="site-cart-chip" href="{% url 'cart' %}" aria-label="Корзина">
-        <i class="bi bi-bag"></i>
-        <span id="cartCount">0</span>
+      <a class="site-chip site-chip--cart" href="{% url 'cart' %}" aria-label="Корзина">
+        <i class="bi bi-bag" aria-hidden="true"></i>
+        <span class="site-chip__label">Корзина</span>
+        <span class="site-chip__count" id="cartCount">0</span>
       </a>
-      {% else %}
-      <span id="wishlistCount" hidden>0</span>
-      <span id="cartCount" hidden>0</span>
+      {% if not request.user.is_authenticated %}
+      <a class="site-chip site-chip--auth" href="{% url 'auth' %}" aria-label="Войти">
+        <i class="bi bi-person" aria-hidden="true"></i>
+        <span class="site-chip__label">Войти</span>
+      </a>
       {% endif %}
-      <button class="site-burger" id="burger" type="button" aria-label="Меню"><i class="bi bi-list"></i></button>
+      <button class="site-burger" id="burger" type="button" aria-label="Меню" aria-expanded="false">
+        <i class="bi bi-list" aria-hidden="true"></i>
+      </button>
     </div>
   </div>
-  <nav class="container site-nav" id="nav">
+
+  <nav class="container site-nav" id="nav" aria-label="Основная навигация">
     {% with current=request.resolver_match.url_name %}
-    <a class="{% if current == 'catalog' %}active{% endif %}" href="{% url 'catalog' %}">Каталог</a>
-    <a class="{% if current == 'about' %}active{% endif %}" href="{% url 'about' %}">О нас</a>
-    <a class="{% if current == 'blog' %}active{% endif %}" href="{% url 'blog' %}">Блог</a>
-    <a class="{% if current == 'pickup' %}active{% endif %}" href="{% url 'pickup' %}">Пункты выдачи</a>
+    <a class="site-nav__link {% if current == 'catalog' %}is-active{% endif %}" href="{% url 'catalog' %}">
+      <i class="bi bi-grid" aria-hidden="true"></i>
+      <span>Каталог</span>
+    </a>
+    <a class="site-nav__link {% if current == 'about' %}is-active{% endif %}" href="{% url 'about' %}">
+      <i class="bi bi-info-circle" aria-hidden="true"></i>
+      <span>О нас</span>
+    </a>
+    <a class="site-nav__link {% if current == 'blog' %}is-active{% endif %}" href="{% url 'blog' %}">
+      <i class="bi bi-journal-text" aria-hidden="true"></i>
+      <span>Блог</span>
+    </a>
+    <a class="site-nav__link {% if current == 'pickup' %}is-active{% endif %}" href="{% url 'pickup' %}">
+      <i class="bi bi-geo-alt" aria-hidden="true"></i>
+      <span>Пункты выдачи</span>
+    </a>
+    <a class="site-nav__link {% if current == 'wholesale' %}is-active{% endif %}" href="{% url 'wholesale' %}">
+      <i class="bi bi-briefcase" aria-hidden="true"></i>
+      <span>Оптом</span>
+    </a>
     {% if request.user.is_authenticated %}
-    <a class="{% if current == 'profile' %}active{% endif %}" href="{% url 'profile' %}">Профиль</a>
-    <a class="{% if current == 'cart' %}active{% endif %}" href="{% url 'cart' %}">Корзина</a>
+    <a class="site-nav__link {% if current == 'profile' or current == 'order_history' %}is-active{% endif %}" href="{% url 'profile' %}">
+      <i class="bi bi-person-circle" aria-hidden="true"></i>
+      <span>Профиль</span>
+    </a>
     {% if request.user.is_staff %}
-    <a href="{% url 'admin:index' %}">Админ-панель</a>
+    <a class="site-nav__link site-nav__link--admin" href="{% url 'admin:index' %}">
+      <i class="bi bi-shield-lock" aria-hidden="true"></i>
+      <span>Админ-панель</span>
+    </a>
     {% endif %}
-    {% else %}
-    <a class="{% if current == 'auth' %}active{% endif %}" href="{% url 'auth' %}">Вход / Регистрация</a>
     {% endif %}
     {% endwith %}
   </nav>
-</div>
+</header>

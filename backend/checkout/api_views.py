@@ -7,41 +7,50 @@ from .serializers import CartItemSerializer, CartSerializer, OrderSerializer
 
 class CartViewSet(viewsets.ModelViewSet):
     serializer_class = CartSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        if self.request.user.is_authenticated:
-            return Cart.objects.filter(user=self.request.user).prefetch_related("items")
-        return Cart.objects.none()
+        return Cart.objects.filter(user=self.request.user).prefetch_related("items", "items__product__images")
 
     def perform_create(self, serializer):
-        if self.request.user.is_authenticated:
-            serializer.save(user=self.request.user)
-            return
-        serializer.save()
+        serializer.save(user=self.request.user)
 
 
 class CartItemViewSet(viewsets.ModelViewSet):
     serializer_class = CartItemSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        if self.request.user.is_authenticated:
-            return CartItem.objects.filter(cart__user=self.request.user).select_related("product", "cart")
-        return CartItem.objects.none()
+        return (
+            CartItem.objects
+            .filter(cart__user=self.request.user)
+            .select_related("product", "cart")
+            .prefetch_related("product__images")
+        )
+
+
+class OrderPermission(permissions.BasePermission):
+    """
+    Guest users can POST a new order (guest checkout).
+    Listing/retrieving/updating orders still requires authentication.
+    """
+
+    def has_permission(self, request, view):
+        if view.action == "create":
+            return True
+        return request.user and request.user.is_authenticated
 
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [OrderPermission]
 
     def get_queryset(self):
-        if self.request.user.is_authenticated:
-            return Order.objects.filter(user=self.request.user).prefetch_related("items")
-        return Order.objects.none()
-
-    def perform_create(self, serializer):
-        if self.request.user.is_authenticated:
-            serializer.save(user=self.request.user)
-            return
-        serializer.save()
+        if not self.request.user.is_authenticated:
+            return Order.objects.none()
+        return (
+            Order.objects
+            .filter(user=self.request.user)
+            .select_related("pickup_point")
+            .prefetch_related("items")
+        )

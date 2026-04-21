@@ -21,9 +21,19 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class BrandSerializer(serializers.ModelSerializer):
     product_count = serializers.IntegerField(read_only=True)
+    logo_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Brand
-        fields = "__all__"
+        fields = ["id", "name", "slug", "description", "logo_url", "website", "is_active", "product_count"]
+
+    def get_logo_url(self, obj):
+        if obj.logo:
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(obj.logo.url)
+            return obj.logo.url
+        return obj.logo_url
 
 
 class CatalogFilterOptionSerializer(serializers.ModelSerializer):
@@ -60,9 +70,19 @@ class CatalogFilterGroupSerializer(serializers.ModelSerializer):
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductImage
-        fields = "__all__"
+        fields = ["id", "product", "image_url", "alt_text", "is_primary", "sort_order"]
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return obj.image_url
 
 
 class ProductSpecificationSerializer(serializers.ModelSerializer):

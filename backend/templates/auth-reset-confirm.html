@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Смена пароля{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — Смена пароля{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/auth.css' %}">
 {% endblock %}
 
 {% block content %}
-<main class="container page">
+<div class="container page">
   <div class="breadcrumbs">
     <a href="{% url 'home' %}">Главная</a>
     <span>/</span>
@@ -52,5 +52,5 @@
       </form>
     </section>
   </section>
-</main>
+</div>
 {% endblock %}

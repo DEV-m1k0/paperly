@@ -195,8 +195,8 @@
       (item) => `
         <article class="item-card">
           <button class="fav-btn" aria-label="Добавить в избранное"><i class="bi bi-heart"></i></button>
-          <a class="item-image" href="/product/"><img src="${item.img}" alt="${item.title}"></a>
-          <h3><a href="/product/">${item.title}</a></h3>
+          <a class="item-image" href="/catalog/"><img src="${item.img}" alt="${item.title}"></a>
+          <h3><a href="/catalog/">${item.title}</a></h3>
           <p>${item.desc}</p>
           <div class="item-bottom">
             <strong>${item.price}</strong>
@@ -207,21 +207,14 @@
     )
     .join("");
 
-  let count = Number(localStorage.getItem("paperly_cart_count") || 0);
-  cartCount.textContent = String(count);
+  window.paperly.renderCartCount();
 
   document.querySelectorAll(".add-btn").forEach((button) => {
     button.dataset.cartBound = "true";
     button.addEventListener("click", () => {
-    button.addEventListener("click", () => {
       if (typeof window.paperlyAddToCart === "function") {
-        count = window.paperlyAddToCart(button);
-      } else {
-        count += 1;
+        window.paperlyAddToCart(button);
       }
-      cartCount.textContent = String(count);
-      localStorage.setItem("paperly_cart_count", String(count));
-
       const initialText = button.textContent;
       button.textContent = "Добавлено";
       button.disabled = true;
@@ -247,7 +240,7 @@
     event.preventDefault();
     const query = searchForm.querySelector("input")?.value.trim();
     if (query) {
-      alert(`Поиск по разделу: ${query}`);
+      window.location.href = `/catalog/?q=${encodeURIComponent(query)}`;
     }
   });
 });

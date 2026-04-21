@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .api_views import (
     BrandViewSet,
-    CatalogFilterGroupViewSet,
+    CatalogFiltersSchemaAPIView,
     CatalogMetaAPIView,
     CategoryViewSet,
     ProductReviewViewSet,
@@ -13,10 +13,10 @@ from .api_views import (
 router = DefaultRouter()
 router.register("categories", CategoryViewSet, basename="api-categories")
 router.register("brands", BrandViewSet, basename="api-brands")
-router.register("catalog-filters", CatalogFilterGroupViewSet, basename="api-catalog-filters")
 router.register("products", ProductViewSet, basename="api-products")
 router.register("reviews", ProductReviewViewSet, basename="api-reviews")
 
 urlpatterns = router.urls + [
+    path("catalog-filters/", CatalogFiltersSchemaAPIView.as_view(), name="api-catalog-filters"),
     path("catalog-meta/", CatalogMetaAPIView.as_view(), name="api-catalog-meta"),
 ]

@@ -1,57 +1,136 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Избранное{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — Избранное{% endblock %}
 
 {% block page_css %}
+<link rel="stylesheet" href="{% static 'css/product-cards.css' %}">
 <link rel="stylesheet" href="{% static 'css/favorites.css' %}">
 {% endblock %}
 
 {% block content %}
-<main class="container page">
-    <div class="breadcrumbs">
-      <a href="{% url 'home' %}">Главная</a>
-      <span>/</span>
-      <a href="{% url 'profile' %}">Профиль</a>
-      <span>/</span>
-      <span>Избранное</span>
+<div class="container page favorites-page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <span>Избранное</span>
+  </div>
+
+  <section class="page-hero page-hero--narrow fav-hero reveal">
+    <div class="page-hero__bg" aria-hidden="true">
+      <span class="blob blob--rose"></span>
+      <span class="blob blob--teal"></span>
     </div>
+    <div class="page-hero__content">
+      <p class="eyebrow">Избранное</p>
+      <h1>Сохранённые <span class="accent">товары</span></h1>
+      <p class="page-hero__lead">
+        Возвращайтесь к понравившимся товарам в один клик.
+        Мы уведомим вас, если товар появится со скидкой.
+      </p>
+      <div class="page-hero__actions">
+        <a class="btn btn--primary" href="{% url 'catalog' %}">
+          <i class="bi bi-grid" aria-hidden="true"></i>
+          <span>В каталог</span>
+        </a>
+        <a class="btn btn--ghost" href="{% url 'cart' %}">
+          <i class="bi bi-bag" aria-hidden="true"></i>
+          <span>Открыть корзину</span>
+        </a>
+      </div>
+    </div>
+  </section>
 
-    <section class="layout">
-      <aside class="sidebar">
-        <p class="eyebrow">Личный кабинет</p>
-        <h1>Избранное</h1>
-        <ul>
-          {% with current=request.resolver_match.url_name %}
-          <li class="{% if current == 'profile' %}is-active{% endif %}"><a href="{% url 'profile' %}">Профиль</a></li>
-          <li class="{% if current == 'order_history' %}is-active{% endif %}"><a href="{% url 'order_history' %}">История заказов</a></li>
-          <li class="{% if current == 'favorites' %}is-active{% endif %}"><a href="{% url 'favorites' %}">Избранное</a></li>
-          {% endwith %}
-        </ul> {% if request.user.is_authenticated %}
-                <form class="logout-form" method="post" action="{% url 'logout' %}">
-                          {% csrf_token %}
-                          <button class="btn btn--ghost btn--logout" type="submit">
-                           <i class="bi bi-box-arrow-right"></i>
-                           <span>Выйти из аккаунта</span>
-                            </button></form>
-                                    {% endif %}
-                                 </aside>
+  <div class="fav-toolbar" id="favToolbar" hidden>
+    <div class="fav-toolbar__count">
+      <i class="bi bi-heart-fill" aria-hidden="true"></i>
+      <span id="favCount">0 товаров</span>
+    </div>
+    <div class="fav-toolbar__controls">
+      <label class="fav-sort">
+        <span class="fav-sort__label">Сортировка</span>
+        <select id="favSort" class="no-choices">
+          <option value="added-desc">Сначала новые</option>
+          <option value="added-asc">Сначала старые</option>
+          <option value="price-asc">Дешевле</option>
+          <option value="price-desc">Дороже</option>
+          <option value="name">По названию</option>
+        </select>
+      </label>
+      <button class="fav-action" type="button" id="favAddAll">
+        <i class="bi bi-bag-plus" aria-hidden="true"></i>
+        <span>Всё в корзину</span>
+      </button>
+      <button class="fav-action fav-action--danger" type="button" id="favClearAll">
+        <i class="bi bi-trash" aria-hidden="true"></i>
+        <span>Очистить</span>
+      </button>
+    </div>
+  </div>
 
-      <section class="content">
-        <div class="fav-grid" id="favGrid" hidden></div>
+  <div class="fav-grid" id="favGrid" hidden></div>
 
-        <div class="empty" id="emptyState" hidden>
-          <i class="bi bi-heart"></i>
-          <h2>В избранном пока пусто</h2>
-          <p>Добавьте товары в закладки, чтобы быстро вернуться к ним позже.</p>
-          <a href="{% url 'catalog' %}" class="btn btn--primary">Перейти в каталог</a>
-        </div>
-      </section>
-    </section>
-  </main>
+  <div class="fav-skeleton" id="favSkeleton">
+    <div class="fav-skeleton__card"></div>
+    <div class="fav-skeleton__card"></div>
+    <div class="fav-skeleton__card"></div>
+    <div class="fav-skeleton__card"></div>
+  </div>
+
+  <div class="state-empty fav-empty" id="emptyState" hidden>
+    <div class="state-empty__visual" aria-hidden="true">
+      <span class="state-empty__orb state-empty__orb--a"></span>
+      <span class="state-empty__orb state-empty__orb--b"></span>
+      <div class="state-empty__icon fav-empty__icon">
+        <i class="bi bi-heart"></i>
+      </div>
+    </div>
+    <h2>В избранном пока пусто</h2>
+    <p>Добавляйте товары в закладки, чтобы быстро вернуться к ним позже — они сохранятся в вашем аккаунте.</p>
+    <div class="state-empty__actions">
+      <a href="{% url 'catalog' %}" class="btn btn--primary">
+        <i class="bi bi-grid" aria-hidden="true"></i>
+        <span>Перейти в каталог</span>
+      </a>
+      <a href="{% url 'cart' %}" class="btn btn--ghost">
+        <i class="bi bi-bag" aria-hidden="true"></i>
+        <span>Открыть корзину</span>
+      </a>
+    </div>
+    <div class="fav-empty__suggest">
+      <span class="fav-empty__label">Популярное сейчас:</span>
+      <a class="fav-empty__chip" href="{% url 'new_arrivals' %}">
+        <i class="bi bi-stars" aria-hidden="true"></i> Новинки
+      </a>
+      <a class="fav-empty__chip" href="{% url 'bestsellers' %}">
+        <i class="bi bi-trophy" aria-hidden="true"></i> Хиты продаж
+      </a>
+      <a class="fav-empty__chip" href="{% url 'promotions' %}">
+        <i class="bi bi-tag" aria-hidden="true"></i> Акции
+      </a>
+    </div>
+  </div>
+
+  <div class="state-empty fav-auth" id="authState" hidden>
+    <div class="state-empty__visual" aria-hidden="true">
+      <div class="state-empty__icon"><i class="bi bi-lock"></i></div>
+    </div>
+    <h2>Войдите, чтобы увидеть избранное</h2>
+    <p>Авторизованные пользователи могут сохранять товары и возвращаться к ним с любого устройства.</p>
+    <div class="state-empty__actions">
+      <a href="{% url 'auth' %}?next={{ request.get_full_path|urlencode }}" class="btn btn--primary">
+        <i class="bi bi-person" aria-hidden="true"></i>
+        <span>Войти</span>
+      </a>
+      <a href="{% url 'catalog' %}" class="btn btn--ghost">
+        <i class="bi bi-grid" aria-hidden="true"></i>
+        <span>В каталог</span>
+      </a>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block page_js %}
 <script src="{% static 'js/favorites.js' %}"></script>
 {% endblock %}
-

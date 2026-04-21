@@ -5,23 +5,57 @@ from django.utils.text import slugify
 
 
 class TimeStampedModel(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField("Создано", auto_now_add=True)
+    updated_at = models.DateTimeField("Обновлено", auto_now=True)
 
     class Meta:
         abstract = True
 
 
+# ──────────────────────────────────────────────
+# Глобальные настройки сайта (singleton)
+# ──────────────────────────────────────────────
+class SiteSetting(models.Model):
+    site_name = models.CharField("Название сайта", max_length=255, default="Paperly")
+    tagline = models.CharField("Слоган", max_length=500, blank=True)
+    phone = models.CharField("Телефон", max_length=32, blank=True)
+    email = models.EmailField("Email", blank=True)
+    city = models.CharField("Город", max_length=120, blank=True)
+    address = models.CharField("Адрес офиса", max_length=255, blank=True)
+    copyright_text = models.CharField("Текст копирайта", max_length=255, blank=True)
+
+    class Meta:
+        verbose_name = "Настройки сайта"
+        verbose_name_plural = "Настройки сайта"
+
+    def __str__(self):
+        return self.site_name
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+# ──────────────────────────────────────────────
+# Каталог
+# ──────────────────────────────────────────────
 class Category(TimeStampedModel):
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True)
+    name = models.CharField("Название", max_length=255)
+    slug = models.SlugField("Слаг", max_length=255, unique=True)
     parent = models.ForeignKey(
-        "self", on_delete=models.CASCADE, related_name="children", null=True, blank=True
+        "self", verbose_name="Родительская категория",
+        on_delete=models.CASCADE, related_name="children", null=True, blank=True,
     )
-    description = models.TextField(blank=True)
-    image_url = models.URLField(blank=True)
-    sort_order = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
+    description = models.TextField("Описание", blank=True)
+    image_url = models.URLField("URL изображения", blank=True)
+    image = models.ImageField("Изображение", upload_to="categories/", blank=True)
+    sort_order = models.PositiveIntegerField("Порядок сортировки", default=0)
+    is_active = models.BooleanField("Активна", default=True)
 
     class Meta:
         ordering = ["sort_order", "name"]
@@ -29,17 +63,24 @@ class Category(TimeStampedModel):
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
 
+    @property
+    def display_image_url(self):
+        if self.image:
+            return self.image.url
+        return self.image_url
+
     def __str__(self) -> str:
         return self.name
 
 
 class Brand(TimeStampedModel):
-    name = models.CharField(max_length=255, unique=True)
-    slug = models.SlugField(max_length=255, unique=True)
-    description = models.TextField(blank=True)
-    logo_url = models.URLField(blank=True)
-    website = models.URLField(blank=True)
-    is_active = models.BooleanField(default=True)
+    name = models.CharField("Название", max_length=255, unique=True)
+    slug = models.SlugField("Слаг", max_length=255, unique=True)
+    description = models.TextField("Описание", blank=True)
+    logo_url = models.URLField("URL логотипа", blank=True)
+    logo = models.ImageField("Логотип", upload_to="brands/", blank=True)
+    website = models.URLField("Сайт", blank=True)
+    is_active = models.BooleanField("Активен", default=True)
 
     class Meta:
         ordering = ["name"]
@@ -51,10 +92,10 @@ class Brand(TimeStampedModel):
 
 
 class CatalogFilterGroup(TimeStampedModel):
-    title = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True)
-    sort_order = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
+    title = models.CharField("Заголовок", max_length=255)
+    slug = models.SlugField("Слаг", max_length=255, unique=True)
+    sort_order = models.PositiveIntegerField("Порядок сортировки", default=0)
+    is_active = models.BooleanField("Активна", default=True)
 
     class Meta:
         ordering = ["sort_order", "title"]
@@ -67,20 +108,21 @@ class CatalogFilterGroup(TimeStampedModel):
 
 class CatalogFilterOption(TimeStampedModel):
     group = models.ForeignKey(
-        CatalogFilterGroup, on_delete=models.CASCADE, related_name="options"
+        CatalogFilterGroup, verbose_name="Группа",
+        on_delete=models.CASCADE, related_name="options",
     )
-    label = models.CharField(max_length=255)
+    label = models.CharField("Метка", max_length=255)
     query_param = models.CharField(
-        max_length=64,
+        "Параметр запроса", max_length=64,
         help_text=(
             "Параметр запроса для API. Допустимые значения: brand, category, "
             "purpose, product_format, sheets_count, in_stock, is_new, is_hit, "
             "is_featured, has_discount, has_promotion, sale."
         ),
     )
-    value = models.CharField(max_length=64)
-    sort_order = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
+    value = models.CharField("Значение", max_length=64)
+    sort_order = models.PositiveIntegerField("Порядок сортировки", default=0)
+    is_active = models.BooleanField("Активна", default=True)
 
     class Meta:
         ordering = ["sort_order", "label"]
@@ -109,31 +151,35 @@ class Product(TimeStampedModel):
         CREATIVE = "creative", "Творчество"
         UNIVERSAL = "universal", "Универсальное"
 
-    title = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True)
-    sku = models.CharField(max_length=64, unique=True)
-    brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name="products")
-    categories = models.ManyToManyField(Category, related_name="products")
+    title = models.CharField("Название", max_length=255)
+    slug = models.SlugField("Слаг", max_length=255, unique=True)
+    sku = models.CharField("Артикул", max_length=64, unique=True)
+    brand = models.ForeignKey(Brand, verbose_name="Бренд", on_delete=models.PROTECT, related_name="products")
+    categories = models.ManyToManyField(Category, verbose_name="Категории", related_name="products")
 
-    short_description = models.CharField(max_length=300, blank=True)
-    description = models.TextField(blank=True)
+    short_description = models.CharField("Краткое описание", max_length=300, blank=True)
+    description = models.TextField("Описание", blank=True)
 
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    old_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    stock = models.PositiveIntegerField(default=0)
-    format = models.CharField(max_length=16, choices=ProductFormat.choices, default=ProductFormat.A4)
-    sheets_count = models.PositiveSmallIntegerField(null=True, blank=True)
-    purpose = models.CharField(max_length=16, choices=ProductPurpose.choices, default=ProductPurpose.UNIVERSAL)
+    price = models.DecimalField("Цена", max_digits=10, decimal_places=2)
+    old_price = models.DecimalField("Старая цена", max_digits=10, decimal_places=2, null=True, blank=True)
+    stock = models.PositiveIntegerField("Остаток на складе", default=0)
+    max_order_quantity = models.PositiveIntegerField(
+        "Макс. кол-во в заказе", default=0,
+        help_text="0 = без ограничения",
+    )
+    format = models.CharField("Формат", max_length=16, choices=ProductFormat.choices, default=ProductFormat.A4)
+    sheets_count = models.PositiveSmallIntegerField("Кол-во листов", null=True, blank=True)
+    purpose = models.CharField("Назначение", max_length=16, choices=ProductPurpose.choices, default=ProductPurpose.UNIVERSAL)
 
-    status = models.CharField(max_length=16, choices=ProductStatus.choices, default=ProductStatus.ACTIVE)
-    is_new = models.BooleanField(default=False)
-    is_hit = models.BooleanField(default=False)
-    is_featured = models.BooleanField(default=False)
+    status = models.CharField("Статус", max_length=16, choices=ProductStatus.choices, default=ProductStatus.ACTIVE)
+    is_new = models.BooleanField("Новинка", default=False)
+    is_hit = models.BooleanField("Хит продаж", default=False)
+    is_featured = models.BooleanField("Рекомендуемый", default=False)
 
-    weight_grams = models.PositiveIntegerField(default=0)
-    length_mm = models.PositiveIntegerField(default=0)
-    width_mm = models.PositiveIntegerField(default=0)
-    height_mm = models.PositiveIntegerField(default=0)
+    weight_grams = models.PositiveIntegerField("Вес (г)", default=0)
+    length_mm = models.PositiveIntegerField("Длина (мм)", default=0)
+    width_mm = models.PositiveIntegerField("Ширина (мм)", default=0)
+    height_mm = models.PositiveIntegerField("Высота (мм)", default=0)
 
     class Meta:
         ordering = ["title"]
@@ -156,11 +202,18 @@ class Product(TimeStampedModel):
 
 
 class ProductImage(TimeStampedModel):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
-    image_url = models.URLField()
-    alt_text = models.CharField(max_length=255, blank=True)
-    is_primary = models.BooleanField(default=False)
-    sort_order = models.PositiveIntegerField(default=0)
+    product = models.ForeignKey(Product, verbose_name="Товар", on_delete=models.CASCADE, related_name="images")
+    image_url = models.URLField("URL изображения", blank=True)
+    image = models.ImageField("Файл изображения", upload_to="products/", blank=True)
+    alt_text = models.CharField("Альтернативный текст", max_length=255, blank=True)
+    is_primary = models.BooleanField("Основное", default=False)
+    sort_order = models.PositiveIntegerField("Порядок сортировки", default=0)
+
+    @property
+    def url(self):
+        if self.image:
+            return self.image.url
+        return self.image_url
 
     class Meta:
         ordering = ["sort_order", "id"]
@@ -179,10 +232,10 @@ class ProductImage(TimeStampedModel):
 
 
 class ProductSpecification(TimeStampedModel):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="specifications")
-    name = models.CharField(max_length=120)
-    value = models.CharField(max_length=255)
-    sort_order = models.PositiveIntegerField(default=0)
+    product = models.ForeignKey(Product, verbose_name="Товар", on_delete=models.CASCADE, related_name="specifications")
+    name = models.CharField("Название", max_length=120)
+    value = models.CharField("Значение", max_length=255)
+    sort_order = models.PositiveIntegerField("Порядок сортировки", default=0)
 
     class Meta:
         ordering = ["sort_order", "id"]
@@ -195,12 +248,15 @@ class ProductSpecification(TimeStampedModel):
 
 
 class ProductReview(TimeStampedModel):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews")
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    author_name = models.CharField(max_length=120)
-    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
-    text = models.TextField()
-    is_published = models.BooleanField(default=True, db_index=True)
+    product = models.ForeignKey(Product, verbose_name="Товар", on_delete=models.CASCADE, related_name="reviews")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, verbose_name="Пользователь",
+        on_delete=models.SET_NULL, null=True, blank=True,
+    )
+    author_name = models.CharField("Имя автора", max_length=120)
+    rating = models.PositiveSmallIntegerField("Оценка", validators=[MinValueValidator(1), MaxValueValidator(5)])
+    text = models.TextField("Текст отзыва")
+    is_published = models.BooleanField("Опубликован", default=True, db_index=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -211,23 +267,26 @@ class ProductReview(TimeStampedModel):
         return f"{self.product.title} [{self.rating}/5]"
 
 
+# ──────────────────────────────────────────────
+# Маркетинг
+# ──────────────────────────────────────────────
 class Promotion(TimeStampedModel):
     class PromotionType(models.TextChoices):
         DISCOUNT = "discount", "Скидка"
         BUNDLE = "bundle", "Набор"
         GIFT = "gift", "Подарок"
 
-    title = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True)
-    description = models.TextField(blank=True)
-    promo_type = models.CharField(max_length=16, choices=PromotionType.choices, default=PromotionType.DISCOUNT)
+    title = models.CharField("Название", max_length=255)
+    slug = models.SlugField("Слаг", max_length=255, unique=True)
+    description = models.TextField("Описание", blank=True)
+    promo_type = models.CharField("Тип акции", max_length=16, choices=PromotionType.choices, default=PromotionType.DISCOUNT)
     discount_percent = models.PositiveSmallIntegerField(
-        null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(99)]
+        "Процент скидки", null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(99)]
     )
-    start_at = models.DateTimeField()
-    end_at = models.DateTimeField()
-    is_active = models.BooleanField(default=True)
-    products = models.ManyToManyField(Product, related_name="promotions", blank=True)
+    start_at = models.DateTimeField("Начало")
+    end_at = models.DateTimeField("Окончание")
+    is_active = models.BooleanField("Активна", default=True)
+    products = models.ManyToManyField(Product, verbose_name="Товары", related_name="promotions", blank=True)
 
     class Meta:
         ordering = ["-start_at"]
@@ -239,11 +298,11 @@ class Promotion(TimeStampedModel):
 
 
 class GiftCertificate(TimeStampedModel):
-    title = models.CharField(max_length=120)
-    slug = models.SlugField(max_length=120, unique=True)
-    nominal = models.DecimalField(max_digits=10, decimal_places=2)
-    description = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
+    title = models.CharField("Название", max_length=120)
+    slug = models.SlugField("Слаг", max_length=120, unique=True)
+    nominal = models.DecimalField("Номинал", max_digits=10, decimal_places=2)
+    description = models.TextField("Описание", blank=True)
+    is_active = models.BooleanField("Активен", default=True)
 
     class Meta:
         ordering = ["nominal"]
@@ -254,9 +313,12 @@ class GiftCertificate(TimeStampedModel):
         return f"{self.title} ({self.nominal})"
 
 
+# ──────────────────────────────────────────────
+# Блог
+# ──────────────────────────────────────────────
 class BlogCategory(TimeStampedModel):
-    title = models.CharField(max_length=120, unique=True)
-    slug = models.SlugField(max_length=120, unique=True)
+    title = models.CharField("Заголовок", max_length=120, unique=True)
+    slug = models.SlugField("Слаг", max_length=120, unique=True)
 
     class Meta:
         ordering = ["title"]
@@ -272,14 +334,21 @@ class BlogPost(TimeStampedModel):
         DRAFT = "draft", "Черновик"
         PUBLISHED = "published", "Опубликовано"
 
-    title = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True)
-    category = models.ForeignKey(BlogCategory, on_delete=models.SET_NULL, null=True, blank=True)
-    excerpt = models.CharField(max_length=350, blank=True)
-    content = models.TextField()
-    cover_url = models.URLField(blank=True)
-    status = models.CharField(max_length=16, choices=PostStatus.choices, default=PostStatus.DRAFT, db_index=True)
-    published_at = models.DateTimeField(null=True, blank=True)
+    title = models.CharField("Заголовок", max_length=255)
+    slug = models.SlugField("Слаг", max_length=255, unique=True)
+    category = models.ForeignKey(BlogCategory, verbose_name="Категория", on_delete=models.SET_NULL, null=True, blank=True)
+    excerpt = models.CharField("Анонс", max_length=350, blank=True)
+    content = models.TextField("Содержание")
+    cover_url = models.URLField("URL обложки", blank=True)
+    cover = models.ImageField("Обложка", upload_to="blog/", blank=True)
+    status = models.CharField("Статус", max_length=16, choices=PostStatus.choices, default=PostStatus.DRAFT, db_index=True)
+
+    @property
+    def display_cover_url(self):
+        if self.cover:
+            return self.cover.url
+        return self.cover_url
+    published_at = models.DateTimeField("Дата публикации", null=True, blank=True)
 
     class Meta:
         ordering = ["-published_at", "-created_at"]
@@ -290,16 +359,19 @@ class BlogPost(TimeStampedModel):
         return self.title
 
 
+# ──────────────────────────────────────────────
+# Логистика
+# ──────────────────────────────────────────────
 class PickupPoint(TimeStampedModel):
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True)
-    city = models.CharField(max_length=120)
-    address = models.CharField(max_length=255)
-    metro = models.CharField(max_length=120, blank=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6)
-    opening_hours = models.CharField(max_length=255)
-    is_active = models.BooleanField(default=True)
+    name = models.CharField("Название", max_length=255)
+    slug = models.SlugField("Слаг", max_length=255, unique=True)
+    city = models.CharField("Город", max_length=120)
+    address = models.CharField("Адрес", max_length=255)
+    metro = models.CharField("Метро / ориентир", max_length=120, blank=True)
+    latitude = models.DecimalField("Широта", max_digits=9, decimal_places=6)
+    longitude = models.DecimalField("Долгота", max_digits=9, decimal_places=6)
+    opening_hours = models.CharField("Часы работы", max_length=255)
+    is_active = models.BooleanField("Активен", default=True)
 
     class Meta:
         ordering = ["city", "name"]
@@ -317,14 +389,14 @@ class DeliveryTariff(TimeStampedModel):
         REGION = "region", "Регионы"
         PICKUP = "pickup", "Самовывоз"
 
-    title = models.CharField(max_length=120)
-    city = models.CharField(max_length=120, blank=True)
-    delivery_type = models.CharField(max_length=16, choices=DeliveryType.choices)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    free_from_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    eta_min_days = models.PositiveSmallIntegerField(default=1)
-    eta_max_days = models.PositiveSmallIntegerField(default=1)
-    is_active = models.BooleanField(default=True)
+    title = models.CharField("Название", max_length=120)
+    city = models.CharField("Город", max_length=120, blank=True)
+    delivery_type = models.CharField("Тип доставки", max_length=16, choices=DeliveryType.choices)
+    price = models.DecimalField("Цена", max_digits=10, decimal_places=2)
+    free_from_amount = models.DecimalField("Бесплатно от суммы", max_digits=10, decimal_places=2, null=True, blank=True)
+    eta_min_days = models.PositiveSmallIntegerField("Мин. дней доставки", default=1)
+    eta_max_days = models.PositiveSmallIntegerField("Макс. дней доставки", default=1)
+    is_active = models.BooleanField("Активен", default=True)
 
     class Meta:
         ordering = ["delivery_type", "city", "title"]
@@ -335,19 +407,22 @@ class DeliveryTariff(TimeStampedModel):
         return f"{self.title} ({self.delivery_type})"
 
 
+# ──────────────────────────────────────────────
+# Клиенты
+# ──────────────────────────────────────────────
 class CustomerProfile(TimeStampedModel):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
-    first_name = models.CharField(max_length=120, blank=True)
-    last_name = models.CharField(max_length=120, blank=True)
-    phone = models.CharField(max_length=32, blank=True)
-    birth_date = models.DateField(null=True, blank=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, verbose_name="Пользователь", on_delete=models.CASCADE, related_name="profile")
+    first_name = models.CharField("Имя", max_length=120, blank=True)
+    last_name = models.CharField("Фамилия", max_length=120, blank=True)
+    phone = models.CharField("Телефон", max_length=32, blank=True)
+    birth_date = models.DateField("Дата рождения", null=True, blank=True)
 
     class Meta:
         verbose_name = "Профиль клиента"
         verbose_name_plural = "Профили клиентов"
 
     def __str__(self) -> str:
-        return f"Profile: {self.user}"
+        return f"Профиль: {self.user}"
 
 
 class Address(TimeStampedModel):
@@ -355,15 +430,15 @@ class Address(TimeStampedModel):
         SHIPPING = "shipping", "Адрес доставки"
         BILLING = "billing", "Платежный адрес"
 
-    profile = models.ForeignKey(CustomerProfile, on_delete=models.CASCADE, related_name="addresses")
-    address_type = models.CharField(max_length=16, choices=AddressType.choices, default=AddressType.SHIPPING)
-    city = models.CharField(max_length=120)
-    street = models.CharField(max_length=255)
-    entrance = models.CharField(max_length=50, blank=True)
-    flat_or_office = models.CharField(max_length=50, blank=True)
-    postal_code = models.CharField(max_length=20, blank=True)
-    comment = models.TextField(blank=True)
-    is_default = models.BooleanField(default=False)
+    profile = models.ForeignKey(CustomerProfile, verbose_name="Профиль", on_delete=models.CASCADE, related_name="addresses")
+    address_type = models.CharField("Тип адреса", max_length=16, choices=AddressType.choices, default=AddressType.SHIPPING)
+    city = models.CharField("Город", max_length=120)
+    street = models.CharField("Улица", max_length=255)
+    entrance = models.CharField("Подъезд", max_length=50, blank=True)
+    flat_or_office = models.CharField("Кв./Офис", max_length=50, blank=True)
+    postal_code = models.CharField("Почтовый индекс", max_length=20, blank=True)
+    comment = models.TextField("Комментарий", blank=True)
+    is_default = models.BooleanField("По умолчанию", default=False)
 
     class Meta:
         verbose_name = "Адрес"
@@ -375,23 +450,24 @@ class Address(TimeStampedModel):
 
 class NotificationSetting(TimeStampedModel):
     profile = models.OneToOneField(
-        CustomerProfile, on_delete=models.CASCADE, related_name="notification_settings"
+        CustomerProfile, verbose_name="Профиль",
+        on_delete=models.CASCADE, related_name="notification_settings",
     )
-    order_status = models.BooleanField(default=True)
-    promotions = models.BooleanField(default=False)
-    restock = models.BooleanField(default=True)
+    order_status = models.BooleanField("Статус заказа", default=True)
+    promotions = models.BooleanField("Акции", default=False)
+    restock = models.BooleanField("Поступления", default=True)
 
     class Meta:
         verbose_name = "Настройки уведомлений"
         verbose_name_plural = "Настройки уведомлений"
 
     def __str__(self) -> str:
-        return f"Notifications: {self.profile.user}"
+        return f"Уведомления: {self.profile.user}"
 
 
 class Favorite(TimeStampedModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="favorites")
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="favorite_by")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="Пользователь", on_delete=models.CASCADE, related_name="favorites")
+    product = models.ForeignKey(Product, verbose_name="Товар", on_delete=models.CASCADE, related_name="favorite_by")
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["user", "product"], name="uniq_user_favorite")]
@@ -402,26 +478,30 @@ class Favorite(TimeStampedModel):
         return f"{self.user} -> {self.product}"
 
 
+# ──────────────────────────────────────────────
+# Корзина
+# ──────────────────────────────────────────────
 class Cart(TimeStampedModel):
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="cart", null=True, blank=True
+        settings.AUTH_USER_MODEL, verbose_name="Пользователь",
+        on_delete=models.CASCADE, related_name="cart", null=True, blank=True,
     )
-    session_key = models.CharField(max_length=64, blank=True, db_index=True)
-    is_active = models.BooleanField(default=True)
+    session_key = models.CharField("Ключ сессии", max_length=64, blank=True, db_index=True)
+    is_active = models.BooleanField("Активна", default=True)
 
     class Meta:
         verbose_name = "Корзина"
         verbose_name_plural = "Корзины"
 
     def __str__(self) -> str:
-        return f"Cart #{self.pk}"
+        return f"Корзина #{self.pk}"
 
 
 class CartItem(TimeStampedModel):
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="in_carts")
-    quantity = models.PositiveIntegerField(default=1)
-    price_snapshot = models.DecimalField(max_digits=10, decimal_places=2)
+    cart = models.ForeignKey(Cart, verbose_name="Корзина", on_delete=models.CASCADE, related_name="items")
+    product = models.ForeignKey(Product, verbose_name="Товар", on_delete=models.CASCADE, related_name="in_carts")
+    quantity = models.PositiveIntegerField("Количество", default=1)
+    price_snapshot = models.DecimalField("Цена на момент добавления", max_digits=10, decimal_places=2)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["cart", "product"], name="uniq_cart_product")]
@@ -429,9 +509,12 @@ class CartItem(TimeStampedModel):
         verbose_name_plural = "Позиции корзины"
 
     def __str__(self) -> str:
-        return f"{self.cart} - {self.product} x{self.quantity}"
+        return f"{self.cart} — {self.product} x{self.quantity}"
 
 
+# ──────────────────────────────────────────────
+# Заказы
+# ──────────────────────────────────────────────
 class Order(TimeStampedModel):
     class OrderStatus(models.TextChoices):
         NEW = "new", "Новый"
@@ -451,25 +534,25 @@ class Order(TimeStampedModel):
         CASH = "cash", "Наличными/картой при получении"
         INVOICE = "invoice", "Счет для юрлица"
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    number = models.CharField(max_length=32, unique=True)
-    status = models.CharField(max_length=16, choices=OrderStatus.choices, default=OrderStatus.NEW, db_index=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="Покупатель", on_delete=models.SET_NULL, null=True, blank=True)
+    number = models.CharField("Номер заказа", max_length=32, unique=True)
+    status = models.CharField("Статус", max_length=16, choices=OrderStatus.choices, default=OrderStatus.NEW, db_index=True)
 
-    full_name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=32)
-    email = models.EmailField()
-    city = models.CharField(max_length=120)
-    address = models.CharField(max_length=255)
-    comment = models.TextField(blank=True)
+    full_name = models.CharField("ФИО", max_length=255)
+    phone = models.CharField("Телефон", max_length=32)
+    email = models.EmailField("Email")
+    city = models.CharField("Город", max_length=120)
+    address = models.CharField("Адрес", max_length=255)
+    comment = models.TextField("Комментарий", blank=True)
 
-    delivery_type = models.CharField(max_length=16, choices=DeliveryType.choices)
-    payment_type = models.CharField(max_length=16, choices=PaymentType.choices)
-    pickup_point = models.ForeignKey(PickupPoint, on_delete=models.SET_NULL, null=True, blank=True)
+    delivery_type = models.CharField("Тип доставки", max_length=16, choices=DeliveryType.choices)
+    payment_type = models.CharField("Тип оплаты", max_length=16, choices=PaymentType.choices)
+    pickup_point = models.ForeignKey(PickupPoint, verbose_name="Пункт самовывоза", on_delete=models.SET_NULL, null=True, blank=True)
 
-    subtotal = models.DecimalField(max_digits=12, decimal_places=2)
-    delivery_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    total = models.DecimalField(max_digits=12, decimal_places=2)
+    subtotal = models.DecimalField("Подытог", max_digits=12, decimal_places=2)
+    delivery_price = models.DecimalField("Стоимость доставки", max_digits=12, decimal_places=2, default=0)
+    discount_amount = models.DecimalField("Сумма скидки", max_digits=12, decimal_places=2, default=0)
+    total = models.DecimalField("Итого", max_digits=12, decimal_places=2)
 
     class Meta:
         ordering = ["-created_at"]
@@ -481,25 +564,25 @@ class Order(TimeStampedModel):
 
 
 class OrderItem(TimeStampedModel):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
-    title_snapshot = models.CharField(max_length=255)
-    sku_snapshot = models.CharField(max_length=64, blank=True)
-    quantity = models.PositiveIntegerField(default=1)
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    order = models.ForeignKey(Order, verbose_name="Заказ", on_delete=models.CASCADE, related_name="items")
+    product = models.ForeignKey(Product, verbose_name="Товар", on_delete=models.SET_NULL, null=True, blank=True)
+    title_snapshot = models.CharField("Название товара", max_length=255)
+    sku_snapshot = models.CharField("Артикул", max_length=64, blank=True)
+    quantity = models.PositiveIntegerField("Количество", default=1)
+    unit_price = models.DecimalField("Цена за единицу", max_digits=10, decimal_places=2)
 
     class Meta:
         verbose_name = "Позиция заказа"
         verbose_name_plural = "Позиции заказа"
 
     def __str__(self) -> str:
-        return f"{self.order.number} - {self.title_snapshot}"
+        return f"{self.order.number} — {self.title_snapshot}"
 
 
 class OrderStatusHistory(TimeStampedModel):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="status_history")
-    status = models.CharField(max_length=16, choices=Order.OrderStatus.choices)
-    comment = models.CharField(max_length=255, blank=True)
+    order = models.ForeignKey(Order, verbose_name="Заказ", on_delete=models.CASCADE, related_name="status_history")
+    status = models.CharField("Статус", max_length=16, choices=Order.OrderStatus.choices)
+    comment = models.CharField("Комментарий", max_length=255, blank=True)
 
     class Meta:
         ordering = ["created_at"]
@@ -510,17 +593,20 @@ class OrderStatusHistory(TimeStampedModel):
         return f"{self.order.number}: {self.status}"
 
 
+# ──────────────────────────────────────────────
+# Опт
+# ──────────────────────────────────────────────
 class WholesalePriceList(TimeStampedModel):
     class Segment(models.TextChoices):
         BUSINESS = "business", "Юрлица"
         SCHOOL = "school", "Школы"
         UNIVERSITY = "university", "Университеты"
 
-    title = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True)
-    segment = models.CharField(max_length=16, choices=Segment.choices)
-    file_url = models.URLField(blank=True)
-    is_active = models.BooleanField(default=True)
+    title = models.CharField("Название", max_length=255)
+    slug = models.SlugField("Слаг", max_length=255, unique=True)
+    segment = models.CharField("Сегмент", max_length=16, choices=Segment.choices)
+    file_url = models.URLField("URL файла", blank=True)
+    is_active = models.BooleanField("Активен", default=True)
 
     class Meta:
         verbose_name = "Оптовый прайс-лист"
@@ -543,13 +629,13 @@ class WholesaleRequest(TimeStampedModel):
         DONE = "done", "Обработана"
         DECLINED = "declined", "Отклонена"
 
-    organization_name = models.CharField(max_length=255)
-    organization_type = models.CharField(max_length=16, choices=OrganizationType.choices)
-    contact_person = models.CharField(max_length=120)
-    phone = models.CharField(max_length=32)
-    email = models.EmailField()
-    comment = models.TextField(blank=True)
-    status = models.CharField(max_length=16, choices=RequestStatus.choices, default=RequestStatus.NEW)
+    organization_name = models.CharField("Название организации", max_length=255)
+    organization_type = models.CharField("Тип организации", max_length=16, choices=OrganizationType.choices)
+    contact_person = models.CharField("Контактное лицо", max_length=120)
+    phone = models.CharField("Телефон", max_length=32)
+    email = models.EmailField("Email")
+    comment = models.TextField("Комментарий", blank=True)
+    status = models.CharField("Статус", max_length=16, choices=RequestStatus.choices, default=RequestStatus.NEW)
 
     class Meta:
         ordering = ["-created_at"]
@@ -572,11 +658,11 @@ class ReturnRequest(TimeStampedModel):
         REJECTED = "rejected", "Отклонено"
         REFUNDED = "refunded", "Возврат выполнен"
 
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="return_requests")
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    return_type = models.CharField(max_length=16, choices=ReturnType.choices)
-    reason = models.TextField()
-    status = models.CharField(max_length=16, choices=ReturnStatus.choices, default=ReturnStatus.NEW)
+    order = models.ForeignKey(Order, verbose_name="Заказ", on_delete=models.CASCADE, related_name="return_requests")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="Пользователь", on_delete=models.SET_NULL, null=True, blank=True)
+    return_type = models.CharField("Тип возврата", max_length=16, choices=ReturnType.choices)
+    reason = models.TextField("Причина")
+    status = models.CharField("Статус", max_length=16, choices=ReturnStatus.choices, default=ReturnStatus.NEW)
 
     class Meta:
         ordering = ["-created_at"]
@@ -584,38 +670,43 @@ class ReturnRequest(TimeStampedModel):
         verbose_name_plural = "Заявки на возврат"
 
     def __str__(self) -> str:
-        return f"Return #{self.pk} ({self.order.number})"
+        return f"Возврат #{self.pk} ({self.order.number})"
 
 
 class ReturnRequestItem(TimeStampedModel):
-    return_request = models.ForeignKey(ReturnRequest, on_delete=models.CASCADE, related_name="items")
-    order_item = models.ForeignKey(OrderItem, on_delete=models.SET_NULL, null=True, blank=True)
-    quantity = models.PositiveIntegerField(default=1)
-    comment = models.CharField(max_length=255, blank=True)
+    return_request = models.ForeignKey(ReturnRequest, verbose_name="Заявка на возврат", on_delete=models.CASCADE, related_name="items")
+    order_item = models.ForeignKey(OrderItem, verbose_name="Позиция заказа", on_delete=models.SET_NULL, null=True, blank=True)
+    quantity = models.PositiveIntegerField("Количество", default=1)
+    comment = models.CharField("Комментарий", max_length=255, blank=True)
 
     class Meta:
         verbose_name = "Позиция возврата"
         verbose_name_plural = "Позиции возврата"
 
     def __str__(self) -> str:
-        return f"Return item #{self.pk}"
+        return f"Позиция возврата #{self.pk}"
 
 
+# ──────────────────────────────────────────────
+# Контент сайта (инфо-страницы)
+# ──────────────────────────────────────────────
 class SitePage(TimeStampedModel):
     class PageType(models.TextChoices):
+        INDEX = "index", "Главная"
         ABOUT = "about", "О магазине"
         DELIVERY = "delivery", "Доставка и оплата"
         GUARANTEE = "guarantee", "Гарантия и возврат"
         WHOLESALE = "wholesale", "Оптовым клиентам"
+        PICKUP = "pickup", "Пункты самовывоза"
         PRIVACY = "privacy", "Политика конфиденциальности"
         TERMS = "terms", "Пользовательское соглашение"
         OFFER = "offer", "Договор оферты"
 
-    title = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True)
-    page_type = models.CharField(max_length=24, choices=PageType.choices)
-    content = models.TextField(blank=True)
-    is_published = models.BooleanField(default=True)
+    title = models.CharField("Заголовок", max_length=255)
+    slug = models.SlugField("Слаг", max_length=255, unique=True)
+    page_type = models.CharField("Тип страницы", max_length=24, choices=PageType.choices)
+    content = models.TextField("Содержание (HTML)", blank=True, help_text="HTML-контент страницы. Отображается в основном блоке.")
+    is_published = models.BooleanField("Опубликована", default=True)
 
     class Meta:
         verbose_name = "Инфо-страница"
@@ -625,6 +716,9 @@ class SitePage(TimeStampedModel):
         return self.title
 
 
+# ──────────────────────────────────────────────
+# Автогенерация slug
+# ──────────────────────────────────────────────
 def set_slugs(sender, instance, **kwargs):
     if hasattr(instance, "slug") and not instance.slug:
         if hasattr(instance, "title") and instance.title:

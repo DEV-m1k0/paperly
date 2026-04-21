@@ -1,5 +1,7 @@
 ﻿document.addEventListener("DOMContentLoaded", () => {
-  const cartCount = document.getElementById("cartCount");
+  const { escapeHtml, apiJson, unwrapList } = window.paperly;
+  window.paperly.renderCartCount();
+
   const blogGrid = document.getElementById("blogGrid");
   const blogEmpty = document.getElementById("blogEmpty");
   const blogDetail = document.getElementById("blogDetail");
@@ -8,18 +10,6 @@
   const blogDetailMeta = document.getElementById("blogDetailMeta");
   const blogDetailCover = document.getElementById("blogDetailCover");
   const blogBack = document.getElementById("blogBack");
-
-  let count = Number(localStorage.getItem("paperly_cart_count") || 0);
-  cartCount.textContent = String(count);
-
-  function escapeHtml(value) {
-    return String(value)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
-  }
 
   function formatDate(value) {
     if (!value) return "";
@@ -86,15 +76,8 @@
 
   async function loadList() {
     try {
-      const response = await fetch("/api/blog/");
-      if (!response.ok) {
-        blogGrid.innerHTML = "";
-        blogEmpty.hidden = false;
-        return [];
-      }
-
-      const payload = await response.json();
-      return Array.isArray(payload) ? payload : payload.results || [];
+      const payload = await apiJson("/api/blog/");
+      return unwrapList(payload);
     } catch (error) {
       console.error("Blog API error", error);
       blogGrid.innerHTML = "";
@@ -105,13 +88,8 @@
 
   async function loadDetail(slug) {
     try {
-      const response = await fetch(`/api/blog/?slug=${encodeURIComponent(slug)}`);
-      if (!response.ok) {
-        return null;
-      }
-      const payload = await response.json();
-      const rows = Array.isArray(payload) ? payload : payload.results || [];
-      return rows[0] || null;
+      const payload = await apiJson(`/api/blog/?slug=${encodeURIComponent(slug)}`);
+      return unwrapList(payload)[0] || null;
     } catch (error) {
       console.error("Blog detail error", error);
       return null;

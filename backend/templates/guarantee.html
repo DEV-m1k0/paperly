@@ -1,111 +1,162 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — Гарантия и возврат{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — {{ page_title|default:"Гарантия и возврат" }}{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/guarantee.css' %}">
 {% endblock %}
 
 {% block content %}
-<main class="container page">
-    <div class="breadcrumbs">
-      <a href="{% url 'home' %}">Главная</a>
-      <span>/</span>
-      <span>Гарантия и возврат</span>
+<div class="container page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <span>Гарантия и возврат</span>
+  </div>
+
+  {% if page_content %}
+    {{ page_content|safe }}
+  {% else %}
+  <section class="page-hero reveal">
+    <div class="page-hero__bg" aria-hidden="true">
+      <span class="blob blob--teal"></span>
+      <span class="blob blob--rose"></span>
     </div>
 
-    <section class="hero">
-      <div>
-        <p class="eyebrow">Права покупателя</p>
-        <h1>Гарантия, обмен и возврат канцелярских товаров</h1>
-        <p class="lead">Правила действуют в соответствии с Законом РФ «О защите прав потребителей» (ЗоЗПП) и применимыми подзаконными актами.</p>
+    <div class="page-hero__content">
+      <p class="eyebrow">Права покупателя</p>
+      <h1>Гарантия, <span class="accent">обмен и возврат</span> канцелярских товаров</h1>
+      <p class="page-hero__lead">
+        Правила действуют в соответствии с Законом РФ «О защите прав потребителей» (ЗоЗПП) и применимыми подзаконными актами.
+      </p>
+      <div class="page-hero__actions">
+        <a class="btn btn--primary" href="{% url 'catalog' %}">
+          <i class="bi bi-grid" aria-hidden="true"></i>
+          <span>В каталог</span>
+        </a>
+        {% if site.email %}
+        <a class="btn btn--ghost" href="mailto:{{ site.email }}">
+          <i class="bi bi-envelope" aria-hidden="true"></i>
+          <span>Связаться</span>
+        </a>
+        {% endif %}
       </div>
-      <article class="hero-note">
-        <h3><i class="bi bi-info-circle"></i> Важно</h3>
-        <p>Для ускорения обработки возврата подготовьте номер заказа, фото товара и описание ситуации.</p>
-      </article>
-    </section>
+    </div>
 
-    <section class="section">
-      <div class="tabs" role="tablist">
-        <button class="tab is-active" data-tab="good" role="tab">Товар надлежащего качества</button>
-        <button class="tab" data-tab="defect" role="tab">Товар с недостатком</button>
+    <aside class="page-hero__side">
+      <div class="page-hero__side-head">
+        <i class="bi bi-shield-check" aria-hidden="true"></i>
+        <h3>Гарантия качества</h3>
       </div>
-
-      <div class="tab-panels">
-        <article class="tab-panel is-active" id="good" role="tabpanel">
-          <h2>Обмен/возврат, если товар не подошел</h2>
-          <ul class="rules">
-            <li><i class="bi bi-check2-circle"></i> Срок обращения: в течение 14 дней, не считая дня покупки (ст. 25 ЗоЗПП).</li>
-            <li><i class="bi bi-check2-circle"></i> Товар не должен быть в употреблении, сохранены товарный вид, пломбы, фабричные ярлыки.</li>
-            <li><i class="bi bi-check2-circle"></i> При отсутствии аналогичного товара для обмена покупатель вправе потребовать возврат денег.</li>
-          </ul>
-          <p class="note">Ряд непродовольственных товаров надлежащего качества не подлежит обмену/возврату согласно Перечню, утв. Постановлением Правительства РФ №2463.</p>
-        </article>
-
-        <article class="tab-panel" id="defect" role="tabpanel">
-          <h2>Если обнаружен недостаток товара</h2>
-          <ul class="rules">
-            <li><i class="bi bi-check2-circle"></i> Потребитель вправе требовать замену, ремонт, соразмерное уменьшение цены или возврат денег (ст. 18 ЗоЗПП).</li>
-            <li><i class="bi bi-check2-circle"></i> Требования предъявляются в пределах гарантийного срока или срока, установленного законом (ст. 19 ЗоЗПП).</li>
-            <li><i class="bi bi-check2-circle"></i> По требованию продавца может проводиться проверка качества/экспертиза.</li>
-          </ul>
-        </article>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section__head">
-        <h2>Сроки рассмотрения требований</h2>
-      </div>
-      <div class="terms-grid">
-        <article class="term-card">
-          <h3>Возврат денежных средств</h3>
-          <p>До 10 дней с даты предъявления требования (ст. 22 ЗоЗПП).</p>
-        </article>
-        <article class="term-card">
-          <h3>Замена товара</h3>
-          <p>До 7 дней, а при необходимости проверки качества — до 20 дней (ст. 21 ЗоЗПП).</p>
-        </article>
-        <article class="term-card">
-          <h3>Гарантийный ремонт</h3>
-          <p>Срок определяется законом и документами по товару; точный период указывается при приеме.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="section section--split">
-      <article class="panel">
-        <h2>Как оформить возврат</h2>
-        <ol>
-          <li>Заполните заявку в поддержке или напишите на email.</li>
-          <li>Укажите номер заказа и причину возврата.</li>
-          <li>Передайте товар в пункт самовывоза или курьером.</li>
-          <li>Дождитесь решения и возврата средств на исходный способ оплаты.</li>
-        </ol>
-      </article>
-
-      <article class="panel panel--accent">
-        <h2>Документы и данные</h2>
-        <ul>
-          <li>Номер заказа</li>
-          <li>ФИО и контакты покупателя</li>
-          <li>Фото товара и упаковки (если есть дефект)</li>
-          <li>Реквизиты для возврата денежных средств</li>
-        </ul>
-      </article>
-    </section>
-
-    <section class="section legal">
-      <h2>Нормативная база</h2>
+      <p>Все товары сертифицированы. Обмен или возврат — без лишних вопросов.</p>
       <ul>
-        <li>Закон РФ от 07.02.1992 №2300-1 «О защите прав потребителей» (ст. 18, 19, 21, 22, 25).</li>
-        <li>Постановление Правительства РФ от 31.12.2020 №2463 (перечень товаров надлежащего качества, не подлежащих обмену/возврату).</li>
+        <li><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Сертифицированные бренды</li>
+        <li><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Возврат в течение 14 дней</li>
+        <li><i class="bi bi-cash-coin" aria-hidden="true"></i> Быстрое возвращение средств</li>
       </ul>
-      <p class="legal-note">Информация на странице носит справочный характер. В спорных ситуациях применяется действующая редакция законодательства РФ.</p>
-    </section>
-  </main>
+    </aside>
+  </section>
+
+  <section class="page-section reveal">
+    <header class="page-section__head">
+      <p class="eyebrow">Условия</p>
+      <h2>Что можно вернуть и обменять</h2>
+    </header>
+    <div class="feature-grid feature-grid--3">
+      <article class="feature">
+        <div class="feature__icon feature__icon--teal"><i class="bi bi-arrow-return-left" aria-hidden="true"></i></div>
+        <h3>Надлежащее качество</h3>
+        <p>Возврат в течение 14 дней с момента покупки. Товар не был в употреблении, сохранены упаковка и товарный вид.</p>
+        <span class="feature__meta">14 дней</span>
+      </article>
+      <article class="feature">
+        <div class="feature__icon feature__icon--rose"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i></div>
+        <h3>Ненадлежащее качество</h3>
+        <p>Обмен или возврат в течение гарантийного срока. Производственный брак, повреждения при доставке.</p>
+        <span class="feature__meta">по гарантии</span>
+      </article>
+      <article class="feature">
+        <div class="feature__icon feature__icon--amber"><i class="bi bi-clock-history" aria-hidden="true"></i></div>
+        <h3>Сроки возврата средств</h3>
+        <p>Денежные средства возвращаются в течение 10 рабочих дней с момента получения товара.</p>
+        <span class="feature__meta">до 10 дней</span>
+      </article>
+    </div>
+  </section>
+
+  <section class="page-section reveal">
+    <header class="page-section__head">
+      <p class="eyebrow">Процесс</p>
+      <h2>Как оформить возврат</h2>
+    </header>
+    <ol class="steps-grid steps-grid--5">
+      <li class="step">
+        <span class="step__num">1</span>
+        <div><h3>Свяжитесь с нами</h3><p>По телефону или email в рабочее время.</p></div>
+      </li>
+      <li class="step">
+        <span class="step__num">2</span>
+        <div><h3>Опишите причину</h3><p>Укажите дефект или укажите, что товар не подошёл.</p></div>
+      </li>
+      <li class="step">
+        <span class="step__num">3</span>
+        <div><h3>Получите инструкции</h3><p>Менеджер расскажет, как передать товар обратно.</p></div>
+      </li>
+      <li class="step">
+        <span class="step__num">4</span>
+        <div><h3>Передайте товар</h3><p>Курьером, по почте или в пункт выдачи.</p></div>
+      </li>
+      <li class="step">
+        <span class="step__num">5</span>
+        <div><h3>Получите средства</h3><p>На карту или прежний способ оплаты.</p></div>
+      </li>
+    </ol>
+  </section>
+
+  <section class="cta-dark reveal">
+    <div class="cta-dark__content">
+      <p class="eyebrow eyebrow--on-dark">Важно</p>
+      <h2>Что не подлежит возврату</h2>
+      <p>Некоторые категории товаров не могут быть возвращены по закону, даже если они надлежащего качества.</p>
+      <ul>
+        <li><i class="bi bi-x-circle" aria-hidden="true"></i> Товары, бывшие в употреблении</li>
+        <li><i class="bi bi-x-circle" aria-hidden="true"></i> Товары с нарушенной упаковкой, если это влияет на товарный вид</li>
+        <li><i class="bi bi-x-circle" aria-hidden="true"></i> Товары, изготовленные по индивидуальному заказу</li>
+      </ul>
+      {% if site.email %}
+      <a class="btn btn--on-dark" href="mailto:{{ site.email }}">
+        <span>Написать в поддержку</span>
+        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </a>
+      {% endif %}
+    </div>
+    <div class="cta-dark__visual" aria-hidden="true">
+      <i class="bi bi-shield-exclamation"></i>
+      <i class="bi bi-journal-x"></i>
+      <i class="bi bi-box"></i>
+    </div>
+  </section>
+
+  <section class="page-section reveal legal-section">
+    <header class="page-section__head">
+      <p class="eyebrow">Правовая основа</p>
+      <h2>Документы и регламенты</h2>
+    </header>
+    <div class="legal">
+      <ul>
+        <li><i class="bi bi-journal-text" aria-hidden="true"></i> Закон РФ от 07.02.1992 № 2300-1 «О защите прав потребителей»</li>
+        <li><i class="bi bi-journal-text" aria-hidden="true"></i> Постановление Правительства РФ от 31.12.2020 № 2463 «Правила продажи товаров»</li>
+        <li><i class="bi bi-journal-text" aria-hidden="true"></i> Гражданский кодекс РФ, часть вторая, глава 30</li>
+      </ul>
+      <p class="legal-note">
+        При возникновении спорных ситуаций обращайтесь в службу поддержки:
+        <a href="mailto:{{ site.email|default:'info@paperly.ru' }}">{{ site.email|default:"info@paperly.ru" }}</a>
+      </p>
+    </div>
+  </section>
+  {% endif %}
+</div>
 {% endblock %}
 
 {% block page_js %}

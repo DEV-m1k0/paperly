@@ -9,11 +9,11 @@
   cursor: pointer;
   overflow: hidden;
   border: 1px solid #d8e5e8;
-  border-radius: 20px;
+  border-radius: 18px;
   background: linear-gradient(180deg, #ffffff 0%, #fbfefe 100%);
-  padding: 0.78rem;
+  padding: 0.7rem 0.7rem 0.65rem;
   display: grid;
-  gap: 0.66rem;
+  gap: 0.5rem;
   align-content: start;
   box-shadow: 0 10px 28px rgba(11, 65, 61, 0.08);
   transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
@@ -29,7 +29,7 @@
   display: block;
   border-radius: 14px;
   overflow: hidden;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 4 / 3;
   background: #f1f6f7;
 }
 
@@ -46,21 +46,22 @@
 
 .chip {
   position: absolute;
-  top: 1.08rem;
-  left: 1.08rem;
+  top: 0.95rem;
+  left: 0.95rem;
   z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   width: fit-content;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 800;
   color: #0a544d;
   background: rgba(232, 246, 243, 0.95);
   border: 1px solid #c6e7e2;
   backdrop-filter: blur(2px);
   border-radius: 999px;
-  padding: 0.26rem 0.58rem;
+  padding: 0.22rem 0.52rem;
+  letter-spacing: 0.01em;
 }
 
 .chip--discount {
@@ -72,24 +73,25 @@
 
 .fav-btn {
   position: absolute;
-  top: 1.08rem;
-  right: 1.08rem;
+  top: 0.95rem;
+  right: 0.95rem;
   z-index: 3;
-  width: 44px;
-  height: 44px;
-  border-radius: 11px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   border: 1px solid #dbe6e8;
   background: rgba(255, 255, 255, 0.95);
   color: #476268;
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.18s ease;
 }
 
 .fav-btn:hover {
   border-color: #b8cfd4;
   color: #1f3136;
+  transform: scale(1.06);
 }
 
 .fav-btn.is-active {
@@ -102,42 +104,46 @@
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.45rem;
 }
 
 .rating-stars {
   display: inline-flex;
   align-items: center;
-  gap: 0.12rem;
+  gap: 0.1rem;
   line-height: 1;
 }
 
 .rating-stars i {
   color: #f59e0b;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
 }
 
 .meta-score {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: #1f4a43;
-  margin-right: 0.12rem;
 }
 
 .meta-stock {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: #3f5f66;
   background: #eef6f8;
   border-radius: 999px;
-  padding: 0.2rem 0.5rem;
+  padding: 0.14rem 0.46rem;
+  margin-left: auto;
 }
 
 .product h3 {
-  font-size: 1.02rem;
-  line-height: 1.35;
-  min-height: 2.7em;
-  margin-top: 0.1rem;
+  font-size: 0.98rem;
+  line-height: 1.3;
+  margin: 0.1rem 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.6em;
 }
 
 .product h3 a:hover {
@@ -146,46 +152,81 @@
 
 .product p {
   color: var(--muted, #607177);
-  font-size: 0.89rem;
-  line-height: 1.4;
-  min-height: 2.45em;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Compact inline specs: brand + format + sheets + purpose as small pills */
+.product__details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  font-size: 0.74rem;
+  color: #516870;
+}
+
+.product__details span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  background: #f3f8f9;
+  border: 1px solid #e2ecee;
+  border-radius: 999px;
+  padding: 0.18rem 0.5rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product__details strong {
+  color: #1f2f34;
+  font-weight: 700;
 }
 
 .product__bottom {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  margin-top: 0.3rem;
-  gap: 0.6rem;
-  padding-top: 0.62rem;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  padding-top: 0.6rem;
   border-top: 1px solid #edf3f5;
 }
 
 .price-stack {
-  display: grid;
-  gap: 0.08rem;
-  background: #f2f8fa;
-  border: 1px solid #d8e8ec;
-  border-radius: 12px;
-  padding: 0.35rem 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.4rem;
+  row-gap: 0.05rem;
+  min-width: 0;
 }
 
 .product__bottom strong {
-  font-size: 1.2rem;
+  font-size: 1.12rem;
   letter-spacing: -0.01em;
   color: #1f2f34;
   font-weight: 900;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .price-stack.has-discount strong {
   color: #ef4444;
-  text-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
 }
 
 .product__old {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: #7b8f96;
   text-decoration: line-through;
+  white-space: nowrap;
 }
 
 .discount-pill {
@@ -203,23 +244,23 @@
 }
 
 .add {
+  flex-shrink: 0;
   border: none;
-  border-radius: 12px;
-  min-height: 46px;
+  border-radius: 11px;
+  min-height: 40px;
   background: linear-gradient(135deg, #0e766e, #0b655e);
   color: #fff;
   font-weight: 700;
-  padding: 0 1.2rem;
-  font-size: 0.92rem;
-  min-width: 156px;
+  padding: 0 0.9rem;
+  font-size: 0.86rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.58rem;
+  gap: 0.42rem;
   appearance: none;
   -webkit-appearance: none;
   backface-visibility: hidden;
-  box-shadow: 0 8px 18px rgba(14, 118, 110, 0.3);
+  box-shadow: 0 6px 14px rgba(14, 118, 110, 0.26);
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
@@ -231,6 +272,17 @@
 
 .add i {
   font-size: 0.95rem;
+}
+
+/* On narrow cards hide the "В корзину" label — leave the bag icon only */
+@media (max-width: 1280px) {
+  .add span {
+    display: none;
+  }
+  .add {
+    padding: 0 0.85rem;
+    min-width: 42px;
+  }
 }
 
 .empty-state {
@@ -247,18 +299,57 @@
   .products {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .add span {
+    display: inline;
+  }
+  .add {
+    padding: 0 1rem;
+  }
 }
 
 @media (max-width: 760px) {
   .products {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
   .product__bottom {
-    grid-template-columns: 1fr;
+    flex-wrap: wrap;
   }
-
   .add {
     width: 100%;
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 480px) {
+  .products {
+    grid-template-columns: 1fr;
+  }
+  .product {
+    padding: 0.58rem;
+    border-radius: 16px;
+  }
+  .product h3 {
+    font-size: 0.92rem;
+    min-height: auto;
+    -webkit-line-clamp: 2;
+  }
+  .product p {
+    font-size: 0.82rem;
+  }
+  .product__bottom strong {
+    font-size: 1.05rem;
+  }
+  .add {
+    min-height: 42px;
+    font-size: 0.85rem;
+    padding: 0 0.9rem;
+  }
+  .fav-btn {
+    width: 34px;
+    height: 34px;
+  }
+  .chip {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.45rem;
   }
 }

@@ -1,122 +1,201 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paperly — О магазине{% endblock %}
-
-{% block page_css %}
-<link rel="stylesheet" href="{% static 'css/about.css' %}">
-{% endblock %}
-
-{% block pre_content %}
-<div class="bg-shape bg-shape--one" aria-hidden="true"></div>
-  <div class="bg-shape bg-shape--two" aria-hidden="true"></div>
-{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — {{ page_title|default:"О магазине" }}{% endblock %}
 
 {% block content %}
-<main class="container page">
-    <div class="breadcrumbs">
-      <a href="{% url 'home' %}">Главная</a>
-      <span>/</span>
-      <span>О магазине</span>
+<div class="container page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <span>О магазине</span>
+  </div>
+
+  {% if page_content %}
+    {{ page_content|safe }}
+  {% else %}
+  <section class="page-hero reveal">
+    <div class="page-hero__bg" aria-hidden="true">
+      <span class="blob blob--teal"></span>
+      <span class="blob blob--amber"></span>
     </div>
 
-    <section class="hero reveal">
-      <div>
-        <p class="eyebrow">О компании</p>
-        <h1>Paperly — магазин канцтоваров для школы, офиса и творчества</h1>
-        <p class="hero__lead">Мы помогаем быстро собирать нужные товары: от тетрадей и ручек до комплексных решений для офисов и учебных центров. Работаем как с розничными покупателями, так и с оптом.</p>
+    <div class="page-hero__content">
+      <p class="eyebrow">О компании</p>
+      <h1>
+        {{ site.site_name|default:"Paperly" }} —
+        <span class="accent">магазин канцтоваров</span>
+        для школы, офиса и творчества
+      </h1>
+      <p class="page-hero__lead">
+        Мы помогаем быстро собирать нужные товары: от тетрадей и ручек до комплексных решений для офисов и учебных центров.
+        {% if site.city %}Работаем в {{ site.city }}{% else %}Работаем{% endif %} и по всей России.
+      </p>
+
+      <div class="page-hero__actions">
+        <a class="btn btn--primary" href="{% url 'catalog' %}">
+          <i class="bi bi-grid" aria-hidden="true"></i>
+          <span>В каталог</span>
+        </a>
+        <a class="btn btn--ghost" href="{% url 'wholesale' %}">
+          <i class="bi bi-briefcase" aria-hidden="true"></i>
+          <span>Для организаций</span>
+        </a>
       </div>
-      <div class="hero__card">
+    </div>
+
+    <aside class="page-hero__side">
+      <div class="page-hero__side-head">
+        <i class="bi bi-compass" aria-hidden="true"></i>
         <h3>Наша миссия</h3>
-        <p>Сделать покупку канцтоваров понятной, быстрой и предсказуемой по качеству.</p>
-        <ul>
-          <li><i class="bi bi-check2-circle"></i> Проверенные бренды</li>
-          <li><i class="bi bi-check2-circle"></i> Честные сроки поставки</li>
-          <li><i class="bi bi-check2-circle"></i> Поддержка на всех этапах заказа</li>
-        </ul>
       </div>
-    </section>
+      <p>Сделать покупку канцтоваров понятной, быстрой и предсказуемой по качеству.</p>
+      <ul>
+        <li><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Проверенные бренды</li>
+        <li><i class="bi bi-clock-history" aria-hidden="true"></i> Честные сроки поставки</li>
+        <li><i class="bi bi-headset" aria-hidden="true"></i> Поддержка на всех этапах заказа</li>
+      </ul>
+    </aside>
+  </section>
 
-    <section class="stats reveal">
-      <article><strong>12 000+</strong><span>товаров в каталоге</span></article>
-      <article><strong>8 лет</strong><span>опыта в рынке канцтоваров</span></article>
-      <article><strong>2 500+</strong><span>корпоративных клиентов</span></article>
-      <article><strong>4.9/5</strong><span>средняя оценка сервиса</span></article>
-    </section>
-
-    <section class="section reveal">
-      <div class="section__head">
-        <h2>Наши преимущества</h2>
-      </div>
-      <div class="benefits-grid">
-        <article>
-          <i class="bi bi-box-seam"></i>
-          <h3>Широкий ассортимент</h3>
-          <p>Полная матрица товаров по категориям и подкатегориям, включая редкие позиции.</p>
-        </article>
-        <article>
-          <i class="bi bi-lightning"></i>
-          <h3>Быстрая отгрузка</h3>
-          <p>Большая часть заказов передается в доставку в течение 24 часов.</p>
-        </article>
-        <article>
-          <i class="bi bi-building"></i>
-          <h3>Экспертиза B2B</h3>
-          <p>Работаем с компаниями, школами, вузами и закупочными отделами.</p>
-        </article>
-        <article>
-          <i class="bi bi-shield-check"></i>
-          <h3>Гарантия качества</h3>
-          <p>Контроль поставок и прозрачные правила обмена/возврата.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="section reveal">
-      <div class="section__head">
-        <h2>Опыт и развитие</h2>
-      </div>
-      <div class="timeline">
-        <article>
-          <span>2018</span>
-          <h3>Запуск онлайн-витрины</h3>
-          <p>Открыли первые категории бумажной продукции и письменных принадлежностей.</p>
-        </article>
-        <article>
-          <span>2020</span>
-          <h3>Выход в B2B сегмент</h3>
-          <p>Добавили оптовые поставки для офисов, школ и образовательных проектов.</p>
-        </article>
-        <article>
-          <span>2023</span>
-          <h3>Масштабирование каталога</h3>
-          <p>Расширили ассортимент художественных и чертежных товаров.</p>
-        </article>
-        <article>
-          <span>2026</span>
-          <h3>Новая UX-платформа</h3>
-          <p>Переработали структуру каталога и карточки товаров для ускорения выбора.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="section section--split reveal">
-      <article class="panel">
-        <h2>Команда</h2>
-        <p>У нас работают категорийные менеджеры, специалисты по закупкам, логисты и служба клиентского сервиса. Мы регулярно обновляем каталог на основе спроса школ, офисов и творческих студий.</p>
+  <section class="page-stats reveal" aria-label="Цифры о магазине">
+    {% for stat in about_stats %}
+      <article class="page-stat">
+        <strong>{{ stat.value }}</strong>
+        <span>{{ stat.label }}</span>
       </article>
-      <article class="panel panel--accent">
-        <h2>Партнеры</h2>
-        <p>Сотрудничаем с поставщиками и брендами Erich Krause, Brauberg, Maped, Kores и другими производителями канцтоваров.</p>
-      </article>
-    </section>
+    {% endfor %}
+  </section>
 
-    <section class="cta reveal">
-      <h2>Готовы к заказу?</h2>
-      <p>Перейдите в каталог и соберите комплект для школы, офиса или творчества.</p>
-      <a href="{% url 'catalog' %}">Перейти в каталог <i class="bi bi-arrow-right"></i></a>
-    </section>
-  </main>
+  <section class="page-section reveal">
+    <header class="page-section__head">
+      <p class="eyebrow">Преимущества</p>
+      <h2>Почему выбирают нас</h2>
+    </header>
+    <div class="feature-grid">
+      <article class="feature">
+        <div class="feature__icon feature__icon--teal"><i class="bi bi-box-seam" aria-hidden="true"></i></div>
+        <h3>Широкий ассортимент</h3>
+        <p>Всё для школы, офиса и творчества — от тетрадей до чертёжных инструментов.</p>
+        {% if about_extras.categories_count %}
+        <span class="feature__meta">{{ about_extras.categories_count }} категорий</span>
+        {% endif %}
+      </article>
+      <article class="feature">
+        <div class="feature__icon feature__icon--amber"><i class="bi bi-lightning-charge" aria-hidden="true"></i></div>
+        <h3>Быстрая отгрузка</h3>
+        <p>Передаём заказ в доставку в течение 24 часов после подтверждения.</p>
+      </article>
+      <article class="feature">
+        <div class="feature__icon feature__icon--rose"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></div>
+        <h3>Прозрачный возврат</h3>
+        <p>Понятные условия обмена и возврата в соответствии с ЗоЗПП.</p>
+      </article>
+      <article class="feature">
+        <div class="feature__icon feature__icon--indigo"><i class="bi bi-percent" aria-hidden="true"></i></div>
+        <h3>Оптовые условия</h3>
+        <p>Спеццены для компаний, школ и учебных центров — от одной коробки.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="page-section reveal">
+    <header class="page-section__head">
+      <p class="eyebrow">Процесс</p>
+      <h2>Как мы работаем</h2>
+    </header>
+    <ol class="steps-grid">
+      <li class="step">
+        <span class="step__num">1</span>
+        <div>
+          <h3>Выбор товаров</h3>
+          <p>В каталоге — удобные фильтры по бренду, формату, назначению и цене.</p>
+        </div>
+      </li>
+      <li class="step">
+        <span class="step__num">2</span>
+        <div>
+          <h3>Оформление за минуту</h3>
+          <p>Контакты, адрес, способ оплаты — заказ уходит в работу сразу.</p>
+        </div>
+      </li>
+      <li class="step">
+        <span class="step__num">3</span>
+        <div>
+          <h3>Доставка</h3>
+          <p>Курьер домой или самовывоз из удобного пункта выдачи.</p>
+        </div>
+      </li>
+      <li class="step">
+        <span class="step__num">4</span>
+        <div>
+          <h3>Оплата</h3>
+          <p>Картой онлайн, через СБП или при получении — как удобно.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section class="cta-dark reveal">
+    <div class="cta-dark__content">
+      <p class="eyebrow eyebrow--on-dark">B2B</p>
+      <h2>Для организаций</h2>
+      <p>Работаем с юрлицами, школами и университетами по договору с закрывающими документами.</p>
+      <ul>
+        <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Персональные цены под объём</li>
+        <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Закрывающие документы в ЭДО</li>
+        <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Регулярные поставки по графику</li>
+        <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Выделенный менеджер</li>
+      </ul>
+      <a class="btn btn--on-dark" href="{% url 'wholesale' %}">
+        <span>Оставить заявку</span>
+        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </a>
+    </div>
+    <div class="cta-dark__visual" aria-hidden="true">
+      <i class="bi bi-building"></i>
+      <i class="bi bi-mortarboard"></i>
+      <i class="bi bi-briefcase"></i>
+    </div>
+  </section>
+
+  <section class="page-section reveal" aria-label="Контакты">
+    <header class="page-section__head">
+      <p class="eyebrow">Контакты</p>
+      <h2>Есть вопрос? Мы на связи</h2>
+    </header>
+    <div class="contact-grid">
+      {% if site.phone %}
+      <a class="contact-card" href="tel:{{ site.phone }}">
+        <i class="bi bi-telephone" aria-hidden="true"></i>
+        <div>
+          <span class="contact-card__label">Телефон</span>
+          <strong>{{ site.phone }}</strong>
+        </div>
+      </a>
+      {% endif %}
+      {% if site.email %}
+      <a class="contact-card" href="mailto:{{ site.email }}">
+        <i class="bi bi-envelope" aria-hidden="true"></i>
+        <div>
+          <span class="contact-card__label">Email</span>
+          <strong>{{ site.email }}</strong>
+        </div>
+      </a>
+      {% endif %}
+      {% if site.address %}
+      <div class="contact-card contact-card--static">
+        <i class="bi bi-geo-alt" aria-hidden="true"></i>
+        <div>
+          <span class="contact-card__label">Адрес</span>
+          <strong>{{ site.address }}</strong>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+</div>
 {% endblock %}
 
 {% block page_js %}
