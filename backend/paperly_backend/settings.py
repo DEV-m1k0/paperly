@@ -117,6 +117,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # WhiteNoise — сжатие и cache-busting для static'ов в production
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 WHITENOISE_MAX_AGE = 60 * 60 * 24 * 30   # 30 дней кеша в браузере
+# Не падать, если минифицированный JS/CSS ссылается на .map-файл,
+# которого нет в бандле (типично для bootstrap.bundle.min.js → *.map).
+WHITENOISE_MANIFEST_STRICT = False
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
