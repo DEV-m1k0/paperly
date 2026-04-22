@@ -33,8 +33,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    # WhiteNoise — раздача static на production без nginx (PA поддерживает)
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    # WhiteNoise — раздача static + media на production без nginx.
+    # Наш subclass добавляет MEDIA_ROOT к дефолтному STATIC_ROOT.
+    "paperly_backend.middleware.MediaWhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
