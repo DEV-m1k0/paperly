@@ -21,7 +21,11 @@ __pycache__/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-media
+
+# Пользовательские загрузки в админке (уникальные для продакшена).
+# Демо-картинки для seed_demo_data лежат в backend/media/ и трекаются специально
+# (нужны на Render при первом деплое).
+/media/
 
 # Collectstatic output — пересобирается на каждый деплой, в git держать не нужно
 /backend/staticfiles/

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="Paperly">
+  <defs>
+    <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0e766e"/>
+      <stop offset="100%" stop-color="#14a398"/>
+    </linearGradient>
+    <pattern id="dots" width="40" height="40" patternUnits="userSpaceOnUse">
+      <circle cx="20" cy="20" r="1.5" fill="rgba(255,255,255,.18)"/>
+    </pattern>
+  </defs>
+  <rect width="600" height="600" fill="url(#pg)"/>
+  <rect width="600" height="600" fill="url(#dots)"/>
+  <circle cx="510" cy="90" r="140" fill="rgba(255,255,255,.08)"/>
+  <circle cx="90" cy="510" r="100" fill="rgba(255,255,255,.06)"/>
+  <g transform="translate(300 260)" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="-85" y="-95" width="170" height="190" rx="10" fill="rgba(255,255,255,.08)"/>
+    <line x1="-55" y1="-55" x2="55" y2="-55"/>
+    <line x1="-55" y1="-25" x2="55" y2="-25"/>
+    <line x1="-55" y1="5" x2="55" y2="5"/>
+    <line x1="-55" y1="35" x2="25" y2="35"/>
+  </g>
+  <text x="300" y="440" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="36" font-weight="700" fill="#fff" letter-spacing="2">PAPERLY</text>
+  <text x="300" y="478" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="20" fill="rgba(255,255,255,.8)">изображение скоро появится</text>
+</svg>
