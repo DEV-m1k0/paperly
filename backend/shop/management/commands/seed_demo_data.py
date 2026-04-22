@@ -239,38 +239,45 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--reset", action="store_true", help="Delete old demo entities before seeding")
 
-    @transaction.atomic
     def handle(self, *args, **options):
+        # Каждая секция — в своей транзакции + try/except. Так если одна
+        # упадёт (например, валидация новой модели), остальные — в т.ч.
+        # привязка картинок к товарам/блогу — сохранятся.
         if options["reset"]:
             self.stdout.write("Resetting demo entities...")
-            self._reset_data()
+            with transaction.atomic():
+                self._reset_data()
 
-        self.stdout.write("Seeding categories...")
-        categories_map = self._seed_categories()
-        self.stdout.write("Seeding brands...")
-        brands = self._seed_brands()
-        self.stdout.write("Seeding products...")
-        products = self._seed_products(categories_map, brands)
-        self.stdout.write("Seeding marketing...")
-        self._seed_marketing(products)
-        self.stdout.write("Seeding logistics...")
-        self._seed_logistics()
-        self.stdout.write("Seeding content...")
-        self._seed_content()
-        self.stdout.write("Seeding wholesale...")
-        self._seed_wholesale()
-        self.stdout.write("Seeding filters...")
-        self._seed_filters(brands)
-        self.stdout.write("Seeding gift certificates...")
-        self._seed_gift_certificates()
-        self.stdout.write("Seeding customer data...")
-        self._seed_customer_data(products)
-        self.stdout.write("Seeding returns...")
-        self._seed_returns()
-        self.stdout.write("Seeding site settings...")
-        self._seed_site_settings()
+        categories_map, brands, products = None, None, None
 
-        self.stdout.write(self.style.SUCCESS(f"Done! Created {len(products)} products."))
+        def _section(label, fn, *args, **kwargs):
+            self.stdout.write(f"Seeding {label}...")
+            try:
+                with transaction.atomic():
+                    return fn(*args, **kwargs)
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"  ✗ {label} failed: {e}"))
+                return None
+
+        categories_map = _section("categories", self._seed_categories)
+        brands = _section("brands", self._seed_brands)
+        if categories_map is not None and brands is not None:
+            products = _section("products", self._seed_products, categories_map, brands)
+        if products is not None:
+            _section("marketing", self._seed_marketing, products)
+        _section("logistics", self._seed_logistics)
+        _section("content", self._seed_content)
+        _section("wholesale", self._seed_wholesale)
+        if brands is not None:
+            _section("filters", self._seed_filters, brands)
+        _section("gift certificates", self._seed_gift_certificates)
+        if products is not None:
+            _section("customer data", self._seed_customer_data, products)
+        _section("returns", self._seed_returns)
+        _section("site settings", self._seed_site_settings)
+
+        count = len(products) if products else 0
+        self.stdout.write(self.style.SUCCESS(f"Done! Created {count} products."))
 
     def _reset_data(self):
         for model in [
@@ -754,13 +761,19 @@ class Command(BaseCommand):
 
     # ─── Wholesale ───────────────────────────────
     def _seed_wholesale(self):
-        for segment, title in [
-            (WholesalePriceList.Segment.BUSINESS, "Прайс для юрлиц"),
-            (WholesalePriceList.Segment.SCHOOL, "Прайс для школ"),
-            (WholesalePriceList.Segment.UNIVERSITY, "Прайс для университетов"),
-        ]:
+        # ВАЖНО: slug'и задаём явно латиницей. Django'вский slugify() без
+        # allow_unicode=True на кириллице возвращает пустую строку → все
+        # три записи получают slug="" → IntegrityError на UNIQUE → вся
+        # транзакция seed отката → картинки товаров и обложки блога НЕ
+        # сохраняются. Этот баг уже ломал Render-деплой.
+        pricelists = [
+            ("wholesale-business", WholesalePriceList.Segment.BUSINESS, "Прайс для юрлиц"),
+            ("wholesale-school", WholesalePriceList.Segment.SCHOOL, "Прайс для школ"),
+            ("wholesale-university", WholesalePriceList.Segment.UNIVERSITY, "Прайс для университетов"),
+        ]
+        for slug, segment, title in pricelists:
             WholesalePriceList.objects.get_or_create(
-                slug=slugify(title),
+                slug=slug,
                 defaults={"title": title, "segment": segment, "file_url": "#"},
             )
 
