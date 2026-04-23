@@ -129,13 +129,42 @@
     node.textContent = String(count);
   }
 
+  // Сообщение для пользователя, когда количество упёрлось в лимит товара.
+  // Возвращает false, если товар всё равно был добавлен (просто обрезан) —
+  // вызывающий код сам решает, показывать alert или нет.
+  function notifyMaxReached(productTitle, maxQty) {
+    try {
+      alert(
+        `Максимум можно заказать ${maxQty} шт. «${productTitle}».\n` +
+        `В корзину добавлено максимально доступное количество.`
+      );
+    } catch {
+      // alert может быть заблокирован — не критично, серверная валидация всё
+      // равно не даст оформить заказ сверх лимита.
+    }
+  }
+
   function addCartItem(product, quantity = 1) {
     const items = readCartItems();
     const id = String(product.id);
     const existing = items.find((item) => String(item.id) === id);
-    const qty = Math.max(1, Number(quantity) || 1);
+    const rawQty = Math.max(1, Number(quantity) || 1);
+    // maxQty = 0 или не задан → без ограничения (совпадает с поведением
+    // Product.max_order_quantity на бекенде).
+    const maxQty = Math.max(0, Number(product.maxQty) || 0);
+    const currentQty = existing ? Number(existing.qty) || 0 : 0;
+    let nextQty = currentQty + rawQty;
+    let clamped = false;
+    if (maxQty > 0 && nextQty > maxQty) {
+      nextQty = maxQty;
+      clamped = true;
+    }
+    // Если вообще нечего добавлять (уже в корзине лежит максимум) — ничего не
+    // трогаем, но всё равно сигналим пользователю.
+    const effectiveQty = Math.max(1, nextQty);
     if (existing) {
-      existing.qty += qty;
+      existing.qty = effectiveQty;
+      if (maxQty > 0) existing.maxQty = maxQty;
     } else {
       items.push({
         id,
@@ -143,10 +172,13 @@
         price: Number(product.price) || 0,
         img: product.img || "",
         desc: product.desc || "",
-        qty,
+        qty: effectiveQty,
+        maxQty: maxQty > 0 ? maxQty : 0,
       });
     }
-    return saveCartItems(items);
+    const count = saveCartItems(items);
+    if (clamped) notifyMaxReached(product.title || "товар", maxQty);
+    return count;
   }
 
   function clearCart() {

@@ -23,7 +23,7 @@ if PROJECT_DIR not in sys.path:
     sys.path.insert(0, PROJECT_DIR)
 
 # ───── 2. Environment variables ─────
-# Всё, что нужно: SECRET_KEY, DEBUG=False, ALLOWED_HOSTS, AI_API_KEY и т.д.
+# Всё, что нужно: SECRET_KEY, DEBUG=False, ALLOWED_HOSTS, email-креды.
 # Лучше их задать через .env рядом с settings.py — python-dotenv подхватит.
 # Но на всякий случай можно и здесь:
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "paperly_backend.settings")

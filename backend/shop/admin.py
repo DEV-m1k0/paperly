@@ -111,12 +111,30 @@ class ProductSpecificationInline(admin.TabularInline):
 @admin.register(models.Product)
 class ProductAdmin(BaseAdmin):
     list_display = ("title", "sku", "brand", "format", "purpose", "price", "stock", "max_order_quantity", "status", "is_new", "is_hit")
+    list_editable = ("max_order_quantity",)
     list_filter = ("status", "is_new", "is_hit", "is_featured", "brand", "format", "purpose")
     search_fields = ("title", "sku", "slug")
     inlines = (ProductImageInline, ProductSpecificationInline)
     prepopulated_fields = {"slug": ("title",)}
     filter_horizontal = ("categories",)
     list_select_related = ("brand",)
+    fieldsets = (
+        (None, {"fields": ("title", "slug", "sku", "brand", "categories", "status")}),
+        ("Описание", {"fields": ("short_description", "description")}),
+        ("Цена и наличие", {"fields": ("price", "old_price", "stock")}),
+        ("Ограничения", {
+            "fields": ("max_order_quantity",),
+            "description": (
+                "<b>Макс. кол-во в заказе</b> — сколько штук одного товара покупатель "
+                "может добавить в корзину и заказать за один раз. "
+                "<b>0 = без ограничения</b>. Лимит проверяется и на клиенте (кнопки в "
+                "корзине), и на сервере (при создании заказа)."
+            ),
+        }),
+        ("Характеристики", {"fields": ("format", "sheets_count", "purpose")}),
+        ("Маркетинг", {"fields": ("is_new", "is_hit", "is_featured")}),
+        ("Габариты", {"fields": ("weight_grams", "length_mm", "width_mm", "height_mm")}),
+    )
 
 
 @admin.register(models.ProductReview)

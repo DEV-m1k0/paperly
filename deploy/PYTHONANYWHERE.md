@@ -10,12 +10,10 @@
 | Static через WhiteNoise | ✅ | ✅ |
 | Media (картинки товаров) | ✅ | ✅ |
 | Email через SMTP Yandex | ✅ | ✅ |
-| Groq / OpenAI / внешние API | ⚠️ только whitelisted | ✅ |
-| Локальная Ollama | ❌ | ❌ |
 | Celery / Redis | ❌ | ✅ (always-on tasks) |
 | Кастомный домен | ❌ | ✅ |
 
-**Важно**: AI-чат на бесплатном тарифе нужно либо **отключить**, либо подключить через Groq (если домен `api.groq.com` в whitelist PA). На paid-тарифе — работает любой внешний API.
+Чат-виджет не требует внешних API — все ответы зашиты в JS, подборки товаров тянутся из собственного `/api/products/`. Работает на любом тарифе.
 
 ## Шаг 1. Подготовить репозиторий локально
 
@@ -86,13 +84,6 @@ EMAIL_USE_SSL=True
 EMAIL_HOST_USER=paperly.work@yandex.ru
 EMAIL_HOST_PASSWORD=jrizrwwkbtcgbljp
 DEFAULT_FROM_EMAIL=paperly.work@yandex.ru
-
-# AI: отключаем чат на free-тарифе (вернёт 503 gracefully)
-AI_API_KEY=
-# Либо включить через Groq (paid или если в whitelist PA):
-# AI_API_KEY=gsk_ваш_groq_ключ
-# AI_API_BASE=https://api.groq.com/openai/v1
-# AI_MODEL=llama-3.3-70b-versatile
 ```
 
 Сохранить: **Ctrl+O**, Enter, **Ctrl+X**.
@@ -204,14 +195,8 @@ python manage.py collectstatic --noinput
 
 ## Отключение функций, несовместимых с PA
 
-### 1. AI-чат
-На free-тарифе: оставьте `AI_API_KEY=` пустым. Чат вернёт 503 с дружелюбным сообщением, сам сайт работает.
-
-### 2. Newsletter через Celery
-Celery на free нет. Я не использую Celery для отправки — всё через обычный `send_mail`. Работает синхронно.
-
-### 3. Автостарт Ollama
-Management-команда `runserver` пытается стартовать Ollama. На PA это не нужно — **runserver на PA вообще не используется**, WSGI обходит его. Никаких действий не требуется.
+### Newsletter через Celery
+Celery на free нет. Мы не используем Celery для отправки — всё через обычный `send_mail`. Работает синхронно.
 
 ## MySQL вместо SQLite (опционально, paid-тариф)
 

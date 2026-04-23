@@ -1,12 +1,16 @@
 import hashlib
+import json
 import random
 import shutil
-from datetime import timedelta
+from datetime import date, timedelta
 from io import BytesIO
 from pathlib import Path
 
 from django.conf import settings
+from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
 from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -92,6 +96,39 @@ REVIEW_TEXTS = [
     "Немного дороговато, но качество того стоит.",
     "Заказывали для офиса, все остались довольны.",
     "Подарили коллеге — очень понравилось!",
+]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Пользователи: 10 покупателей + 3 менеджера + 2 админа.
+# Пароли одинаковы внутри роли (customer12345 / manager12345 / admin12345),
+# чтобы демо-доступ из README был лаконичным.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# (username, first_name, last_name, phone, birth_date, city, street, postal_code)
+CUSTOMER_SEEDS = [
+    ("customer",   "Антон",    "Князев",   "+7 (999) 100-00-00", date(1995, 3, 15),  "Курск",             "ул. Ленина, 11",         "305000"),
+    ("customer2",  "Мария",    "Сидорова", "+7 (910) 222-33-44", date(1990, 8, 22),  "Курск",             "пр-т Клыкова, 52",       "305018"),
+    ("customer3",  "Дмитрий",  "Соколов",  "+7 (915) 111-22-33", date(1988, 5, 3),   "Курск",             "ул. Карла Маркса, 65",   "305001"),
+    ("customer4",  "Елена",    "Иванова",  "+7 (926) 333-44-55", date(1992, 11, 17), "Москва",            "ул. Арбат, 20",          "119019"),
+    ("customer5",  "Павел",    "Козлов",   "+7 (903) 777-88-99", date(1985, 2, 8),   "Курск",             "ул. Сумская, 37А",       "305002"),
+    ("customer6",  "Ольга",    "Смирнова", "+7 (905) 444-55-66", date(1996, 7, 29),  "Курск",             "пр-т Кулакова, 12",      "305016"),
+    ("customer7",  "Алексей",  "Попов",    "+7 (916) 555-66-77", date(1991, 10, 12), "Санкт-Петербург",   "Невский пр., 28",        "191186"),
+    ("customer8",  "Наталья",  "Фёдорова", "+7 (925) 666-77-88", date(1987, 4, 19),  "Курск",             "ул. Энтузиастов, 4",     "305044"),
+    ("customer9",  "Михаил",   "Волков",   "+7 (902) 888-99-00", date(1993, 9, 6),   "Воронеж",           "пр-т Революции, 15",     "394018"),
+    ("customer10", "Татьяна",  "Морозова", "+7 (936) 111-00-99", date(1989, 12, 25), "Курск",             "ул. Магистральная, 21",  "305029"),
+]
+
+# (username, first_name, last_name)
+MANAGER_SEEDS = [
+    ("manager",  "Екатерина", "Романова"),
+    ("manager2", "Игорь",     "Белов"),
+    ("manager3", "Ксения",    "Новикова"),
+]
+
+ADMIN_SEEDS = [
+    ("admin",  "Admin",  "Paperly"),
+    ("admin2", "Сергей", "Николаев"),
 ]
 
 
@@ -263,23 +300,38 @@ class Command(BaseCommand):
         brands = _section("brands", self._seed_brands)
         if categories_map is not None and brands is not None:
             products = _section("products", self._seed_products, categories_map, brands)
+        # Пользователей создаём рано, до marketing — чтобы отзывы на товары
+        # сразу линковались к реальным покупателям.
+        users = _section("users", self._seed_users) or {"customers": [], "managers": [], "admins": []}
+        customers = users["customers"]
+        managers = users["managers"]
+        admins = users["admins"]
+
         if products is not None:
-            _section("marketing", self._seed_marketing, products)
+            _section("marketing", self._seed_marketing, products, customers)
         _section("logistics", self._seed_logistics)
         _section("content", self._seed_content)
         _section("wholesale", self._seed_wholesale)
         if brands is not None:
             _section("filters", self._seed_filters, brands)
         _section("gift certificates", self._seed_gift_certificates)
-        if products is not None:
-            _section("customer data", self._seed_customer_data, products)
+        if products is not None and customers:
+            _section("customer data", self._seed_customer_data, products, customers)
         _section("returns", self._seed_returns)
+        if managers or admins:
+            _section("admin activity", self._seed_admin_activity, managers, admins)
         _section("site settings", self._seed_site_settings)
 
         count = len(products) if products else 0
-        self.stdout.write(self.style.SUCCESS(f"Done! Created {count} products."))
+        self.stdout.write(self.style.SUCCESS(
+            f"Done! {count} products · {len(customers)} customers · "
+            f"{len(managers)} managers · {len(admins)} admins."
+        ))
 
     def _reset_data(self):
+        # LogEntry — логи админки за менеджеров/админов. Чистим, чтобы
+        # повторный --reset не накапливал дубликаты.
+        LogEntry.objects.all().delete()
         for model in [
             ReturnRequestItem, ReturnRequest,
             OrderStatusHistory, OrderItem, Order,
@@ -521,7 +573,13 @@ class Command(BaseCommand):
         return products
 
     # ─── Marketing ───────────────────────────────
-    def _seed_marketing(self, products):
+    def _seed_marketing(self, products, customers=None):
+        """Promotions + product reviews.
+
+        `customers` — список User-объектов покупателей. Если передан, ~60%
+        отзывов линкуются к реальным покупателям (Review.user + author_name
+        = «Имя Ф.»), остальные остаются гостевыми.
+        """
         promos = [
             ("back-to-school", "Снова в школу", "Скидки до 30% на школьные наборы", 30, -3, 20),
             ("office-week", "Неделя офиса", "Скидки 15% на офисные товары", 15, -1, 7),
@@ -540,20 +598,41 @@ class Command(BaseCommand):
             )
             promo.products.set(random.sample(products, min(8, len(products))))
 
-        # Reviews — 2-3 per product
+        # Reviews: на каждом товаре 2-4 отзыва. Часть — от реальных покупателей
+        # (чтобы на странице профиля показывалась их история отзывов), часть —
+        # гостевые, с именами из REVIEW_NAMES.
+        # customers приходят как list[dict{"user": ..., "phone": ..., ...}] от
+        # _seed_users — разворачиваем в list[User].
+        customer_users = [c["user"] if isinstance(c, dict) else c for c in (customers or [])]
         for product in products:
             num_reviews = random.randint(2, 4)
-            for i in range(num_reviews):
-                name = random.choice(REVIEW_NAMES)
-                ProductReview.objects.get_or_create(
-                    product=product,
-                    author_name=f"{name}",
-                    defaults={
-                        "rating": random.choice([4, 4, 5, 5, 5, 3]),
-                        "text": random.choice(REVIEW_TEXTS),
-                        "is_published": True,
-                    },
-                )
+            for _ in range(num_reviews):
+                link_to_customer = customer_users and random.random() < 0.6
+                if link_to_customer:
+                    user = random.choice(customer_users)
+                    author_name = f"{user.first_name} {user.last_name[:1]}."
+                    ProductReview.objects.get_or_create(
+                        product=product,
+                        user=user,
+                        defaults={
+                            "author_name": author_name,
+                            "rating": random.choice([4, 4, 5, 5, 5, 3]),
+                            "text": random.choice(REVIEW_TEXTS),
+                            "is_published": True,
+                        },
+                    )
+                else:
+                    name = random.choice(REVIEW_NAMES)
+                    ProductReview.objects.get_or_create(
+                        product=product,
+                        author_name=name,
+                        user=None,
+                        defaults={
+                            "rating": random.choice([4, 4, 5, 5, 5, 3]),
+                            "text": random.choice(REVIEW_TEXTS),
+                            "is_published": True,
+                        },
+                    )
 
     # ─── Logistics ───────────────────────────────
     def _seed_logistics(self):
@@ -829,91 +908,86 @@ class Command(BaseCommand):
                     defaults={"query_param": param, "value": value, "sort_order": opt_idx},
                 )
 
-    # ─── Customer data ───────────────────────────
-    def _seed_customer_data(self, products):
+    # ─── Users (3 ролей: покупатели, менеджеры, админы) ──
+    def _seed_users(self):
+        """Create all demo users in a single pass.
+
+        Принудительно синхронизируем email / имя / флаги / пароль на каждом
+        запуске, чтобы демо-доступы из README всегда совпадали с БД (даже
+        если юзер уже существовал с другими значениями). Даты регистрации и
+        последнего входа бэкдейтим, чтобы в админке `/admin/auth/user/` была
+        видна реальная «возрастная» картина.
+        """
         User = get_user_model()
-        from datetime import date
 
-        # ── User 1: demo ──
-        user, _ = User.objects.get_or_create(
-            username="demo",
-            defaults={"email": "demo@paperly.ru", "first_name": "Антон", "last_name": "Князев"},
-        )
-        user.set_password("demo12345")
-        user.save(update_fields=["password"])
-
-        profile, _ = CustomerProfile.objects.get_or_create(
-            user=user,
-            defaults={
-                "first_name": "Антон", "last_name": "Князев",
-                "phone": "+7 (999) 100-00-00", "birth_date": date(1995, 3, 15),
-            },
-        )
-        Address.objects.get_or_create(
-            profile=profile,
-            city="Курск",
-            street="ул. Ленина, 11",
-            defaults={
-                "address_type": Address.AddressType.SHIPPING, "is_default": True,
-                "entrance": "2", "flat_or_office": "кв. 45", "postal_code": "305000",
-            },
-        )
-        NotificationSetting.objects.get_or_create(
-            profile=profile,
-            defaults={"order_status": True, "promotions": True, "restock": False},
-        )
-
-        # ── User 2: maria ──
-        user2, _ = User.objects.get_or_create(
-            username="maria",
-            defaults={"email": "maria@paperly.ru", "first_name": "Мария", "last_name": "Сидорова"},
-        )
-        user2.set_password("maria12345")
-        user2.save(update_fields=["password"])
-
-        profile2, _ = CustomerProfile.objects.get_or_create(
-            user=user2,
-            defaults={
-                "first_name": "Мария", "last_name": "Сидорова",
-                "phone": "+7 (910) 222-33-44", "birth_date": date(1990, 8, 22),
-            },
-        )
-        Address.objects.get_or_create(
-            profile=profile2,
-            city="Курск",
-            street="пр-т Клыкова, 52",
-            defaults={
-                "address_type": Address.AddressType.SHIPPING, "is_default": True,
-                "entrance": "1", "flat_or_office": "кв. 12", "postal_code": "305018",
-            },
-        )
-        NotificationSetting.objects.get_or_create(
-            profile=profile2,
-            defaults={"order_status": True, "promotions": False, "restock": True},
-        )
-
-        # ── Favorites ──
-        for product in products[:7]:
-            Favorite.objects.get_or_create(user=user, product=product)
-        for product in products[5:10]:
-            Favorite.objects.get_or_create(user=user2, product=product)
-
-        # ── Carts ──
-        cart, _ = Cart.objects.get_or_create(user=user)
-        for product in products[:4]:
-            CartItem.objects.get_or_create(
-                cart=cart, product=product,
-                defaults={"quantity": random.randint(1, 3), "price_snapshot": product.price},
+        customers = []
+        for idx, (username, first, last, phone, bday, city, street, postal) in enumerate(CUSTOMER_SEEDS):
+            user, _ = User.objects.get_or_create(
+                username=username,
+                defaults={"email": f"{username}@paperly.ru", "first_name": first, "last_name": last},
             )
+            user.email = f"{username}@paperly.ru"
+            user.first_name = first
+            user.last_name = last
+            user.is_staff = False
+            user.is_superuser = False
+            user.is_active = True
+            user.set_password("customer12345")
+            # Разбрасываем дату регистрации — от 2 до 12 месяцев назад.
+            user.date_joined = timezone.now() - timedelta(days=60 + idx * 28)
+            user.last_login = timezone.now() - timedelta(hours=random.randint(1, 720))
+            user.save()
+            customers.append({
+                "user": user, "phone": phone, "birth_date": bday,
+                "city": city, "street": street, "postal_code": postal,
+            })
 
-        cart2, _ = Cart.objects.get_or_create(user=user2)
-        for product in products[3:6]:
-            CartItem.objects.get_or_create(
-                cart=cart2, product=product,
-                defaults={"quantity": 1, "price_snapshot": product.price},
+        manager_group, _ = Group.objects.get_or_create(name="Менеджер")
+        managers = []
+        for idx, (username, first, last) in enumerate(MANAGER_SEEDS):
+            user, _ = User.objects.get_or_create(
+                username=username,
+                defaults={"email": f"{username}@paperly.ru", "first_name": first, "last_name": last},
             )
+            user.email = f"{username}@paperly.ru"
+            user.first_name = first
+            user.last_name = last
+            user.is_staff = True
+            user.is_superuser = False
+            user.is_active = True
+            user.set_password("manager12345")
+            user.date_joined = timezone.now() - timedelta(days=120 + idx * 45)
+            user.last_login = timezone.now() - timedelta(hours=random.randint(1, 48))
+            user.save()
+            user.groups.add(manager_group)
+            managers.append(user)
 
-        # ── Orders ──
+        admins = []
+        for idx, (username, first, last) in enumerate(ADMIN_SEEDS):
+            user, _ = User.objects.get_or_create(
+                username=username,
+                defaults={"email": f"{username}@paperly.ru", "first_name": first, "last_name": last},
+            )
+            user.email = f"{username}@paperly.ru"
+            user.first_name = first
+            user.last_name = last
+            user.is_staff = True
+            user.is_superuser = True
+            user.is_active = True
+            user.set_password("admin12345")
+            user.date_joined = timezone.now() - timedelta(days=400 + idx * 120)
+            user.last_login = timezone.now() - timedelta(hours=random.randint(1, 24))
+            user.save()
+            admins.append(user)
+
+        return {"customers": customers, "managers": managers, "admins": admins}
+
+    # ─── Customer data ───────────────────────────
+    def _seed_customer_data(self, products, customers):
+        """Наполняем профили покупателей данными (профиль, адрес,
+        уведомления, избранное, корзина, заказы). Каждый покупатель получает
+        разный объём активности, чтобы карточки выглядели реалистично.
+        """
         pickup = PickupPoint.objects.first()
 
         # Status transition chains for realistic history
@@ -938,53 +1012,195 @@ class Command(BaseCommand):
             ],
         }
 
-        orders_data = [
-            ("ORD-001001", Order.OrderStatus.DONE, Order.DeliveryType.PICKUP, Order.PaymentType.CARD, user, products[:3]),
-            ("ORD-001002", Order.OrderStatus.SHIPPED, Order.DeliveryType.COURIER, Order.PaymentType.SBP, user, products[3:6]),
-            ("ORD-001003", Order.OrderStatus.PAID, Order.DeliveryType.COURIER, Order.PaymentType.CASH, user, products[6:8]),
-            ("ORD-001004", Order.OrderStatus.NEW, Order.DeliveryType.PICKUP, Order.PaymentType.CARD, user2, products[8:10]),
-            ("ORD-001005", Order.OrderStatus.CANCELED, Order.DeliveryType.COURIER, Order.PaymentType.CARD, user, products[10:12]),
-            ("ORD-001006", Order.OrderStatus.DONE, Order.DeliveryType.PICKUP, Order.PaymentType.SBP, user2, products[2:5]),
-            ("ORD-001007", Order.OrderStatus.CONFIRMED, Order.DeliveryType.COURIER, Order.PaymentType.CARD, user2, products[12:14]),
+        # Веса статусов: завершённые — большинство, отменённые — редкость.
+        STATUS_WEIGHTS = [
+            (Order.OrderStatus.DONE,      45),
+            (Order.OrderStatus.SHIPPED,   15),
+            (Order.OrderStatus.PAID,      10),
+            (Order.OrderStatus.CONFIRMED, 10),
+            (Order.OrderStatus.NEW,        8),
+            (Order.OrderStatus.CANCELED,  12),
         ]
-        for number, status, delivery, pay_type, order_user, order_products in orders_data:
-            if not order_products:
-                continue
-            delivery_price = 350 if delivery == Order.DeliveryType.COURIER else 0
-            subtotal = sum(p.price for p in order_products)
-            order, created = Order.objects.get_or_create(
-                number=number,
+        statuses_pool = [s for s, w in STATUS_WEIGHTS for _ in range(w)]
+
+        order_seq = 1001  # номера ORD-001001, ORD-001002, …
+
+        for cust_idx, cust in enumerate(customers):
+            user = cust["user"]
+
+            # Профиль + адрес + уведомления — у каждого свой.
+            profile, _ = CustomerProfile.objects.get_or_create(
+                user=user,
                 defaults={
-                    "user": order_user,
-                    "full_name": order_user.get_full_name(),
-                    "phone": "+7 (999) 100-00-00",
-                    "email": order_user.email,
-                    "city": "Курск",
-                    "address": "ул. Ленина, 11",
-                    "delivery_type": delivery,
-                    "payment_type": pay_type,
-                    "pickup_point": pickup if delivery == Order.DeliveryType.PICKUP else None,
-                    "status": status,
-                    "subtotal": subtotal,
-                    "delivery_price": delivery_price,
-                    "discount_amount": 0,
-                    "total": subtotal + delivery_price,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "phone": cust["phone"],
+                    "birth_date": cust["birth_date"],
                 },
             )
-            if created:
-                for p in order_products:
-                    OrderItem.objects.create(
-                        order=order, product=p,
-                        title_snapshot=p.title, sku_snapshot=p.sku,
-                        quantity=1, unit_price=p.price,
+            Address.objects.get_or_create(
+                profile=profile,
+                city=cust["city"],
+                street=cust["street"],
+                defaults={
+                    "address_type": Address.AddressType.SHIPPING, "is_default": True,
+                    "entrance": str(random.randint(1, 4)),
+                    "flat_or_office": f"кв. {random.randint(1, 200)}",
+                    "postal_code": cust["postal_code"],
+                },
+            )
+            NotificationSetting.objects.get_or_create(
+                profile=profile,
+                defaults={
+                    "order_status": True,
+                    "promotions": random.choice([True, False]),
+                    "restock": random.choice([True, False]),
+                },
+            )
+
+            # Избранное: 5–15 товаров на покупателя.
+            fav_count = random.randint(5, min(15, len(products)))
+            for product in random.sample(products, fav_count):
+                Favorite.objects.get_or_create(user=user, product=product)
+
+            # Корзина: у части покупателей (70%) в ней что-то лежит.
+            cart, _ = Cart.objects.get_or_create(user=user)
+            if random.random() < 0.7:
+                cart_items = random.sample(products, random.randint(1, 5))
+                for product in cart_items:
+                    CartItem.objects.get_or_create(
+                        cart=cart, product=product,
+                        defaults={
+                            "quantity": random.randint(1, 3),
+                            "price_snapshot": product.price,
+                        },
                     )
-                # Full status chain history
-                chain = STATUS_CHAINS.get(status, [status])
-                for step_idx, step_status in enumerate(chain):
-                    OrderStatusHistory.objects.create(
-                        order=order, status=step_status,
-                        comment=f"Статус: {Order.OrderStatus(step_status).label}",
-                    )
+
+            # Заказы: 2-6 штук на покупателя с разными статусами.
+            num_orders = random.randint(2, 6)
+            for _ in range(num_orders):
+                status = random.choice(statuses_pool)
+                delivery = random.choice([Order.DeliveryType.COURIER, Order.DeliveryType.PICKUP])
+                pay_type = random.choice([
+                    Order.PaymentType.CARD, Order.PaymentType.SBP,
+                    Order.PaymentType.CASH, Order.PaymentType.CARD,  # CARD вдвое чаще
+                ])
+                order_products = random.sample(products, random.randint(1, 4))
+                delivery_price = 350 if delivery == Order.DeliveryType.COURIER else 0
+                # Реалистичные количества на позицию заказа.
+                line_qty = {p.id: random.randint(1, 3) for p in order_products}
+                subtotal = sum(p.price * line_qty[p.id] for p in order_products)
+
+                number = f"ORD-{order_seq:06d}"
+                order_seq += 1
+                created_at = timezone.now() - timedelta(days=random.randint(1, 180))
+                order, created = Order.objects.get_or_create(
+                    number=number,
+                    defaults={
+                        "user": user,
+                        "full_name": user.get_full_name(),
+                        "phone": cust["phone"],
+                        "email": user.email,
+                        "city": cust["city"],
+                        "address": cust["street"],
+                        "delivery_type": delivery,
+                        "payment_type": pay_type,
+                        "pickup_point": pickup if delivery == Order.DeliveryType.PICKUP else None,
+                        "status": status,
+                        "subtotal": subtotal,
+                        "delivery_price": delivery_price,
+                        "discount_amount": 0,
+                        "total": subtotal + delivery_price,
+                    },
+                )
+                if created:
+                    # Бэкдейтим created_at обычным UPDATE — auto_now_add не даёт
+                    # задать дату на .create(), но .update() его игнорирует.
+                    Order.objects.filter(pk=order.pk).update(created_at=created_at)
+                    for p in order_products:
+                        OrderItem.objects.create(
+                            order=order, product=p,
+                            title_snapshot=p.title, sku_snapshot=p.sku,
+                            quantity=line_qty[p.id], unit_price=p.price,
+                        )
+                    # История статусов: цепочка переходов
+                    chain = STATUS_CHAINS.get(status, [status])
+                    for step_idx, step_status in enumerate(chain):
+                        OrderStatusHistory.objects.create(
+                            order=order, status=step_status,
+                            comment=f"Статус: {Order.OrderStatus(step_status).label}",
+                        )
+
+    # ─── Admin activity (LogEntry) ───────────────
+    def _seed_admin_activity(self, managers, admins):
+        """Fill django_admin_log with realistic actions from managers/admins.
+
+        LogEntry.action_time имеет `auto_now_add=True`, поэтому значение
+        нельзя задать на .create() — делаем UPDATE'ом после создания.
+        """
+
+        def _log(user, obj, action_flag, fields=None, days_ago=0):
+            ct = ContentType.objects.get_for_model(obj.__class__)
+            change_message = (
+                json.dumps([{"changed": {"fields": fields}}]) if fields
+                else json.dumps([{"added": {}}])
+            )
+            entry = LogEntry.objects.create(
+                user=user, content_type=ct,
+                object_id=str(obj.pk), object_repr=str(obj)[:200],
+                action_flag=action_flag, change_message=change_message,
+            )
+            action_time = timezone.now() - timedelta(days=days_ago, hours=random.randint(0, 23))
+            LogEntry.objects.filter(pk=entry.pk).update(action_time=action_time)
+            return entry
+
+        # ── Менеджеры: модерация отзывов + публикация блога ──
+        reviews = list(ProductReview.objects.all()[:40])
+        posts = list(BlogPost.objects.all())
+        for mgr_idx, manager in enumerate(managers):
+            # 6-10 действий на менеджера, в разное время последних 30 дней.
+            actions_count = random.randint(6, 10)
+            for _ in range(actions_count):
+                kind = random.random()
+                days_ago = random.randint(0, 30)
+                if kind < 0.5 and reviews:
+                    # Изменение отзыва (например, toggle is_published)
+                    _log(manager, random.choice(reviews), CHANGE,
+                         fields=["is_published"], days_ago=days_ago)
+                elif kind < 0.85 and posts:
+                    _log(manager, random.choice(posts), CHANGE,
+                         fields=["status", "content"], days_ago=days_ago)
+                elif posts:
+                    # Добавление черновика блог-поста
+                    _log(manager, random.choice(posts), ADDITION, days_ago=days_ago)
+
+        # ── Админы: более разнообразный набор действий ──
+        products = list(Product.objects.all()[:20])
+        orders = list(Order.objects.all()[:30])
+        promos = list(Promotion.objects.all())
+        brands = list(Brand.objects.all()[:5])
+        pages = list(SitePage.objects.all())
+        for adm_idx, admin_user in enumerate(admins):
+            actions_count = random.randint(15, 25)
+            for _ in range(actions_count):
+                days_ago = random.randint(0, 60)
+                pool = random.random()
+                if pool < 0.3 and products:
+                    _log(admin_user, random.choice(products), CHANGE,
+                         fields=random.choice([["price"], ["stock"], ["price", "old_price"]]),
+                         days_ago=days_ago)
+                elif pool < 0.55 and orders:
+                    _log(admin_user, random.choice(orders), CHANGE,
+                         fields=["status"], days_ago=days_ago)
+                elif pool < 0.7 and promos:
+                    _log(admin_user, random.choice(promos), CHANGE,
+                         fields=["discount_percent", "end_at"], days_ago=days_ago)
+                elif pool < 0.85 and pages:
+                    _log(admin_user, random.choice(pages), CHANGE,
+                         fields=["content"], days_ago=days_ago)
+                elif brands:
+                    _log(admin_user, random.choice(brands), CHANGE,
+                         fields=["description"], days_ago=days_ago)
 
     # ─── Gift certificates ────────────────────────
     def _seed_gift_certificates(self):
@@ -1002,47 +1218,47 @@ class Command(BaseCommand):
 
     # ─── Returns ─────────────────────────────────
     def _seed_returns(self):
-        done_order = Order.objects.filter(status=Order.OrderStatus.DONE).first()
-        if not done_order:
-            return
-        user = done_order.user
-        order_items = list(done_order.items.all())
-        if not order_items:
-            return
+        """Создаём 3-5 заявок на возврат по разным клиентам и разным статусам.
 
-        # Return 1: approved
-        ret1, created1 = ReturnRequest.objects.get_or_create(
-            order=done_order,
-            return_type=ReturnRequest.ReturnType.GOOD_QUALITY,
-            defaults={
-                "user": user,
-                "reason": "Товар не подошёл по формату, хочу обменять на A5.",
-                "status": ReturnRequest.ReturnStatus.APPROVED,
-            },
-        )
-        if created1 and order_items:
-            ReturnRequestItem.objects.create(
-                return_request=ret1, order_item=order_items[0], quantity=1,
-                comment="Тетрадь A4 — нужна A5",
-            )
+        Возвраты привязаны к реальным DONE/SHIPPED заказам, поэтому покупатель
+        видит их в своём разделе «Возвраты» в ЛК, а менеджер/админ — в
+        админке.
+        """
+        done_orders = list(Order.objects.filter(status=Order.OrderStatus.DONE).select_related("user")[:6])
+        shipped_orders = list(Order.objects.filter(status=Order.OrderStatus.SHIPPED).select_related("user")[:3])
 
-        shipped_order = Order.objects.filter(status=Order.OrderStatus.SHIPPED).first()
-        if shipped_order:
-            shipped_items = list(shipped_order.items.all())
-            ret2, created2 = ReturnRequest.objects.get_or_create(
-                order=shipped_order,
-                return_type=ReturnRequest.ReturnType.DEFECT,
-                defaults={
-                    "user": shipped_order.user,
-                    "reason": "Получен товар с повреждённой упаковкой.",
-                    "status": ReturnRequest.ReturnStatus.CHECKING,
-                },
+        return_templates = [
+            (ReturnRequest.ReturnType.GOOD_QUALITY, ReturnRequest.ReturnStatus.APPROVED,
+             "Товар не подошёл по формату, хочу обменять на A5.", "Нужен другой формат"),
+            (ReturnRequest.ReturnType.GOOD_QUALITY, ReturnRequest.ReturnStatus.REFUNDED,
+             "Передумал, возврат средств.", "Возврат по желанию покупателя"),
+            (ReturnRequest.ReturnType.DEFECT, ReturnRequest.ReturnStatus.CHECKING,
+             "Получен товар с повреждённой упаковкой.", "Помятая коробка, царапины на корпусе"),
+            (ReturnRequest.ReturnType.DEFECT, ReturnRequest.ReturnStatus.NEW,
+             "Не работает механизм — нужен обмен.", "Брак, не пишет"),
+            (ReturnRequest.ReturnType.DEFECT, ReturnRequest.ReturnStatus.REJECTED,
+             "Следы использования — отклонено.", "Отклонено модератором"),
+        ]
+
+        idx = 0
+        for order in done_orders[:3] + shipped_orders[:2]:
+            if idx >= len(return_templates):
+                break
+            rtype, rstatus, reason, item_comment = return_templates[idx]
+            items = list(order.items.all())
+            if not items:
+                continue
+            ret, created = ReturnRequest.objects.get_or_create(
+                order=order,
+                return_type=rtype,
+                defaults={"user": order.user, "reason": reason, "status": rstatus},
             )
-            if created2 and shipped_items:
+            if created:
                 ReturnRequestItem.objects.create(
-                    return_request=ret2, order_item=shipped_items[0], quantity=1,
-                    comment="Помятая коробка, царапины на корпусе",
+                    return_request=ret, order_item=items[0],
+                    quantity=1, comment=item_comment,
                 )
+            idx += 1
 
     # ─── Site settings ───────────────────────────
     def _seed_site_settings(self):

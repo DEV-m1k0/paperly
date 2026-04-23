@@ -76,12 +76,17 @@ document.addEventListener("DOMContentLoaded", () => {
         productId = "";
       }
     }
+    // Лимит максимального кол-ва в заказе. На product-page кладём на кнопку
+    // сами, в гриде берём с карточки (data-product-max-qty). 0 = без лимита.
+    const maxQtyRaw = trigger.dataset.maxQty ?? card.dataset?.productMaxQty ?? "0";
+    const maxQty = Math.max(0, Number(maxQtyRaw) || 0);
     return {
       id: productId || title,
       title,
       desc,
       price,
       img: image,
+      maxQty,
     };
   }
 

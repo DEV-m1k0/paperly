@@ -57,6 +57,8 @@
     const title = P.escapeHtml(product.title);
     const desc = P.escapeHtml(product.short_description || "Товар из каталога");
 
+    const maxOrderQty = Math.max(0, Number(product.max_order_quantity || 0));
+
     return `
       <article class="product"
         data-product-id="${product.id}"
@@ -64,6 +66,7 @@
         data-product-price="${price}"
         data-product-img="${image}"
         data-product-desc="${desc}"
+        data-product-max-qty="${maxOrderQty}"
         data-type="${type}"
         data-brand="${product.brand_slug || ""}"
         data-stock="${Number(product.stock || 0) > 0 ? "in_stock" : "out_stock"}"

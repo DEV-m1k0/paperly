@@ -1,6 +1,6 @@
 # Paperly — интернет-магазин канцтоваров
 
-Полнофункциональный интернет-магазин канцелярии на Django 4.2 + DRF с локальным AI-ассистентом на Ollama. Полностью оффлайн: ни корзина, ни чат не делают запросов во внешние сервисы.
+Полнофункциональный интернет-магазин канцелярии на Django 4.2 + DRF. Работает полностью оффлайн — без обращений к внешним API.
 
 ---
 
@@ -10,7 +10,7 @@
 - **Гостевой шопинг** — корзина и избранное работают без регистрации (localStorage), аккаунт можно создать на этапе оформления заказа.
 - **Заказы в 1 шаг** — курьер / самовывоз, 4 способа оплаты, транзакционная защита при создании.
 - **Личный кабинет** — профиль, адреса, уведомления, история заказов, возвраты.
-- **AI-ассистент** — плавающий чат-виджет с поддержкой товарного поиска (tool-calling). Работает **полностью локально** через Ollama, никаких внешних API.
+- **Чат-помощник** — плавающий виджет с шаблонными ответами: помощь по заказам/доставке/возвратам + подбор товаров кнопками по категориям, назначению, скидкам. Никаких нейросетей: все сценарии зашиты в дерево вопросов, ответы мгновенные.
 - **Яндекс.Карта** — 7 пунктов самовывоза в Курске.
 - **Блог** — категории, полные статьи.
 - **B2B** — оптовые заявки, прайс-листы.
@@ -23,7 +23,6 @@
 | Слой | Технологии |
 |---|---|
 | Backend | Python 3.11+, Django 4.2, DRF 3.15 |
-| AI | Ollama (локальный LLM, OpenAI-compatible API) + `openai` Python SDK |
 | Админка | django-jazzmin 3.0 |
 | База | SQLite (dev), PostgreSQL (prod) |
 | Фронт | HTML5, CSS3, Vanilla JS (ES6), Bootstrap Icons |
@@ -35,22 +34,21 @@
 
 ## Быстрый старт
 
-**TL;DR для тех, у кого Python и Ollama уже стоят:**
-
 ```bash
 git clone <url>
-cd moneyV2/backend
+cd paperly/backend
 python -m venv .venv
 .venv\Scripts\activate            # Windows
 # source .venv/bin/activate        # Linux/macOS
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py seed_demo_data
-python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Открыть [http://127.0.0.1:8000/](http://127.0.0.1:8000/). При первом `runserver` кастомная команда сама запустит Ollama и скачает модель `llama3.2:3b` (~2 ГБ).
+Открыть [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
+
+Сид создаёт 15 пользователей с фиксированными паролями — свой `createsuperuser` запускать не нужно (см. [Демо-доступы](#демо-доступы)).
 
 ---
 
@@ -62,10 +60,7 @@ python manage.py runserver
 |---|---|---|
 | **Python 3.11+** | Django, SDK | [python.org/downloads](https://www.python.org/downloads/) |
 | **Git** | склонировать проект | [git-scm.com](https://git-scm.com/) |
-| **Ollama** | локальный AI-ассистент | [ollama.com/download](https://ollama.com/download) |
 | **Redis** (опционально) | Celery, фоновые задачи | [redis.io/download](https://redis.io/download/) |
-
-Если AI-чат тебе не нужен — Ollama можно не ставить, всё остальное будет работать (виджет просто вернёт «Ассистент недоступен»).
 
 ### 1. Клонирование
 
@@ -100,7 +95,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Ставятся: Django, DRF, Jazzmin, Celery, Pillow, `openai` (для AI-чата), `python-dotenv`.
+Ставятся: Django, DRF, Jazzmin, Celery, Pillow, `python-dotenv`.
 
 ### 4. Переменные окружения
 
@@ -130,11 +125,6 @@ DEFAULT_FROM_EMAIL=your-email@yandex.ru
 # Celery (опционально)
 CELERY_BROKER_URL=redis://localhost:6379/0
 CELERY_RESULT_BACKEND=redis://localhost:6379/1
-
-# AI — локальная Ollama (дефолт; можно удалить — подставится автоматически)
-AI_API_KEY=ollama
-AI_API_BASE=http://localhost:11434/v1
-AI_MODEL=llama3.2:3b
 ```
 
 ### 5. База данных
@@ -155,8 +145,11 @@ python manage.py seed_demo_data
 - 9 инфо-страниц (О магазине, Доставка, Гарантия...)
 - 4 подарочных сертификата
 - 3 оптовых прайс-листа и 3 заявки
-- 2 демо-покупателя с заказами в разных статусах
-- 2 заявки на возврат
+- **15 пользователей**: 10 покупателей + 3 менеджера + 2 админа (подробнее в [Демо-доступах](#демо-доступы))
+- ~30-50 заказов в разных статусах, раскиданных по покупателям
+- ~100-150 отзывов (часть — от реальных покупателей, часть — гостевые)
+- 3-5 заявок на возврат
+- ~70 записей в журнале админки (`django_admin_log`) — история активности менеджеров/админов
 - Настройки сайта
 
 Для полной перезагрузки:
@@ -167,59 +160,88 @@ python manage.py seed_demo_data --reset
 
 ### 6. Суперпользователь
 
+Команду `createsuperuser` запускать **не нужно** — админ `admin` / `admin12345` создаётся автоматически вместе с остальными демо-пользователями на шаге `seed_demo_data` (см. [Демо-доступы](#демо-доступы)).
+
+Если всё же хочется создать ещё одного суперпользователя:
+
 ```bash
 python manage.py createsuperuser
 ```
 
-### 7. Установка Ollama (для AI-чата)
-
-1. Скачай и установи с [ollama.com/download](https://ollama.com/download) (~500 МБ)
-2. **Закрой и открой новый терминал** — чтобы `ollama` появилась в PATH
-3. Проверь: `ollama --version` должен вернуть номер версии
-
-При первом `runserver` Django сам подтянет модель `llama3.2:3b` (~2 ГБ на диске). Заранее можно:
-
-```bash
-ollama pull llama3.2:3b
-```
-
-### 8. Запуск
+### 7. Запуск
 
 ```bash
 python manage.py runserver
 ```
 
-Первый запуск с Ollama выглядит так:
-
-```
-[ollama] starting `ollama serve`...
-[ollama] daemon: started
-[ollama] pulling `llama3.2:3b` — this may take several minutes...
-[ollama] model `llama3.2:3b`: pulled
-Starting development server at http://127.0.0.1:8000/
-```
-
-Последующие запуски — мгновенные: daemon остаётся в фоне.
+Всё — откройте [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
 
 ---
 
 ## Демо-доступы
 
-| Роль | URL | Логин | Пароль |
-|---|---|---|---|
-| Админка | `/admin/` | (твой суперпользователь) | (твой пароль) |
-| Демо-покупатель 1 | `/auth/` | `demo` | `demo12345` |
-| Демо-покупатель 2 | `/auth/` | `maria` | `maria12345` |
+`python manage.py seed_demo_data` создаёт **15 пользователей**. Внутри каждой роли пароль одинаковый — так проще запомнить.
+
+### Покупатели (10) — пароль `customer12345`
+
+Логины: `customer`, `customer2`, `customer3`, …, `customer10`. Вход через `/auth/`.
+
+| Логин | Имя | Город |
+|---|---|---|
+| `customer` | Антон Князев | Курск |
+| `customer2` | Мария Сидорова | Курск |
+| `customer3` | Дмитрий Соколов | Курск |
+| `customer4` | Елена Иванова | Москва |
+| `customer5` | Павел Козлов | Курск |
+| `customer6` | Ольга Смирнова | Курск |
+| `customer7` | Алексей Попов | Санкт-Петербург |
+| `customer8` | Наталья Фёдорова | Курск |
+| `customer9` | Михаил Волков | Воронеж |
+| `customer10` | Татьяна Морозова | Курск |
+
+У каждого покупателя при входе видно:
+- профиль с телефоном и датой рождения + адрес доставки
+- **2–6 заказов** в разных статусах (завершён, отгружен, оплачен, в обработке, новый, отменён), раскиданных по последним 6 месяцам
+- **5–15 товаров в избранном** и **1–5 товаров в корзине** (у 70% покупателей)
+- **6–11 отзывов** на товары (пишутся от имени покупателя: «Антон К.»)
+- у части — 1–2 заявки на возврат по завершённым/отгруженным заказам
+
+### Менеджеры (3) — пароль `manager12345`
+
+Логины: `manager`, `manager2`, `manager3`. Вход через `/admin/`.
+
+| Логин | Имя |
+|---|---|
+| `manager` | Екатерина Романова |
+| `manager2` | Игорь Белов |
+| `manager3` | Ксения Новикова |
+
+Все — `is_staff=True`, в группе «Менеджер». Видят и могут редактировать: отзывы на товары (модерация), блог-посты и категории блога; товары/бренды/категории — только просмотр. Разрешения настраиваются миграцией `shop/0010_create_manager_group.py`.
+
+У каждого менеджера — 6–10 записей в журнале действий админки (`django_admin_log`): approved-отзывы, опубликованные блог-посты. Это видно на странице пользователя в `/admin/auth/user/<id>/` и в истории объектов.
+
+### Админы (2) — пароль `admin12345`
+
+Логины: `admin`, `admin2`. Вход через `/admin/`.
+
+| Логин | Имя |
+|---|---|
+| `admin` | Admin Paperly |
+| `admin2` | Сергей Николаев |
+
+Оба — `is_superuser=True`. У каждого — 15–25 записей в журнале админки: правки цен/остатков товаров, смена статусов заказов, редактирование акций/страниц/брендов за последние 60 дней.
+
+> ⚠️ Пароли зашиты в сид для удобства разработки. **Перед продом — смените их или удалите демо-пользователей.**
 
 ## Роли и права
 
-В проекте две служебные роли (плюс обычный покупатель):
+В проекте две служебные роли (плюс обычный покупатель). Все три создаются автоматически сидом — см. [Демо-доступы](#демо-доступы).
 
-| Роль | Что может | Где живёт |
-|---|---|---|
-| **Суперпользователь** | всё — заказы, товары, настройки, пользователи | `createsuperuser` |
-| **Менеджер** | модерировать отзывы, публиковать статьи блога + категории блога | группа «Менеджер», создаётся миграцией |
-| **Покупатель** | обычный магазин: корзина, заказы, избранное | регистрация на сайте |
+| Роль | Демо-логины | Что может | Где живёт |
+|---|---|---|---|
+| **Суперпользователь** | `admin`, `admin2` | всё — заказы, товары, настройки, пользователи | `is_superuser=True` |
+| **Менеджер** | `manager`, `manager2`, `manager3` | модерировать отзывы, публиковать статьи блога + категории блога | группа «Менеджер», создаётся миграцией |
+| **Покупатель** | `customer`, `customer2`, … `customer10` | обычный магазин: корзина, заказы, избранное | регистрация на сайте |
 
 Группа **«Менеджер»** и её права настраиваются автоматически миграцией `shop/0010_create_manager_group.py` — она включает:
 - Полный CRUD на **«Отзывы на товары»** (включая `is_published` — approve/reject)
@@ -229,11 +251,11 @@ Starting development server at http://127.0.0.1:8000/
 
 При входе в `/admin/` менеджер видит **только** эти разделы — Django фильтрует сайдбар по permissions.
 
-Назначить роль через CLI:
+Назначить роль ещё одному пользователю через CLI:
 
 ```bash
-python manage.py make_manager demo              # выдать
-python manage.py make_manager demo --revoke     # снять
+python manage.py make_manager customer          # выдать
+python manage.py make_manager customer --revoke # снять
 python manage.py make_manager editor@paperly.ru # можно по email
 ```
 
@@ -246,7 +268,7 @@ python manage.py make_manager editor@paperly.ru # можно по email
 ```
 backend/
 ├── paperly_backend/              # Главный конфиг Django
-│   ├── settings.py               # БД, email, DRF, Jazzmin, AI
+│   ├── settings.py               # БД, email, DRF, Jazzmin
 │   └── urls.py                   # Корневой роутер
 ├── shop/                         # Модели + админка (29 моделей)
 │   ├── models.py                 # Product, Order, Category, Brand, ...
@@ -256,14 +278,9 @@ backend/
 │   ├── fixtures/seed_data.json
 │   └── management/commands/
 │       └── seed_demo_data.py     # Заливка демо-контента
-├── pages/                        # SSR-страницы + AI-чат
+├── pages/                        # SSR-страницы
 │   ├── views.py                  # Auth, все лендинги
-│   ├── chat_views.py             # POST /api/chat/ (агентик-луп)
-│   ├── chat_prompts.py           # System prompt + tool schema + search
-│   ├── urls.py
-│   └── management/commands/
-│       ├── ensure_ollama.py      # Стартует daemon + pull модели
-│       └── runserver.py          # Drop-in замена runserver
+│   └── urls.py
 ├── catalog/                      # API каталога
 ├── customers/                    # API профилей/адресов/избранного
 ├── checkout/                     # API корзины/заказов
@@ -272,13 +289,13 @@ backend/
 ├── templates/                    # HTML-шаблоны (~25 страниц)
 │   └── components/header.html
 ├── static/
-│   ├── css/                      # 22 CSS-файла (включая chat.css)
+│   ├── css/                      # 22 CSS-файла
 │   │   ├── theme.css             # Дизайн-система (токены, btn, card, ...)
-│   │   └── chat.css              # Плавающий AI-виджет
+│   │   └── chat.css              # Стили чат-виджета
 │   └── js/                       # 17 JS-файлов
 │       ├── utils.js              # window.paperly helpers
 │       ├── header-search.js      # Live-поиск в хедере
-│       └── chat.js               # AI-виджет
+│       └── chat.js               # Чат-виджет с шаблонными ответами
 ├── media/                        # Загруженные картинки
 ├── manage.py
 └── requirements.txt
@@ -286,73 +303,60 @@ backend/
 
 ---
 
-## AI-ассистент: как это работает
+## Чат-помощник
 
-### Архитектура
+Плавающий виджет в правом нижнем углу. **Никаких нейросетей** — весь контент захардкожен в дерево шаблонных ответов, поэтому ответы мгновенные и предсказуемые. Серверного эндпоинта у чата нет.
 
-```
-Браузер (chat.js)
-   ↓ POST /api/chat/ (session cookie + CSRF)
-ChatAPIView  ─── rate-limit (60/час на сессию)
-   ↓
-build_system_prompt()  — вливаем живые данные (товары, бренды, тарифы)
-   ↓
-OpenAI SDK → http://localhost:11434/v1 (Ollama)
-   ↓
-Модель решает: отвечать текстом или вызвать tool
-   ↓
-Если tool_call search_products → run_product_search() в БД
-   ↓
-Результат обратно в модель, до 4 итераций
-   ↓
-Финальный ответ + [product:ID] маркеры → фронт рисует карточки
-```
+### Что умеет
 
-### Ключевые файлы
+| Раздел | Что делает |
+|---|---|
+| 🛒 **Подобрать товар** | Кнопочный мастер: категория → показываем 5 карточек с ценой/наличием + ссылка на полный каталог с теми же фильтрами. |
+| 📦 **Помощь с заказом** | Пошаговые инструкции: как оформить, где отследить, как изменить или отменить. |
+| 🚚 **Доставка и оплата** | Тарифы, сроки, способы оплаты, условия бесплатной доставки. |
+| ↩️ **Возврат и обмен** | Сроки, порядок оформления, что нельзя вернуть. |
+| 🏢 **B2B** | Условия для юрлиц и школ, ссылка на форму заявки. |
+| ❓ **FAQ** | Режим работы, контакты, документы, программы лояльности. |
 
-- **[backend/pages/chat_views.py](backend/pages/chat_views.py)** — HTTP-эндпоинт, агентик-луп, coerce типов, fallback-парсинг `tool_use_failed`.
-- **[backend/pages/chat_prompts.py](backend/pages/chat_prompts.py)** — system prompt на русском (правила, инфо о магазине, стоп-слова), tool schema, `run_product_search()` (Lower + токенизация + стемминг для кириллицы).
-- **[backend/shop/apps.py](backend/shop/apps.py)** — патч `LOWER`/`UPPER` функций SQLite для корректной работы с кириллицей.
-- **[backend/pages/management/commands/ensure_ollama.py](backend/pages/management/commands/ensure_ollama.py)** — проверяет daemon, стартует при необходимости, пуллит модель.
-- **[backend/pages/management/commands/runserver.py](backend/pages/management/commands/runserver.py)** — drop-in runserver, вызывает `ensure_ollama` перед стартом.
-- **[backend/static/js/chat.js](backend/static/js/chat.js)** — виджет: кнопка-бабл, панель, localStorage-история, typing indicator, быстрые подсказки, рендер карточек товаров.
-- **[backend/static/css/chat.css](backend/static/css/chat.css)** — стили в теме сайта (teal-градиент).
+Внутри каждого раздела — ещё одна-две вложенные кнопки. Везде снизу кнопки «← Назад» и «🏠 В начало».
 
-### Настройка модели
+### Как устроено технически
 
-По умолчанию — `llama3.2:3b` (2 ГБ, быстрая, надёжный tool-calling). Сменить в `.env`:
+- **[backend/static/js/chat.js](backend/static/js/chat.js)** — дерево сценариев в константе `NODES` + навигационный стек. Весь диалог рендерится из этого дерева.
+- **[backend/static/css/chat.css](backend/static/css/chat.css)** — стили (teal-градиент, skeleton-анимации, адаптивность, `prefers-reduced-motion`).
+- Единственный серверный вызов — `GET /api/products/?…` при выборе категории/подборки. Используется уже существующий каталог-эндпоинт.
+- Сохранение в `localStorage`: навигационный стек и «открыта/закрыта панель». После F5 разговор восстанавливается.
 
-| Модель | Размер | Когда |
-|---|---|---|
-| `llama3.2:1b` | 1.3 ГБ | слабое железо, tool-calling нестабилен |
-| **`llama3.2:3b`** | **2 ГБ** | **дефолт — лучший баланс** |
-| `qwen2.5:3b` | 1.9 ГБ | альтернатива, хорош для русского |
-| `llama3.1:8b` | 4.7 ГБ | более умные ответы, нужно 8+ ГБ RAM |
-| `qwen2.5:7b` | 4.4 ГБ | топ tool-calling среди малых моделей |
-| `llama3.1:70b` | 40 ГБ | нужна GPU с 24+ ГБ VRAM |
+### Как править контент
 
-### Использовать другого провайдера (вместо Ollama)
+Любой текст, кнопка, ссылка — в константе `NODES` в [backend/static/js/chat.js](backend/static/js/chat.js). Структура узла:
 
-Код универсален — подставь любой OpenAI-compatible endpoint в `.env`:
-
-```env
-# Groq Cloud (бесплатный tier, быстро)
-AI_API_KEY=gsk_...
-AI_API_BASE=https://api.groq.com/openai/v1
-AI_MODEL=llama-3.3-70b-versatile
-
-# OpenRouter (куча моделей, часть бесплатных)
-AI_API_KEY=sk-or-...
-AI_API_BASE=https://openrouter.ai/api/v1
-AI_MODEL=meta-llama/llama-3.1-8b-instruct:free
-
-# OpenAI (платный)
-AI_API_KEY=sk-...
-AI_API_BASE=https://api.openai.com/v1
-AI_MODEL=gpt-4o-mini
+```js
+"node-id": {
+  message: "Что говорит бот",    // string или [string, string] — несколько баблов
+  options: [                     // кнопки выбора (опционально)
+    { icon: "📝", label: "Вариант 1", hint: "подсказка", next: "child-id" },
+    { icon: "🛒", label: "Фильтр",    action: "filter",
+      params: { category: "paper" }, listTitle: "Тетради" },
+    { icon: "🔗", label: "Перейти",   href: "/cart/" },
+  ],
+  body: ["параграф 1", "параграф 2"],          // блок инфо-текста (опционально)
+  links: [{icon, label, href}, …],             // ссылки-плитки (опционально)
+  contacts: true,                              // показать блок с телефоном/email
+}
 ```
 
-Custom runserver увидит, что `AI_API_BASE` не указывает на Ollama, и пропустит проверку daemon.
+Добавить новый раздел = добавить узел в `NODES` + пункт в `root.options`. Никаких миграций или сервера перезапускать не нужно — только пересборка статики (автоматически при `runserver`).
+
+### Публичный API
+
+Другие части фронта могут прыгнуть в конкретный раздел программно:
+
+```js
+window.paperly.chat.open();                 // развернуть панель
+window.paperly.chat.goto("delivery");       // открыть и сразу перейти к разделу «Доставка»
+window.paperly.chat.reset();                // сбросить диалог и свернуть
+```
 
 ---
 
@@ -369,7 +373,6 @@ Custom runserver увидит, что `AI_API_BASE` не указывает на
 | GET | `/api/blog-posts/` | public | Статьи блога |
 | GET | `/api/pickup-points/` | public | Пункты самовывоза |
 | GET | `/api/delivery-tariffs/` | public | Тарифы доставки |
-| POST | `/api/chat/` | session | AI-ассистент (tool-use агентик-луп) |
 | POST | `/api/orders/` | any | Создание заказа (гостевой OK) |
 | GET | `/api/orders/` | user | История заказов |
 | GET/POST | `/api/favorites/` | user | Избранное |
@@ -377,7 +380,7 @@ Custom runserver увидит, что `AI_API_BASE` не указывает на
 | GET/POST | `/api/addresses/` | user | Адреса |
 | POST | `/api/wholesale-requests/` | any | Оптовая заявка |
 
-Rate-limits (DRF throttling): **60 req/min** для анонимов, **200 req/min** для авторизованных. Чат: **60 сообщений/час** на сессию.
+Rate-limits (DRF throttling): **60 req/min** для анонимов, **200 req/min** для авторизованных.
 
 ---
 
@@ -413,23 +416,16 @@ Rate-limits (DRF throttling): **60 req/min** для анонимов, **200 req/
 
 ```bash
 # Django
-python manage.py runserver                  # старт + auto-Ollama
+python manage.py runserver                  # старт dev-сервера
 python manage.py migrate                    # применить миграции
 python manage.py makemigrations             # создать миграции
 python manage.py seed_demo_data             # загрузить демо
 python manage.py seed_demo_data --reset     # полная перезагрузка
-python manage.py createsuperuser            # админ
+python manage.py createsuperuser            # доп. админ (сид уже создаёт `admin`/`admin12345`)
 python manage.py make_manager <user>        # выдать роль «Менеджер»
 python manage.py make_manager <user> --revoke  # снять роль
 python manage.py collectstatic              # собрать статику (prod)
 python manage.py shell                      # shell с Django-окружением
-
-# AI / Ollama
-python manage.py ensure_ollama              # проверить + запустить + pull
-python manage.py ensure_ollama --check      # только проверить (exit 1 если нет)
-ollama list                                 # какие модели скачаны
-ollama pull qwen2.5:3b                      # скачать другую модель
-ollama rm llama3.2:3b                       # удалить модель
 
 # Celery (если нужно)
 celery -A paperly_backend worker -l info
@@ -454,36 +450,21 @@ celery -A paperly_backend beat -l info
 - CSRF на всех формах и POST-эндпоинтах
 - API по умолчанию — `IsAuthenticated`; публичные эндпоинты явно `AllowAny`
 - DRF throttling: 60/мин анон, 200/мин user
-- Чат: 60 сообщений/час на сессию
 - Транзакционная защита при создании заказа (`select_for_update`)
 - HTTPS/HSTS/Secure cookies включаются автоматически при `DEBUG=False`
 - Пароли валидируются Django `AUTH_PASSWORD_VALIDATORS`
 - `.env` в `.gitignore` — секреты не попадают в репозиторий
-- AI-чат работает оффлайн (через Ollama) — никакие запросы пользователей не уходят во внешние сервисы
+- Чат-виджет работает полностью на клиенте, никаких внешних API — только локальный запрос к `/api/products/` за подборкой
 
 ---
 
 ## Типовые проблемы
 
-### `[ollama] Ollama CLI not found in PATH`
-Ollama не установлена или терминал не перезапущен. Установи с [ollama.com/download](https://ollama.com/download), затем **открой новый терминал**.
-
-### `[ollama] daemon did not become ready within 30s`
-Запусти `ollama serve` вручную в отдельном терминале и посмотри ошибку. Часто помогает перезагрузка.
-
-### Чат отвечает «Ассистент временно недоступен»
-1. Проверь, что Ollama работает: `curl http://localhost:11434/api/tags`
-2. Проверь, что модель скачана: `ollama list`
-3. Включи `DEBUG=True` в `.env` — в ответе чата появится детализация ошибки
-4. Смотри логи в консоли `runserver` — полный traceback там
-
 ### Поиск товаров не находит кириллицу
 Убедись, что `shop/apps.py` правильно применился (там патч SQLite `LOWER` для кириллицы). Перезапусти `runserver`.
 
-### Модель медленно отвечает
-- На CPU модели 3B+ дают ~5–15 токенов/сек — это нормально.
-- Переключись на `llama3.2:1b` для скорости ценой качества.
-- Если есть NVIDIA GPU — Ollama автоматически её использует, проверь `ollama ps`.
+### Чат не показывает товары в подборке
+Открой DevTools → Network, проверь, что `/api/products/?…` отвечает 200. Если 404 — убедись, что `seed_demo_data` выполнился и в БД есть товары.
 
 ---
 

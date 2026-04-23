@@ -1,0 +1,157 @@
+{% extends 'admin/base.html' %}
+{% load i18n admin_urls static jazzmin %}
+
+{#
+  Paperly — кастомизация Jazzmin-сайдбара.
+
+  Наследуется от стокового admin/base.html (это jazzmin'овский — наш файл
+  лежит выше по loader-цепочке, но не расширяет сам себя), переопределяется
+  только блок `sidebar`.
+
+  Цели этого override'а:
+  - title="…" на каждом .nav-link  → browser-native tooltip в collapsed-mode
+  - aria-label, aria-expanded, role, aria-controls  → a11y-семантика
+  - `.has-active-child` пометка на app-parent, когда активный URL — его child
+  - обёрнутая ссылка на юзера в .sidebar-footer с logout-ссылкой
+  - inline-script в <head> восстанавливает состояние collapse до полной
+    загрузки CSS → нет FOUC
+#}
+
+{% block extrahead %}
+{{ block.super }}
+<script>
+  // FOUC-protection: читаем cookie `sidebar-collapsed` и сразу ставим
+  // класс на <html>, чтобы первый paint уже был в нужном состоянии.
+  // Сама заливка cookie делается AdminLTE; мы просто её читаем.
+  (function () {
+    try {
+      var m = document.cookie.match(/(?:^|;\s*)jazzy-sidebar-collapse=([^;]+)/);
+      if (m && m[1] === 'true') {
+        document.documentElement.classList.add('jazzy-preload-collapsed');
+      }
+    } catch (e) { /* non-fatal */ }
+  })();
+</script>
+{% endblock %}
+
+
+{% block sidebar %}
+  {% if jazzmin_settings.show_sidebar %}
+    {% get_side_menu as side_menu_list %}
+
+    <aside class="main-sidebar elevation-4 {{ jazzmin_ui.sidebar_classes }}" id="jazzy-sidebar"
+           role="navigation" aria-label="{% trans 'Боковое меню администратора' %}">
+      <a href="{% url 'admin:index' %}" class="brand-link {{ jazzmin_ui.brand_classes }}" id="jazzy-logo"
+         aria-label="{% trans 'На главную админки' %}: {{ jazzmin_settings.site_brand }}">
+        <img src="{% static jazzmin_settings.site_logo %}"
+             alt="{{ jazzmin_settings.site_header }}"
+             class="{{ jazzmin_settings.site_logo_classes }} brand-image elevation-3"
+             style="opacity: .8">
+        <span class="brand-text font-weight-light">{{ jazzmin_settings.site_brand }}</span>
+      </a>
+
+      <div class="sidebar">
+        <nav class="mt-2" aria-label="{% trans 'Разделы админки' %}">
+          <ul class="nav nav-pills nav-sidebar flex-column {{ jazzmin_ui.sidebar_list_classes }}"
+              data-widget="treeview" role="menu" data-collapsible="false">
+
+            {# Dashboard — всегда первым #}
+            <li class="nav-item">
+              <a href="{% url 'admin:index' %}" class="nav-link"
+                 title="{% trans 'Панель управления' %}"
+                 aria-label="{% trans 'Панель управления' %}">
+                <i class="nav-icon fas fa-th-large" aria-hidden="true"></i>
+                <p>{% trans 'Панель управления' %}</p>
+              </a>
+            </li>
+
+            {% if jazzmin_settings.navigation_expanded %}
+              {# navigation_expanded: плоский список с app-headers #}
+              {% for app in side_menu_list %}
+                <li class="nav-header" role="presentation">{{ app.name }}</li>
+                {% for model in app.models %}
+                  <li class="nav-item">
+                    {% if model.url %}
+                      <a href="{{ model.url }}" class="nav-link"
+                         title="{{ model.name }}"
+                         aria-label="{{ model.name }}">
+                        <i class="nav-icon {{ model.icon }}" aria-hidden="true"></i>
+                        <p>{{ model.name }}</p>
+                      </a>
+                    {% else %}
+                      <span class="nav-link disabled"
+                            title="{{ model.name }} ({% trans 'нет доступа' %})"
+                            aria-disabled="true">
+                        <i class="nav-icon {{ model.icon }}" aria-hidden="true"></i>
+                        <p>{{ model.name }}</p>
+                      </span>
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              {% endfor %}
+            {% else %}
+              {# default: collapsible app-groups #}
+              {% for app in side_menu_list %}
+                <li class="nav-item has-treeview">
+                  <a href="#" class="nav-link"
+                     title="{{ app.name }}"
+                     aria-label="{% blocktrans with app_name=app.name %}{{ app_name }} — раздел{% endblocktrans %}"
+                     aria-expanded="false"
+                     aria-haspopup="true">
+                    <i class="nav-icon {{ app.icon }}" aria-hidden="true"></i>
+                    <p>
+                      {{ app.name|truncatechars:24 }}
+                      <i class="fas fa-angle-left right" aria-hidden="true"></i>
+                    </p>
+                  </a>
+                  <ul class="nav nav-treeview" style="display: none;" role="menu">
+                    {% for model in app.models %}
+                      <li class="nav-item">
+                        <a href="{% if model.url %}{{ model.url }}{% else %}javascript:void(0){% endif %}"
+                           class="nav-link"
+                           title="{{ model.name }}"
+                           aria-label="{{ model.name }}">
+                          <i class="nav-icon {{ model.icon }}" aria-hidden="true"></i>
+                          <p>{{ model.name }}</p>
+                        </a>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </li>
+              {% endfor %}
+            {% endif %}
+          </ul>
+        </nav>
+
+        {# Footer-блок с пользователем и logout'ом #}
+        <div class="sidebar-footer" aria-label="{% trans 'Текущий пользователь' %}">
+          <div class="sidebar-footer__user" title="{{ request.user.get_full_name|default:request.user.username }}">
+            {% if jazzmin_settings|has_jazzmin_setting:"user_avatar" %}
+              <img src="{% get_user_avatar request.user %}" class="sidebar-footer__avatar" alt="">
+            {% else %}
+              <span class="sidebar-footer__avatar sidebar-footer__avatar--initial" aria-hidden="true">
+                {{ request.user.get_full_name|default:request.user.username|first|upper }}
+              </span>
+            {% endif %}
+            <div class="sidebar-footer__meta">
+              <span class="sidebar-footer__name">
+                {{ request.user.get_full_name|default:request.user.username }}
+              </span>
+              {% if request.user.is_superuser %}
+                <span class="sidebar-footer__role">{% trans 'Администратор' %}</span>
+              {% elif request.user.is_staff %}
+                <span class="sidebar-footer__role">{% trans 'Персонал' %}</span>
+              {% endif %}
+            </div>
+          </div>
+          <a href="{% url 'admin:logout' %}" class="sidebar-footer__logout"
+             title="{% trans 'Выйти из админки' %}"
+             aria-label="{% trans 'Выйти из админки' %}">
+            <i class="fas fa-right-from-bracket" aria-hidden="true"></i>
+            <span>{% trans 'Выйти' %}</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+  {% endif %}
+{% endblock %}

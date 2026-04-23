@@ -184,6 +184,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const imgMarkup = item.img
           ? `<img class="item__img" src="${item.img}" alt="${P.escapeHtml(item.title)}">`
           : `<div class="item__img item__img--placeholder"><i class="bi bi-bag" aria-hidden="true"></i></div>`;
+        const maxQty = Math.max(0, Number(item.maxQty) || 0);
+        // max-атрибут инпута + подпись «макс. N шт» — чтобы пользователь
+        // видел предел до того, как упрётся в него.
+        const maxAttr = maxQty > 0 ? ` max="${maxQty}"` : "";
+        const hint = maxQty > 0
+          ? `<small class="item__limit" style="display:block;margin-top:6px;color:var(--color-muted,#64748b);font-size:12px;">Макс. ${maxQty} шт. в заказе</small>`
+          : "";
         return `
           <article class="item" data-id="${item.id}">
             ${imgMarkup}
@@ -195,9 +202,10 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="item__controls">
               <div class="item__qty qty">
                 <button data-act="minus" type="button" aria-label="Уменьшить"><i class="bi bi-dash"></i></button>
-                <input type="number" min="1" value="${item.qty}" data-act="input" aria-label="Количество">
+                <input type="number" min="1"${maxAttr} value="${item.qty}" data-act="input" aria-label="Количество">
                 <button data-act="plus" type="button" aria-label="Увеличить"><i class="bi bi-plus"></i></button>
               </div>
+              ${hint}
               <strong class="item__sum">${formatMoney(item.price * item.qty)}</strong>
               <button class="item__remove" data-act="remove" type="button" aria-label="Удалить">
                 <i class="bi bi-x-lg" aria-hidden="true"></i>
@@ -237,7 +245,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function changeQty(id, nextQty) {
-    items = items.map((item) => (item.id === id ? { ...item, qty: Math.max(1, nextQty) } : item));
+    items = items.map((item) => {
+      if (item.id !== id) return item;
+      const max = Math.max(0, Number(item.maxQty) || 0);
+      let clamped = Math.max(1, nextQty);
+      let hitLimit = false;
+      if (max > 0 && clamped > max) {
+        clamped = max;
+        hitLimit = true;
+      }
+      if (hitLimit && nextQty > max) {
+        // Уведомляем только если пользователь реально пытался выйти за лимит
+        // (а не при авто-обрезке при загрузке корзины с устаревшими данными).
+        alert(`Максимум ${max} шт. «${item.title}» в одном заказе.`);
+      }
+      return { ...item, qty: clamped };
+    });
     renderItems();
     persistCart();
     // Re-check the promo (new subtotal may cross min-order thresholds).
@@ -392,7 +415,43 @@ document.addEventListener("DOMContentLoaded", () => {
         price: Number(item.price_snapshot) || 0,
         qty: Number(item.quantity) || 1,
         img: item.product_image || "",
+        // maxQty подтянется через enrichItemsWithLimits() — CartItem сам его не
+        // хранит, лимит живёт на Product.max_order_quantity.
+        maxQty: 0,
       }));
+  }
+
+  // Подтягиваем max_order_quantity из /api/products/{id}/ для тех позиций, где
+  // maxQty отсутствует — нужно после загрузки корзины с сервера или для
+  // гостевых item'ов, сохранённых в localStorage до внедрения этого лимита.
+  async function enrichItemsWithLimits() {
+    const needIds = items
+      .filter((item) => /^\d+$/.test(String(item.id)) && !Number(item.maxQty))
+      .map((item) => String(item.id));
+    if (!needIds.length) return false;
+    const results = await Promise.all(
+      needIds.map((id) => apiJson(`/api/products/${id}/`).catch(() => null))
+    );
+    const byId = new Map();
+    results.forEach((product) => {
+      if (product?.id != null) byId.set(String(product.id), product);
+    });
+    let anyChanged = false;
+    items = items.map((item) => {
+      const product = byId.get(String(item.id));
+      if (!product) return item;
+      const maxQty = Math.max(0, Number(product.max_order_quantity) || 0);
+      let qty = Number(item.qty) || 1;
+      if (maxQty > 0 && qty > maxQty) {
+        qty = maxQty;
+        anyChanged = true;
+      }
+      if (maxQty !== Number(item.maxQty) || qty !== Number(item.qty)) {
+        anyChanged = true;
+      }
+      return { ...item, maxQty, qty };
+    });
+    return anyChanged;
   }
 
   async function syncItemsToServer() {
@@ -443,6 +502,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (items.length) {
       // push local to server
       await syncItemsToServer();
+    }
+  }
+
+  // Подтягиваем лимит, если его не хватает, и перерисовываем/синкаем при
+  // изменениях. Важно для двух случаев: (1) корзина пришла с сервера, где
+  // CartItem не содержит max_order_quantity; (2) гость заходит с корзиной,
+  // которая лежала в localStorage ещё до внедрения лимитов.
+  async function refreshLimits() {
+    const changed = await enrichItemsWithLimits();
+    if (changed) {
+      renderItems();
+      persistCart();
     }
   }
 
@@ -783,5 +854,6 @@ document.addEventListener("DOMContentLoaded", () => {
     renderItems();
     await hydrateFromServer();
     renderItems();
+    await refreshLimits();
   })();
 });

@@ -1814,3 +1814,559 @@ body.register-page::before {
   overflow: hidden; clip: rect(0,0,0,0);
   white-space: nowrap; border: 0;
 }
+
+
+/* ═════════════════════════════════════════════════════════════════════
+ * PATCH — visual-audit fixes (см. report).
+ * Собрано в одну секцию, чтобы было легко находить и откатывать.
+ * ═════════════════════════════════════════════════════════════════════ */
+
+/* ── Dashboard: стоковые Jazzmin `Добавить` / `Изменить` btn-xs кнопки
+ *    упираются в край узкой карточки и обрезаются. Разрешаем им
+ *    сжиматься + при необходимости переноситься.
+ */
+.dashboard .card table,
+.dashboard table.table {
+  /* НЕ table-layout: fixed — иначе action-колонка выходит слишком узкой
+   * и кнопки скатываются в стек. Пусть браузер балансирует ширины. */
+  width: 100% !important;
+}
+.dashboard .card td {
+  vertical-align: middle !important;
+  padding: 6px 8px !important;
+}
+.dashboard .card td:first-child {
+  /* Название модели не должно раздуваться до 50% — держим компактно */
+  width: 55%;
+}
+.dashboard .card td .btn-group {
+  float: none !important;           /* было float-right, портило layout */
+  display: flex !important;
+  justify-content: flex-end;
+  flex-wrap: nowrap;                /* на desktop хотим строго в ряд */
+  gap: 6px;
+  max-width: 100%;
+}
+.dashboard .card td a.btn.btn-xs {
+  /* Перебиваем глобальный .btn с большим padding'ом — это именно
+   * мелкая кнопка в Jazzmin. */
+  padding: 4px 10px !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  min-height: 0 !important;
+  min-width: 0;
+  flex: 0 1 auto;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+/* `Добавить` — заливка teal-soft + teal текст, спокойнее чем прежняя
+ * ядерно-зелёная градиентная кнопка */
+.dashboard .card td a.btn.btn-success.addlink {
+  background: var(--pp-primary-soft) !important;
+  color: var(--pp-primary-strong) !important;
+  border: 1px solid rgba(14, 118, 110, 0.25) !important;
+}
+.dashboard .card td a.btn.btn-success.addlink:hover {
+  background: var(--pp-primary) !important;
+  color: #fff !important;
+  border-color: var(--pp-primary) !important;
+}
+/* `Изменить` — ghost с border'ом вместо заливки, чтобы пара
+ * Добавить/Изменить не конкурировала за внимание */
+.dashboard .card td a.btn.changelink,
+.dashboard .card td a.btn.btn-primary.changelink {
+  background: #fff !important;
+  color: var(--pp-text) !important;
+  border: 1px solid var(--pp-line-strong) !important;
+  box-shadow: none !important;
+}
+.dashboard .card td a.btn.changelink:hover {
+  border-color: var(--pp-primary) !important;
+  color: var(--pp-primary) !important;
+  background: var(--pp-primary-soft) !important;
+}
+/* На узкой карточке разрешаем перенос на 2 строки без клипа. */
+@media (max-width: 1200px) {
+  .dashboard .card td .btn-group {
+    flex-wrap: wrap;                /* мало места — стекуем */
+    justify-content: flex-end;
+  }
+  .dashboard .card td a.btn.btn-xs {
+    font-size: 0.74rem !important;
+    padding: 4px 8px !important;
+  }
+}
+
+/* ── Sidebar: длинный текст («Пользователи и группы» клипался на «ы»).
+ *    Решаем через расширение полезной ширины (меньше padding + меньше
+ *    icon-margin) + гарантируем перенос на 2 строки при необходимости. ── */
+.main-sidebar .nav-sidebar .nav-item > .nav-link {
+  padding: 9px 10px !important;          /* было 10 12 — освобождаем 4px */
+  align-items: center !important;
+}
+.main-sidebar .nav-sidebar .nav-link i.nav-icon {
+  margin-right: 8px !important;          /* было 10 — ещё 2px сверху */
+}
+.main-sidebar .nav-sidebar .nav-link > p {
+  white-space: normal !important;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+}
+/* AdminLTE-шный chevron `.right` внутри <p> — абсолютно позиционируем
+ * в правом краю контейнера, чтобы не лез в ширину текста. Под него
+ * резервируем padding-right на <p>, и для обычных (без-chevron)
+ * пунктов это просто выглядит как небольшой отступ. */
+.main-sidebar .nav-sidebar .nav-link {
+  position: relative;                   /* якорь для абсолютно-chevron'а */
+}
+.main-sidebar .nav-sidebar .nav-link > p {
+  padding-right: 16px;                  /* зарезервированное место под chevron */
+}
+.main-sidebar .nav-sidebar .nav-link > p .right {
+  float: none !important;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.55;
+  font-size: 0.85rem;
+  transition: transform 0.2s ease, opacity 0.15s ease;
+}
+.main-sidebar .nav-sidebar .nav-link:hover > p .right {
+  opacity: 1;
+}
+/* Повернутый chevron для раскрытого подменю */
+.main-sidebar .nav-sidebar .menu-open > .nav-link > p .right {
+  transform: translateY(-50%) rotate(-90deg);
+  opacity: 1;
+}
+
+/* ── Change-form action buttons: длинные label'ы без клипа.
+ *    Jazzmin рендерит их как <input class="btn form-control"> или
+ *    <a class="btn form-control"> в form-group'ах, НЕ в `.submit-row`.
+ *    Наследованный `form-control` ставит `white-space: pre` + `height: 1em`,
+ *    откуда и клип текста («Сохранить и продолжить ред»). */
+.submit-row .btn,
+.submit-row input[type="submit"],
+.submit-row button,
+.submit-row a.button,
+.form-group > .btn.form-control,
+.form-group > input.btn.form-control,
+.form-group > a.btn.form-control {
+  white-space: normal !important;
+  text-overflow: clip !important;
+  overflow: visible !important;
+  line-height: 1.25 !important;
+  height: auto !important;
+  min-height: 44px;
+  min-width: 0 !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+/* ── Select2 FK-link icons (edit/add/delete/view) — единая палитра ── */
+.related-widget-wrapper a,
+a.related-lookup,
+a.change-related,
+a.add-related,
+a.delete-related,
+a.view-related {
+  color: var(--pp-primary) !important;
+  opacity: 0.55;
+  transition: opacity 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+.related-widget-wrapper a:hover,
+a.related-lookup:hover,
+a.change-related:hover,
+a.add-related:hover,
+a.view-related:hover {
+  opacity: 1;
+  color: var(--pp-primary-strong) !important;
+  transform: translateY(-1px);
+}
+/* delete остаётся красным (важный сигнал), но приглушаем в idle state */
+a.delete-related {
+  color: var(--pp-danger) !important;
+  opacity: 0.5;
+}
+a.delete-related:hover {
+  color: var(--pp-danger) !important;
+  opacity: 1;
+  transform: translateY(-1px);
+}
+/* Jazzmin иногда вставляет <img>-иконки или FA-иконки внутри — наследуем */
+.related-widget-wrapper a i,
+a.change-related i,
+a.add-related i,
+a.delete-related i,
+a.view-related i {
+  color: inherit !important;
+}
+/* Django admin использует цветные SVG-пиктограммы (icon-changelink.svg
+ * жёлтая, icon-addlink.svg зелёная и т.д.) — они <img>, `color` не
+ * влияет. Обесцвечиваем в grayscale + на hover возвращаем оригинал. */
+.related-widget-wrapper a > img {
+  filter: grayscale(1) brightness(0.55) contrast(1.15);
+  transition: filter 0.15s ease;
+}
+.related-widget-wrapper a:hover > img {
+  filter: none;
+}
+a.delete-related > img {
+  /* красный остаётся видимым сигналом — просто приглушаем насыщенность */
+  filter: saturate(0.6) brightness(0.9);
+}
+a.delete-related:hover > img {
+  filter: none;
+}
+
+/* ── Глобально: никакого horizontal scroll (кроме явно-скроллируемых
+ *    таблиц / card-body, у них свой overflow). ── */
+html, body {
+  overflow-x: hidden;
+}
+.main-header,
+.main-header > .container-fluid,
+.main-header > nav,
+.main-header > nav > .navbar-collapse {
+  max-width: 100%;
+  overflow: hidden;
+}
+.main-header .navbar-nav,
+.main-header .form-inline {
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+/* На узкой мобиле (<576) полностью прячем navbar-поиски — пользователь
+ * всё равно ищет через list-search внутри changelist'а. */
+@media (max-width: 575px) {
+  .main-header form.form-inline {
+    display: none !important;
+  }
+}
+
+/* ── Типографика: унифицируем заголовки карточек/модулей.
+ *    Серифный Prata — только для страничных H1 (content-header h1)
+ *    и card-title дашборда. В sidebar'е Prata не нужен. */
+.main-sidebar .nav-header,
+.main-sidebar .brand-text,
+.main-sidebar .nav-link {
+  font-family: "Manrope", system-ui, sans-serif !important;
+}
+
+
+/* ═════════════════════════════════════════════════════════════════════
+ * SIDEBAR polish — дополнительный патч по итогам sidebar-аудита.
+ * Задачи:
+ *   - Унифицированные transitions через одну переменную
+ *   - :focus-visible ring на nav-link / brand-link / hamburger
+ *   - Высота brand-link = navbar-height (56px)
+ *   - Правильная сторона и поворот chevron'ов
+ *   - Кастомный тонкий scrollbar в sidebar
+ *   - Active-ancestor подсветка (.has-active-child)
+ *   - Flyout-submenu в collapsed-mode (64px) вместо inline-stack
+ *   - Footer-блок (avatar + имя + logout)
+ *   - Кликабельный backdrop + body-scroll-lock
+ *   - FOUC: pre-load сразу в collapsed состоянии при соответствующей cookie
+ * ═════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Единый токен для всех transitions в sidebar'е. */
+  --pp-motion-fast:  150ms;
+  --pp-motion-med:   220ms;
+  --pp-motion-slow:  320ms;
+  --pp-easing:       cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── FOUC-protection: если cookie говорит что collapsed — сразу ставим
+ *    ширину 64px до прихода CSS. Класс на <html> кидает inline-script
+ *    в <head> base_site.html. */
+html.jazzy-preload-collapsed .main-sidebar {
+  width: 64px !important;
+}
+html.jazzy-preload-collapsed .main-sidebar .brand-text,
+html.jazzy-preload-collapsed .main-sidebar .nav-link > p,
+html.jazzy-preload-collapsed .main-sidebar .sidebar-footer__meta,
+html.jazzy-preload-collapsed .main-sidebar .sidebar-footer__logout span {
+  display: none !important;
+}
+
+/* ── Brand-link height = navbar height (56px) — было 58, 2px sub-pixel
+ *    misalignment убран. */
+.brand-link {
+  min-height: 56px !important;
+  height: 56px !important;
+  overflow: hidden;
+  transition: background var(--pp-motion-med) var(--pp-easing) !important;
+}
+.brand-link:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px;
+}
+
+/* ── Унифицированные transitions (переопределяем предыдущие отдельные
+ *    значения 0.15s/0.18s/0.2s/0.3s). */
+.main-sidebar .nav-sidebar .nav-link {
+  transition: background var(--pp-motion-fast) var(--pp-easing),
+              color var(--pp-motion-fast) var(--pp-easing),
+              transform var(--pp-motion-fast) var(--pp-easing) !important;
+}
+.main-sidebar {
+  transition: width var(--pp-motion-med) var(--pp-easing),
+              transform var(--pp-motion-med) var(--pp-easing) !important;
+}
+
+/* ── Focus-ring: keyboard-only (Tab), не показываем при кликах мышкой. */
+.main-sidebar .nav-link:focus-visible,
+.sidebar-footer__logout:focus-visible,
+.sidebar-footer__user:focus-visible,
+[data-widget="pushmenu"]:focus-visible {
+  outline: 2px solid var(--pp-primary) !important;
+  outline-offset: 2px !important;
+  border-radius: var(--pp-radius-sm);
+}
+/* В активном пункте focus-ring белый, чтобы контрастил с teal-градиентом. */
+.main-sidebar .nav-link.active:focus-visible {
+  outline-color: #ffffff !important;
+}
+
+/* ── Chevron для раскрываемых групп: `>` в закрытом, ↓ (rotate -90) в
+ *    открытом. Заменяем старое поведение, где `.fa-angle-left` смотрел
+ *    влево (некорректно UX-wise). */
+.main-sidebar .nav-sidebar .nav-link > p .right.fas,
+.main-sidebar .nav-sidebar .nav-link > p .right {
+  /* В base.html рендерится `fa-angle-left` — оставляем стоковую класс-
+   * нотацию, а rotate'ом в CSS приводим к правильному направлению. */
+  transform: translateY(-50%) rotate(180deg) !important;  /* closed → вправо */
+}
+.main-sidebar .nav-sidebar .menu-open > .nav-link > p .right,
+.main-sidebar .nav-sidebar .menu-open > .nav-link > p .right.fas {
+  transform: translateY(-50%) rotate(-90deg) !important;  /* open → вниз */
+}
+
+/* ── Active-ancestor: родитель активного пункта получает маркер. */
+.main-sidebar .nav-item.has-active-child > .nav-link {
+  color: var(--pp-primary-strong) !important;
+  font-weight: 700;
+  position: relative;
+}
+.main-sidebar .nav-item.has-active-child > .nav-link::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 4px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--pp-primary);
+  opacity: 0.35;
+}
+
+/* ── Sidebar scroll: auto вместо scroll + кастомный тонкий trackbar. */
+.main-sidebar {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;      /* было scroll — скрывает, когда не нужен */
+}
+.main-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.main-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.main-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(14, 118, 110, 0.25);
+  border-radius: 999px;
+}
+.main-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(14, 118, 110, 0.45);
+}
+/* Firefox */
+.main-sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(14, 118, 110, 0.3) transparent;
+}
+
+/* ── Collapsed-hover: полагаемся на штатное AdminLTE-поведение
+ *    «sidebar-mini hover-expand». При hover вся панель расширяется до
+ *    250px и видны и labels, и treeview-пункты — это одновременно
+ *    «flyout» и консистентный UX. Свой кастомный flyout-абсолют-
+ *    позиционированный я пробовал, но он накладывался на native-overlay
+ *    AdminLTE, создавая 2 слоя. Оставляем только нативное. */
+
+/* ── Sidebar footer (user + logout) ──
+ *    Отдельный блок внизу панели. При collapsed — прячем имя, остаётся
+ *    только круглый avatar + icon-only logout button.
+ */
+.sidebar-footer {
+  margin-top: auto;                 /* прижимает к низу flex-колонки */
+  padding: 12px 10px 16px;
+  border-top: 1px solid var(--pp-line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(14, 118, 110, 0.04) 100%);
+}
+.main-sidebar .sidebar { display: flex; flex-direction: column; }
+.main-sidebar .sidebar > nav { flex: 0 0 auto; }
+
+.sidebar-footer__user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--pp-radius-sm);
+  margin-bottom: 6px;
+}
+.sidebar-footer__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--pp-primary-soft);
+  color: var(--pp-primary-strong);
+  font-weight: 800;
+  font-size: 0.95rem;
+  flex: 0 0 36px;                  /* критично: не растягиваться в flex-row */
+  overflow: hidden;
+  line-height: 1;
+}
+/* <img> внутри avatar'а заполняет круг; text-initial — ничего
+ * специального, наследуется inline-flex + size от родителя. */
+.sidebar-footer__avatar > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+.sidebar-footer__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.sidebar-footer__name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--pp-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-footer__role {
+  font-size: 0.7rem;
+  color: var(--pp-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.sidebar-footer__logout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--pp-radius-sm);
+  color: var(--pp-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--pp-motion-fast) var(--pp-easing),
+              color var(--pp-motion-fast) var(--pp-easing);
+}
+.sidebar-footer__logout:hover,
+.sidebar-footer__logout:focus {
+  background: rgba(225, 29, 72, 0.08);
+  color: var(--pp-danger);
+  text-decoration: none;
+}
+.sidebar-footer__logout i {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+/* Collapsed footer — только кружок и иконка */
+.sidebar-mini.sidebar-collapse .sidebar-footer {
+  padding: 10px 4px 12px;
+}
+.sidebar-mini.sidebar-collapse .sidebar-footer__user {
+  justify-content: center;
+  padding: 4px;
+}
+.sidebar-mini.sidebar-collapse .sidebar-footer__meta { display: none; }
+.sidebar-mini.sidebar-collapse .sidebar-footer__logout {
+  justify-content: center;
+  padding: 8px;
+}
+.sidebar-mini.sidebar-collapse .sidebar-footer__logout span {
+  display: none;
+}
+
+/* ── Backdrop для мобильного drawer ──
+ *    Заменяет псевдо-элемент (::after), т.к. псевдо не принимают клики. */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 65, 61, 0.4);
+  z-index: 1037;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--pp-motion-med) var(--pp-easing);
+}
+body.sidebar-open .sidebar-backdrop {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (min-width: 992px) {
+  /* На десктопе backdrop не нужен, sidebar постоянный. */
+  .sidebar-backdrop { display: none !important; }
+}
+
+/* Body-scroll-lock во время открытого drawer'а */
+body.pp-scroll-locked {
+  overflow: hidden !important;
+}
+
+/* Отключаем старый ::after-оверлей (был до introduction'а backdrop-div'а). */
+body.sidebar-open::after {
+  content: none !important;
+}
+
+/* ── Sidebar hover icon background — заменяем тут, чтобы совпадало с
+ *    унифицированным motion-токеном (было 0.15s hardcoded ранее). */
+.main-sidebar .nav-sidebar .nav-item > .nav-link:hover {
+  background: var(--pp-primary-soft) !important;
+}
+
+/* ── a11y: nav-header (section-label'ы) становятся видимыми дивайдерами
+ *    даже при navigation_expanded=false, если нам нужно добавить их
+ *    через template. Сейчас не рендерятся, но стили готовы. */
+.main-sidebar .nav-sidebar .nav-header {
+  padding: 14px 14px 4px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--pp-muted);
+  background: transparent;
+  border-top: 1px solid var(--pp-line);
+  margin-top: 6px;
+}
+.main-sidebar .nav-sidebar > .nav-header:first-child {
+  border-top: 0;
+  margin-top: 0;
+}
+
+/* ── Reduced motion — все transitions в 0 ── */
+@media (prefers-reduced-motion: reduce) {
+  .main-sidebar,
+  .main-sidebar *,
+  .sidebar-backdrop {
+    transition: none !important;
+    animation-duration: 0.001s !important;
+  }
+}

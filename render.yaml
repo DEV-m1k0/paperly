@@ -5,8 +5,8 @@
 #   1. Залогиниться на render.com → New → Blueprint
 #   2. Подключить GitHub-репозиторий
 #   3. Render прочитает этот файл и развернёт всё автоматически
-#   4. После — нужно только добавить SECRET_KEY, AI_API_KEY и email-креды
-#      в Environment Variables в дашборде Render.
+#   4. После — нужно только добавить email-креды в Environment Variables
+#      в дашборде Render (SECRET_KEY Render сгенерирует сам).
 
 services:
   # ── Web-сервис (Django) ──
@@ -42,19 +42,6 @@ services:
 
       - key: CSRF_TRUSTED_ORIGINS
         value: "https://paperly.onrender.com"
-
-      # AI-чат через Groq — ключ ОБЯЗАТЕЛЬНО задать вручную в dashboard:
-      - key: AI_API_KEY
-        sync: false              # не коммитим в git, юзер задаёт сам
-
-      - key: AI_API_BASE
-        value: "https://api.groq.com/openai/v1"
-
-      - key: AI_MODEL
-        value: "llama-3.3-70b-versatile"
-
-      - key: CHAT_RATE_LIMIT_PER_HOUR
-        value: "60"
 
       # Email — пропишите свои SMTP-креды в dashboard (sync: false → не в git)
       - key: EMAIL_HOST

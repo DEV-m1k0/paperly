@@ -1,6 +1,5 @@
 from django.urls import path
 
-from .chat_views import ChatAPIView
 from .views import (
     auth_password_reset_confirm_view,
     auth_view,
@@ -12,7 +11,6 @@ from .views import (
 )
 
 urlpatterns = [
-    path("api/chat/", ChatAPIView.as_view(), name="chat_api"),
     path("", page_view, {"page_name": "home"}, name="home"),
     path("catalog/", page_view, {"page_name": "catalog"}, name="catalog"),
     path("category/", page_view, {"page_name": "category"}, name="category"),

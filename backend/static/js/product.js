@@ -101,6 +101,27 @@
   const updateCartCount = () => window.paperly.renderCartCount();
   const addToCart = (product, quantity = 1) => window.paperly.addCartItem(product, quantity);
 
+  // Рисуем подпись «макс. N шт» под спинбоксом количества.
+  // Не создаём элемент, если такой уже есть (идемпотентно при повторном рендере).
+  function renderMaxQtyHint() {
+    const maxQty = currentProductData?.maxQty || 0;
+    if (!qtyInput) return;
+    const parent = qtyInput.closest(".qty") || qtyInput.parentElement;
+    if (!parent) return;
+    let hint = parent.parentElement?.querySelector(".qty-hint");
+    if (maxQty <= 0) {
+      if (hint) hint.remove();
+      return;
+    }
+    if (!hint) {
+      hint = document.createElement("small");
+      hint.className = "qty-hint";
+      hint.style.cssText = "display:block;margin-top:6px;color:var(--color-muted,#64748b);font-size:12px;";
+      parent.insertAdjacentElement("afterend", hint);
+    }
+    hint.textContent = `Макс. ${maxQty} шт. в одном заказе`;
+  }
+
   // ---------- Избранное (API) ----------
   function setFavButtonState(isFav) {
     favoriteButtons.forEach(btn => {
@@ -306,6 +327,8 @@
         price: Number(product.price),
         img: product.images?.[0]?.image_url || "",
         desc: product.short_description || "",
+        // 0 = без ограничения (парно с Product.max_order_quantity на бекенде)
+        maxQty: Math.max(0, Number(product.max_order_quantity) || 0),
       };
 
       document.title = `Paperly — ${product.title}`;
@@ -327,7 +350,21 @@
         addToCartBtn.dataset.price = String(currentProductData.price);
         addToCartBtn.dataset.image = currentProductData.img;
         addToCartBtn.dataset.desc = currentProductData.desc;
+        addToCartBtn.dataset.maxQty = String(currentProductData.maxQty);
       }
+
+      // Лимит кол-ва в заказе → ограничиваем спинбокс и показываем подсказку
+      if (qtyInput) {
+        if (currentProductData.maxQty > 0) {
+          qtyInput.max = String(currentProductData.maxQty);
+          if (Number(qtyInput.value) > currentProductData.maxQty) {
+            qtyInput.value = String(currentProductData.maxQty);
+          }
+        } else {
+          qtyInput.removeAttribute("max");
+        }
+      }
+      renderMaxQtyHint();
 
       // Характеристики
       if (Array.isArray(product.specifications) && product.specifications.length) {
@@ -368,6 +405,13 @@
   }
 
   // ---------- Обработчики событий ----------
+  // Верхняя граница: max_order_quantity с товара (0 = нет лимита).
+  function clampQty(value) {
+    const n = Math.max(1, Number(value) || 1);
+    const max = currentProductData?.maxQty || 0;
+    return max > 0 ? Math.min(n, max) : n;
+  }
+
   qtyMinus?.addEventListener("click", () => {
     const current = Number(qtyInput.value) || 1;
     qtyInput.value = String(Math.max(1, current - 1));
@@ -375,7 +419,11 @@
 
   qtyPlus?.addEventListener("click", () => {
     const current = Number(qtyInput.value) || 1;
-    qtyInput.value = String(current + 1);
+    qtyInput.value = String(clampQty(current + 1));
+  });
+
+  qtyInput?.addEventListener("change", () => {
+    qtyInput.value = String(clampQty(qtyInput.value));
   });
 
   addToCartBtn?.addEventListener("click", () => {

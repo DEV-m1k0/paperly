@@ -1,6 +1,7 @@
 ﻿import os
 from pathlib import Path
 
+from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -161,36 +162,39 @@ LOGIN_URL = "/auth/"
 # Jazzmin admin customization — брендирована под дизайн основного сайта Paperly
 JAZZMIN_SETTINGS = {
     # ── Branding ──
-    "site_title": "Paperly — Панель управления",
-    "site_header": "Paperly",
-    "site_brand": "Paperly",
+    # Все user-facing строки проходят через gettext_lazy — когда появится
+    # вторая локаль, переводы подхватятся из locale/<lang>/LC_MESSAGES/
+    # без правки кода.
+    "site_title": _("Paperly — Панель управления"),
+    "site_header": _("Paperly"),
+    "site_brand": _("Paperly"),
     "site_logo": "img/paperly-mark-white.svg",       # shown in sidebar brand block
     "site_logo_classes": "paperly-brand-logo",       # targeted by admin-custom.css
     "site_icon": "img/paperly-mark.svg",             # favicon
     "login_logo": "img/paperly-logo-login.svg",      # login screen
     "login_logo_dark": "img/paperly-logo-login.svg",
-    "welcome_sign": "С возвращением! Вы в панели управления Paperly.",
-    "copyright": "Paperly · интернет-магазин канцтоваров",
+    "welcome_sign": _("С возвращением! Вы в панели управления Paperly."),
+    "copyright": _("Paperly · интернет-магазин канцтоваров"),
 
     # ── Search ──
+    # Глобальный navbar-поиск рендерит по одной форме на каждую модель,
+    # поэтому держим только 2 самые частые — остальные доступны через
+    # стандартный list-search внутри каждого changelist'а.
     "search_model": [
-        "auth.User",
         "shop.Product",
         "shop.Order",
-        "shop.WholesaleRequest",
-        "shop.PromoCode",
     ],
 
     # ── Top menu ──
     "topmenu_links": [
-        {"name": "Сайт", "url": "home", "new_window": True, "icon": "fas fa-globe"},
-        {"name": "Каталог", "url": "/catalog/", "new_window": True, "icon": "fas fa-grip"},
+        {"name": _("Сайт"), "url": "home", "new_window": True, "icon": "fas fa-globe"},
+        {"name": _("Каталог"), "url": "/catalog/", "new_window": True, "icon": "fas fa-grip"},
         {"model": "shop.Order"},
         {"model": "shop.Product"},
     ],
 
     "usermenu_links": [
-        {"name": "Перейти на сайт", "url": "home", "icon": "fas fa-external-link-alt"},
+        {"name": _("Перейти на сайт"), "url": "home", "icon": "fas fa-external-link-alt"},
         {"model": "auth.user"},
     ],
 
@@ -352,12 +356,3 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-
-
-# AI assistant — fully local by default via Ollama (https://ollama.com).
-# The dev `runserver` auto-starts the daemon and pulls the model on first run.
-# No external API calls, no data leaves the machine.
-AI_API_KEY = os.environ.get("AI_API_KEY", "ollama")
-AI_API_BASE = os.environ.get("AI_API_BASE", "http://localhost:11434/v1")
-AI_MODEL = os.environ.get("AI_MODEL", "llama3.2:3b")
-CHAT_RATE_LIMIT_PER_HOUR = int(os.environ.get("CHAT_RATE_LIMIT_PER_HOUR", "60"))

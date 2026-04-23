@@ -1,11 +1,16 @@
 from django.apps import AppConfig
 from django.db.backends.signals import connection_created
 from django.dispatch import receiver
+from django.utils.translation import gettext_lazy as _
 
 
 class ShopConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "shop"
+    # Русская надпись группы в сайдбаре админки. Без этого Django берёт
+    # default `name.title()` → «Shop». gettext_lazy — чтобы работать через
+    # i18n-систему, а не хардкодом.
+    verbose_name = _("Магазин")
 
     def ready(self) -> None:
         from . import signals  # noqa: F401
