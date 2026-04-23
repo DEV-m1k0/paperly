@@ -3,6 +3,11 @@ from rest_framework import serializers
 from shop.models import BlogPost, Promotion, SitePage, WholesalePriceList, WholesaleRequest
 
 
+class NewsletterSubscribeSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=254)
+    source = serializers.CharField(max_length=64, required=False, allow_blank=True)
+
+
 class PromotionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Promotion

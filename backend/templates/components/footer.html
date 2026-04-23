@@ -38,12 +38,19 @@
           {% endif %}
         </div>
 
+        {% if social_links %}
         <div class="site-footer__socials" aria-label="Мы в соцсетях">
-          <a class="site-footer__social" href="#" aria-label="Telegram"><i class="bi bi-telegram" aria-hidden="true"></i></a>
-          <a class="site-footer__social" href="#" aria-label="ВКонтакте"><i class="bi bi-share-fill" aria-hidden="true"></i></a>
-          <a class="site-footer__social" href="#" aria-label="YouTube"><i class="bi bi-youtube" aria-hidden="true"></i></a>
-          <a class="site-footer__social" href="#" aria-label="Instagram"><i class="bi bi-instagram" aria-hidden="true"></i></a>
+          {% for social in social_links %}
+          <a class="site-footer__social" href="{{ social.url }}" aria-label="{{ social.label }}" target="_blank" rel="noopener">
+            {% if social.icon_image %}
+              <img src="{{ social.icon_image.url }}" alt="" width="22" height="22">
+            {% else %}
+              <i class="bi {{ social.icon_class|default:'bi-link-45deg' }}" aria-hidden="true"></i>
+            {% endif %}
+          </a>
+          {% endfor %}
         </div>
+        {% endif %}
       </div>
 
       <nav class="site-footer__col" aria-labelledby="footer-col-buyers">
@@ -79,13 +86,14 @@
       <div class="site-footer__subscribe">
         <h4>Рассылка</h4>
         <p>Раз в 2 недели — подборка новинок и скидок.</p>
-        <form class="site-footer__form" onsubmit="event.preventDefault(); this.reset();">
+        <form class="site-footer__form" id="footerSubscribeForm" novalidate>
           <label class="visually-hidden" for="footerSubscribe">Email</label>
-          <input id="footerSubscribe" type="email" placeholder="Ваш email" required>
+          <input id="footerSubscribe" name="email" type="email" placeholder="Ваш email" autocomplete="email" required>
           <button class="site-footer__submit" type="submit" aria-label="Подписаться">
             <i class="bi bi-arrow-right" aria-hidden="true"></i>
           </button>
         </form>
+        <p class="site-footer__status" id="footerSubscribeStatus" role="status" aria-live="polite" hidden></p>
         <p class="site-footer__tiny">
           Нажимая «Подписаться», вы соглашаетесь с
           <a href="{% url 'legal_privacy' %}">политикой конфиденциальности</a>.

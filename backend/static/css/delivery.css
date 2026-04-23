@@ -1,30 +1,685 @@
-/* Delivery page — minimal page-specific tweaks on top of theme.css */
+/*
+ * Delivery page — полноценный редизайн.
+ * Секции: hero, trust-strip, тарифы, калькулятор, how-it-works, оплата, FAQ, CTA.
+ */
 
-.pay-list {
-  list-style: none;
-  padding: 0;
-  margin: 0.2rem 0 0;
+.delivery-page {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2rem, 4vw, 3.2rem);
+  padding-bottom: clamp(2rem, 5vw, 4rem);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * HERO
+ * ═══════════════════════════════════════════════════════════════ */
+.delivery-hero {
+  position: relative;
   display: grid;
-  gap: 0.45rem;
-  font-size: 0.92rem;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.85fr);
+  gap: clamp(1.3rem, 2.6vw, 2.2rem);
+  align-items: center;
+  padding: clamp(1.8rem, 3.6vw, 3rem) clamp(1.4rem, 3vw, 2.4rem);
+  border-radius: 28px;
+  background: linear-gradient(135deg, #e6f5f3 0%, #f7efda 100%);
+  border: 1px solid rgba(14, 118, 110, 0.12);
+  overflow: hidden;
+}
+
+.delivery-hero__bg {
+  position: absolute; inset: 0;
+  pointer-events: none; overflow: hidden;
+}
+
+.delivery-hero__bg .blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+}
+
+.delivery-hero__bg .blob--teal {
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, rgba(14, 118, 110, 0.35), transparent 70%);
+  top: -80px; left: -60px;
+}
+
+.delivery-hero__bg .blob--amber {
+  width: 260px; height: 260px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.35), transparent 70%);
+  bottom: -80px; right: -40px;
+}
+
+.delivery-hero__content {
+  position: relative;
+  min-width: 0;
+}
+
+.delivery-hero__content h1 {
+  margin: 0 0 0.7rem;
+  font-family: "Prata", serif;
+  font-size: clamp(1.75rem, 3.5vw, 2.55rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
   color: var(--text);
 }
 
-.pay-list li {
+.delivery-hero__content h1 .accent {
+  color: var(--primary);
+}
+
+.delivery-hero__lead {
+  margin: 0 0 1.4rem;
+  font-size: clamp(0.98rem, 1.2vw, 1.08rem);
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 50ch;
+}
+
+.delivery-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.delivery-hero__card {
+  position: relative;
+  padding: 1.6rem 1.5rem 1.4rem;
+  background: #fff;
+  border-radius: 22px;
+  border: 1px solid rgba(14, 118, 110, 0.15);
+  box-shadow: 0 24px 44px -20px rgba(11, 65, 61, 0.2);
+  overflow: hidden;
+}
+
+/* Decorative teal pattern in the corner */
+.delivery-hero__card::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  bottom: -40px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14, 118, 110, 0.12), transparent 65%);
+  pointer-events: none;
+}
+
+.delivery-hero__card-ribbon {
+  position: absolute;
+  top: 14px;
+  right: -34px;
+  transform: rotate(35deg);
+  background: linear-gradient(90deg, #f59e0b, #fb923c);
+  color: #1e2e33;
+  font-weight: 800;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 38px;
+  box-shadow: 0 6px 14px -6px rgba(245, 158, 11, 0.45);
+}
+
+.delivery-hero__card-kicker {
+  margin: 0 0 0.1rem;
+  color: var(--primary);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.delivery-hero__card-title {
+  margin: 0 0 0.5rem;
+  font-family: "Prata", serif;
+  font-weight: 400;
+  font-size: 1.6rem;
+  line-height: 1.1;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.delivery-hero__card-sub {
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+.delivery-hero__card-sub b {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.delivery-hero__card-list {
+  list-style: none;
+  margin: 0; padding: 0.85rem 0 0;
+  border-top: 1px dashed rgba(14, 118, 110, 0.18);
+  display: grid;
+  gap: 0.55rem;
+}
+
+.delivery-hero__card-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  position: relative;
+  z-index: 1;
+}
+
+.delivery-hero__card-list li span {
+  color: var(--muted);
+}
+
+.delivery-hero__card-list li strong {
+  font-weight: 700;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * PAGE SECTION commons (page-hero-like helpers preserved from theme)
+ * ═══════════════════════════════════════════════════════════════ */
+.page-section__head {
+  margin-bottom: 1.4rem;
+  text-align: left;
+}
+
+.page-section__head h2 {
+  margin: 0.2rem 0 0.3rem;
+  font-family: "Prata", serif;
+  font-size: clamp(1.45rem, 2.4vw, 1.85rem);
+  letter-spacing: -0.01em;
+}
+
+.page-section__subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  max-width: 60ch;
+}
+
+.page-section__note {
+  margin: 1rem 0 0;
+  font-size: 0.86rem;
+  color: var(--muted);
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.page-section__note i {
+  color: var(--primary);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * TARIFF CARDS
+ * ═══════════════════════════════════════════════════════════════ */
+.tariff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.tariff-card {
+  position: relative;
+  padding: 1.8rem 1.4rem 1.5rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 12px 28px -18px rgba(11, 65, 61, 0.14);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  overflow: hidden;
+}
+
+.tariff-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(14, 118, 110, 0.03), transparent 40%);
+  pointer-events: none;
+}
+
+.tariff-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(14, 118, 110, 0.24);
+  box-shadow: 0 26px 48px -24px rgba(11, 65, 61, 0.25);
+}
+
+.tariff-card.is-free-active {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 18px 44px -20px rgba(16, 185, 129, 0.4);
+}
+
+.tariff-card.is-free-active::before {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.09), transparent 45%);
+}
+
+.tariff-card--pickup {
+  background: linear-gradient(180deg, #ffffff, #f5faf8);
+  border-color: rgba(14, 118, 110, 0.2);
+}
+
+.tariff-card--express {
+  background: linear-gradient(180deg, #ffffff, #fff8ea);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.tariff-card__badge {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.1rem;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 999px;
+  z-index: 2;
+}
+
+.tariff-card__badge--free {
+  background: #16a34a;
+}
+
+.tariff-card__badge--accent {
+  background: #f59e0b;
+  color: #1e2e33;
+}
+
+.tariff-card__icon {
+  width: 54px; height: 54px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary), #14a69b);
+  color: #fff;
+  font-size: 1.5rem;
+  margin-bottom: 0.4rem;
+  position: relative;
+  box-shadow: 0 10px 22px -10px rgba(14, 118, 110, 0.5);
+}
+
+.tariff-card--express .tariff-card__icon {
+  background: linear-gradient(135deg, #f59e0b, #fb923c);
+  box-shadow: 0 10px 22px -10px rgba(245, 158, 11, 0.55);
+}
+
+.tariff-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text);
+  position: relative;
+}
+
+.tariff-card__desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  position: relative;
+}
+
+.tariff-card__price {
+  margin-top: auto;
+  padding-top: 0.8rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  position: relative;
+}
+
+.tariff-card__price strong {
+  font-family: "Prata", serif;
+  font-size: 2rem;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.tariff-card__price span {
+  font-size: 1.05rem;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.tariff-card__meta {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0.6rem 0 0;
+  border-top: 1px dashed rgba(14, 118, 110, 0.18);
+  display: grid;
+  gap: 0.3rem;
+  position: relative;
+}
+
+.tariff-card__meta li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.83rem;
+  color: var(--text);
+}
+
+.tariff-card__meta i {
+  color: var(--primary);
+  font-size: 0.9rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * FREE-DELIVERY CALCULATOR
+ * ═══════════════════════════════════════════════════════════════ */
+.delivery-calc {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(1.2rem, 3vw, 2.2rem);
+  align-items: center;
+  padding: clamp(1.5rem, 3vw, 2.2rem);
+  border-radius: 24px;
+  background: linear-gradient(135deg, #0a5f58 0%, #0e766e 55%, #145e57 100%);
+  color: #fff;
+  box-shadow: 0 28px 54px -26px rgba(10, 60, 56, 0.5);
+}
+
+.delivery-calc h2 {
+  margin: 0.2rem 0 0.55rem;
+  font-family: "Prata", serif;
+  color: #fff;
+  font-size: clamp(1.4rem, 2.4vw, 1.85rem);
+}
+
+.delivery-calc .eyebrow {
+  color: #fde68a;
+}
+
+.delivery-calc__text p {
+  margin: 0;
+  color: rgba(216, 236, 233, 0.9);
+  line-height: 1.55;
+}
+
+.delivery-calc__widget {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.delivery-calc__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #9be6dc;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.delivery-calc__field input {
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-family: "Prata", serif;
+  text-transform: none;
+  letter-spacing: normal;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.delivery-calc__field input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+  font-family: inherit;
+  font-weight: 400;
+}
+
+.delivery-calc__field input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.18);
+  border-color: #fde68a;
+}
+
+.delivery-calc__output {
+  min-height: 72px;
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: rgba(216, 236, 233, 0.95);
+}
+
+.delivery-calc__output.is-win {
+  background: rgba(110, 231, 183, 0.22);
+  border-color: rgba(110, 231, 183, 0.5);
+  color: #fff;
+}
+
+.delivery-calc__output b {
+  color: #fde68a;
+}
+
+.delivery-calc__output ul {
+  margin: 0.5rem 0 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.delivery-calc__output ul li {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 0.85rem;
 }
 
-.pay-list li i {
+.delivery-calc__output ul li i {
+  color: #6ee7b7;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * HOW IT WORKS — TIMELINE
+ * ═══════════════════════════════════════════════════════════════ */
+.delivery-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  counter-reset: step;
+}
+
+.delivery-step {
+  position: relative;
+  padding: 1.9rem 1.3rem 1.3rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 8px 22px -14px rgba(11, 65, 61, 0.1);
+  transition: transform 0.22s ease, border-color 0.22s ease;
+}
+
+.delivery-step:hover {
+  transform: translateY(-3px);
+  border-color: rgba(14, 118, 110, 0.2);
+}
+
+.delivery-step__index {
+  position: absolute;
+  top: -16px;
+  left: 1.1rem;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #14a69b);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+  box-shadow: 0 10px 20px -8px rgba(14, 118, 110, 0.5);
+}
+
+.delivery-step__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(14, 118, 110, 0.1);
   color: var(--primary);
-  flex-shrink: 0;
+  font-size: 1.35rem;
+  margin-bottom: 0.7rem;
 }
 
-/* FAQ accordion */
+.delivery-step h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.delivery-step p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * PAYMENT METHODS
+ * ═══════════════════════════════════════════════════════════════ */
+.pay-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 1rem;
+}
+
+.pay-method {
+  position: relative;
+  padding: 1.5rem 1.4rem 1.35rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 10px 22px -16px rgba(11, 65, 61, 0.12);
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.pay-method:hover {
+  transform: translateY(-3px);
+  border-color: rgba(14, 118, 110, 0.22);
+  box-shadow: 0 22px 36px -20px rgba(11, 65, 61, 0.2);
+}
+
+.pay-method__icon {
+  width: 48px; height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  font-size: 1.35rem;
+  color: #fff;
+  margin-bottom: 0.3rem;
+}
+
+.pay-method__icon--teal { background: linear-gradient(135deg, var(--primary), #14a69b); }
+.pay-method__icon--amber { background: linear-gradient(135deg, #f59e0b, #fb923c); }
+.pay-method__icon--indigo { background: linear-gradient(135deg, #6366f1, #818cf8); }
+.pay-method__icon--rose { background: linear-gradient(135deg, #e11d48, #fb7185); }
+
+.pay-method h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.pay-method p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.pay-method__brands {
+  margin-top: auto;
+  padding-top: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.pay-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  border-radius: 10px;
+  background: #f1f5f4;
+  color: var(--text);
+}
+
+.pay-brand--visa { background: #1a1f71; color: #fff; }
+.pay-brand--mc { background: #eb001b; color: #fff; }
+.pay-brand--mir { background: linear-gradient(90deg, #14a69b, #0e766e); color: #fff; }
+.pay-brand--sbp { background: #1e3a8a; color: #fff; }
+
+.pay-method__perk {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 10px;
+  background: rgba(14, 118, 110, 0.08);
+  color: var(--primary);
+}
+
+.pay-method__perk i {
+  color: var(--primary);
+}
+
+.pay-method__link {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.pay-method__link:hover {
+  color: var(--primary-strong);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * FAQ
+ * ═══════════════════════════════════════════════════════════════ */
 .faq {
   display: grid;
-  gap: 0.6rem;
+  gap: 0.55rem;
 }
 
 .faq-item {
@@ -32,20 +687,18 @@
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 0 1.1rem;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 .faq-item[open] {
   border-color: rgba(14, 118, 110, 0.3);
-  box-shadow: 0 18px 34px -22px rgba(11, 65, 61, 0.22);
+  box-shadow: 0 16px 32px -22px rgba(11, 65, 61, 0.22);
+  background: linear-gradient(180deg, #ffffff, #f7fbfa);
 }
 
 .faq-item summary {
   list-style: none;
   padding: 1rem 0;
-  font-weight: 700;
-  font-size: 1rem;
-  color: var(--text);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -57,12 +710,28 @@
   display: none;
 }
 
+.faq-item__q {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: var(--text);
+}
+
+.faq-item__q i {
+  color: var(--primary);
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
 .faq-item summary::after {
   content: "\F282";
   font-family: "bootstrap-icons";
   color: var(--primary);
-  transition: transform 0.2s ease;
+  transition: transform 0.25s ease;
   font-size: 0.92rem;
+  flex-shrink: 0;
 }
 
 .faq-item[open] summary::after {
@@ -70,8 +739,108 @@
 }
 
 .faq-item p {
-  margin: 0 0 1.1rem;
+  margin: 0 0 1.1rem 1.8rem;
   color: var(--muted);
-  line-height: 1.55;
+  line-height: 1.65;
   font-size: 0.95rem;
+}
+
+.faq-item p a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * FINAL CTA
+ * ═══════════════════════════════════════════════════════════════ */
+.delivery-cta {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: clamp(1rem, 2.5vw, 1.6rem);
+  align-items: center;
+  padding: clamp(1.4rem, 3vw, 2rem);
+  border-radius: 24px;
+  background: linear-gradient(135deg, #fff9ec 0%, #ffffff 100%);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+}
+
+.delivery-cta__icon {
+  width: 64px; height: 64px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f59e0b, #fb923c);
+  color: #fff;
+  font-size: 1.6rem;
+  box-shadow: 0 14px 28px -10px rgba(245, 158, 11, 0.5);
+  flex-shrink: 0;
+}
+
+.delivery-cta__text h2 {
+  margin: 0 0 0.3rem;
+  font-family: "Prata", serif;
+  font-size: clamp(1.3rem, 2.2vw, 1.55rem);
+}
+
+.delivery-cta__text p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.delivery-cta__actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+ * RESPONSIVE
+ * ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 960px) {
+  .delivery-hero {
+    grid-template-columns: 1fr;
+  }
+  .delivery-hero__card {
+    order: 2;
+  }
+  .delivery-calc {
+    grid-template-columns: 1fr;
+  }
+  .delivery-cta {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .delivery-cta__icon {
+    margin-inline: auto;
+  }
+  .delivery-cta__actions {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 540px) {
+  .tariff-card {
+    padding: 1.6rem 1.25rem 1.3rem;
+  }
+  .tariff-card__badge {
+    top: 0.9rem;
+    right: 0.9rem;
+    font-size: 0.66rem;
+  }
+  .tariff-card__price strong {
+    font-size: 1.7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tariff-card:hover,
+  .pay-method:hover,
+  .delivery-step:hover {
+    transform: none;
+  }
 }

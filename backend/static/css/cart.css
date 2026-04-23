@@ -714,6 +714,169 @@
   margin-bottom: 1rem;
 }
 
+/* Promo-code input inside the summary panel */
+.promo-box {
+  margin: 0 0 1.1rem 0;
+  padding: 0.85rem 0.95rem 0.9rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  backdrop-filter: blur(4px);
+}
+
+.promo-box__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #9be6dc;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.45rem;
+}
+
+.promo-box__row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: stretch;
+}
+
+.promo-box__row input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.58rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.promo-box__row input::placeholder {
+  color: rgba(216, 236, 233, 0.55);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.promo-box__row input:focus {
+  outline: none;
+  border-color: #fde68a;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.promo-box__apply {
+  padding: 0 1rem;
+  border: none;
+  border-radius: 10px;
+  background: #f59e0b;
+  color: #1e2e33;
+  font-weight: 800;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.promo-box__apply:hover:not(:disabled) {
+  background: #fbbf24;
+  transform: translateY(-1px);
+}
+
+.promo-box__apply:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.promo-box__status {
+  margin: 0.55rem 0 0 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.promo-box__status[hidden] {
+  display: none !important;
+}
+
+.promo-box__status.is-error {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.28);
+}
+
+.promo-box__status.is-pending {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(216, 236, 233, 0.85);
+}
+
+.promo-box__applied {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.85rem;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 12px;
+  color: #fff;
+}
+
+.promo-box__applied[hidden] {
+  display: none !important;
+}
+
+.promo-box__applied > i {
+  font-size: 1.3rem;
+  color: #6ee7b7;
+}
+
+.promo-box__applied > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.promo-box__applied strong {
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.promo-box__applied span {
+  font-size: 0.78rem;
+  color: rgba(216, 236, 233, 0.9);
+}
+
+.promo-box__remove {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.promo-box__remove:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: scale(1.05);
+}
+
+.summary-row--discount strong {
+  color: #fde68a;
+}
+
 .summary-row {
   display: flex;
   justify-content: space-between;
@@ -1035,100 +1198,503 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
- * Responsive
+ * Responsive — 6-step ladder: 1040 / 860 / 720 / 560 / 480 / 380
+ * Поэлементно проработаны: header, items, empty, checkout sections,
+ * account-toggle, payment-options, promo-box, summary, payment-modal.
  * ══════════════════════════════════════════════════════════════════ */
 
+/* ── Planшет (до 1040) — single column layout ── */
 @media (max-width: 1040px) {
   .cart-layout {
     grid-template-columns: 1fr;
   }
-
   .checkout {
     position: static;
   }
 }
 
+/* ── Tablet small (до 860) ── */
+@media (max-width: 860px) {
+  .cart-page {
+    padding-top: 0;
+  }
+  .cart-header h1 {
+    font-size: 1.75rem;
+  }
+  .cart-header__lead {
+    font-size: 0.92rem;
+  }
+  .checkout-section {
+    padding: 1.1rem 1.2rem;
+  }
+  .checkout-summary {
+    padding: 1.1rem 1.2rem 1.2rem;
+  }
+}
+
+/* ── Mobile landscape (до 720) ── */
 @media (max-width: 720px) {
   .cart-header {
     align-items: flex-start;
+    flex-direction: column;
+    gap: 0.55rem;
   }
-
+  .cart-header h1 {
+    font-size: 1.55rem;
+  }
+  .cart-header__lead {
+    font-size: 0.9rem;
+  }
   .cart-header__badge {
     padding: 0.45rem 0.85rem;
     font-size: 0.84rem;
   }
 
+  /* ── Item card ── */
   .item {
     grid-template-columns: 72px minmax(0, 1fr);
-    padding: 0.75rem 0.85rem;
+    padding: 0.8rem 0.9rem;
     gap: 0.75rem;
   }
-
   .item__img {
     width: 72px;
     height: 72px;
     border-radius: 11px;
   }
-
+  .item__info h3 {
+    font-size: 0.98rem;
+    line-height: 1.3;
+  }
+  .item__info p {
+    font-size: 0.85rem;
+    -webkit-line-clamp: 2;
+  }
+  .item__unit {
+    font-size: 0.86rem;
+  }
   .item__controls {
     grid-column: 1 / -1;
     justify-content: space-between;
+    align-items: center;
     gap: 0.6rem;
     padding-top: 0.6rem;
     border-top: 1px dashed rgba(14, 118, 110, 0.15);
   }
-
   .item__sum {
     flex: 1;
     text-align: right;
     min-width: 0;
+    font-size: 1rem;
   }
 
+  /* ── Empty cart ── */
+  .cart-empty {
+    padding: 2.2rem 1.2rem 2rem;
+    border-radius: 22px;
+  }
+  .cart-empty__suggest {
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* ── Checkout section ── */
   .checkout-section {
     padding: 1rem 1.1rem;
+    border-radius: 16px;
   }
-
+  .checkout-section__head {
+    gap: 0.7rem;
+  }
   .checkout-section__body {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .checkout-section__head h3 {
+    font-size: 1.02rem;
+  }
+  .checkout-section__head p {
+    font-size: 0.82rem;
   }
 
+  /* ── Payment options ── */
+  .payment-option__body {
+    padding: 0.7rem 0.8rem;
+    gap: 0.65rem;
+  }
+  .payment-option__body > i {
+    width: 38px;
+    height: 38px;
+    font-size: 1.05rem;
+  }
+  .payment-option__body strong {
+    font-size: 0.9rem;
+  }
+  .payment-option__body small {
+    font-size: 0.76rem;
+  }
+
+  /* ── Account toggle ── */
+  .account-toggle {
+    padding: 0.85rem 1rem;
+    gap: 0.75rem;
+  }
+  .account-toggle__body strong {
+    font-size: 0.92rem;
+  }
+  .account-toggle__body small {
+    font-size: 0.8rem;
+  }
+
+  /* ── Promo box ── */
+  .promo-box {
+    padding: 0.8rem 0.85rem;
+  }
+  .promo-box__row input {
+    font-size: 0.88rem;
+    min-height: 40px;
+  }
+  .promo-box__apply {
+    min-height: 40px;
+    padding: 0 0.9rem;
+    font-size: 0.8rem;
+  }
+  .promo-box__applied {
+    padding: 0.65rem 0.8rem;
+  }
+  .promo-box__applied strong {
+    font-size: 0.88rem;
+  }
+  .promo-box__applied span {
+    font-size: 0.75rem;
+  }
+
+  /* ── Summary ── */
+  .summary-row {
+    font-size: 0.9rem;
+  }
+  .summary-row:last-child {
+    font-size: 0.96rem;
+  }
+  .summary-row:last-child strong {
+    font-size: 1.3rem;
+  }
+
+  /* ── Checkout submit ── */
+  .checkout-submit {
+    min-height: 48px;
+    font-size: 0.92rem;
+  }
+
+  /* ── Payment modal ── */
   .payment-modal {
     padding: 1.8rem 1.2rem 1.5rem;
     border-radius: 20px;
   }
-
+  .payment-step h2 {
+    font-size: 1.25rem;
+  }
   .payment-step__icon {
     width: 60px;
     height: 60px;
     font-size: 2rem;
     border-radius: 16px;
   }
+  .payment-amount {
+    font-size: 1.6rem;
+  }
+  .payment-success-icon {
+    width: 68px;
+    height: 68px;
+    font-size: 2.2rem;
+  }
 }
 
+/* ── Телефон (до 560) ── */
+@media (max-width: 560px) {
+  .cart-header h1 {
+    font-size: 1.4rem;
+  }
+
+  /* Item: меньшая обложка + плотнее */
+  .item {
+    grid-template-columns: 60px minmax(0, 1fr);
+    padding: 0.7rem 0.8rem;
+    gap: 0.65rem;
+  }
+  .item__img {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+  }
+  .item__info h3 {
+    font-size: 0.94rem;
+  }
+  .item__info p {
+    font-size: 0.82rem;
+    -webkit-line-clamp: 2;
+  }
+
+  /* Checkout section padding меньше */
+  .checkout-section {
+    padding: 0.95rem 1rem;
+    border-radius: 14px;
+  }
+  .checkout-summary {
+    padding: 1rem 1.1rem 1.1rem;
+    border-radius: 16px;
+  }
+
+  /* Field input более компактно */
+  .field input,
+  .field textarea,
+  .field select.no-choices {
+    font-size: 0.9rem;
+    min-height: 44px;
+  }
+  .field__label {
+    font-size: 0.8rem;
+  }
+
+  /* Summary очень компактно */
+  .summary-row:last-child strong {
+    font-size: 1.2rem;
+  }
+
+  /* Payment modal: меньше radius + padding */
+  .payment-overlay {
+    padding: 0.7rem;
+  }
+  .payment-modal {
+    padding: 1.6rem 1.1rem 1.3rem;
+    border-radius: 18px;
+  }
+  .payment-modal__close {
+    top: 10px;
+    right: 10px;
+    width: 36px;
+    height: 36px;
+  }
+  .payment-step h2 {
+    font-size: 1.15rem;
+  }
+  .payment-qr {
+    width: 160px;
+    height: 160px;
+    border-radius: 14px;
+  }
+
+  /* Payment card form — 2 col → 1 col */
+  .payment-card-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  /* Payment-account-created — иконка + текст на мобильном */
+  .payment-account-created {
+    padding: 0.75rem 0.85rem;
+    gap: 0.7rem;
+  }
+  .payment-account-created > i {
+    width: 34px;
+    height: 34px;
+    font-size: 1rem;
+  }
+}
+
+/* ── Узкий телефон (до 480) ── */
 @media (max-width: 480px) {
   .cart-layout {
     gap: 0.85rem;
   }
 
+  /* Qty controls компактнее для touch */
   .item__qty,
   .qty {
-    grid-template-columns: 30px 36px 30px;
-    height: 36px;
+    grid-template-columns: 32px 40px 32px;
+    height: 40px;
   }
-
+  .item__qty button,
+  .qty button {
+    font-size: 1rem;
+  }
   .item__remove {
-    width: 32px;
-    height: 32px;
-    font-size: 0.8rem;
+    width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+    border-radius: 10px;
   }
 
+  /* Step circle */
   .checkout-section__step {
     width: 30px;
     height: 30px;
     font-size: 0.9rem;
   }
 
+  /* Checkout submit ниже но всё ещё touch-friendly */
+  .checkout-submit {
+    min-height: 46px;
+    font-size: 0.9rem;
+  }
+
+  /* Промокод: input + apply остаются на одной строке */
+  .promo-box__row {
+    gap: 0.3rem;
+  }
+  .promo-box__row input {
+    padding: 0.55rem 0.65rem;
+    font-size: 0.86rem;
+  }
+  .promo-box__apply {
+    padding: 0 0.75rem;
+    font-size: 0.76rem;
+  }
+
+  /* Empty-chip tap-area */
+  .cart-empty__chip {
+    padding: 0.55rem 0.85rem;
+    font-size: 0.88rem;
+  }
+
+  /* Payment modal amount */
   .payment-amount {
     font-size: 1.5rem;
+  }
+}
+
+/* ── Экстра-узкий (до 380) ── */
+@media (max-width: 380px) {
+  .cart-header h1 {
+    font-size: 1.25rem;
+  }
+  .cart-header__lead {
+    font-size: 0.85rem;
+  }
+  .cart-header__badge {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.78rem;
+  }
+
+  /* Item ещё компактнее */
+  .item {
+    grid-template-columns: 54px minmax(0, 1fr);
+    padding: 0.65rem 0.7rem;
+    gap: 0.6rem;
+  }
+  .item__img {
+    width: 54px;
+    height: 54px;
+    border-radius: 9px;
+  }
+  .item__info h3 {
+    font-size: 0.9rem;
+    -webkit-line-clamp: 2;
+  }
+  .item__info p {
+    -webkit-line-clamp: 1;
+    font-size: 0.78rem;
+  }
+  .item__sum {
+    font-size: 0.96rem;
+  }
+
+  /* Qty чуть меньше */
+  .item__qty,
+  .qty {
+    grid-template-columns: 30px 36px 30px;
+    height: 36px;
+  }
+
+  /* Checkout section padding ещё меньше */
+  .checkout-section {
+    padding: 0.85rem 0.9rem;
+  }
+  .checkout-summary {
+    padding: 0.95rem 1rem 1rem;
+  }
+  .checkout-section__head h3 {
+    font-size: 0.98rem;
+  }
+  .checkout-section__head p {
+    font-size: 0.78rem;
+  }
+
+  /* Payment options icon меньше */
+  .payment-option__body {
+    padding: 0.65rem 0.75rem;
+  }
+  .payment-option__body > i {
+    width: 34px;
+    height: 34px;
+  }
+  .payment-option__body strong {
+    font-size: 0.88rem;
+  }
+
+  /* Account toggle switch - chip layout */
+  .account-toggle {
+    padding: 0.8rem 0.9rem;
+    gap: 0.65rem;
+  }
+
+  /* Promo box: input + apply becomes column on extra-narrow */
+  .promo-box__row {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .promo-box__apply {
+    width: 100%;
+    min-height: 42px;
+  }
+
+  /* Summary total smaller */
+  .summary-row {
+    font-size: 0.86rem;
+  }
+  .summary-row:last-child strong {
+    font-size: 1.1rem;
+  }
+
+  /* Checkout submit */
+  .checkout-submit {
+    min-height: 44px;
+    font-size: 0.86rem;
+  }
+
+  /* Payment modal */
+  .payment-modal {
+    padding: 1.4rem 1rem 1.15rem;
+  }
+  .payment-step h2 {
+    font-size: 1.08rem;
+  }
+  .payment-step__icon {
+    width: 54px;
+    height: 54px;
+    font-size: 1.7rem;
+  }
+  .payment-amount {
+    font-size: 1.35rem;
+  }
+  .payment-qr {
+    width: 140px;
+    height: 140px;
+  }
+  .payment-success-icon {
+    width: 62px;
+    height: 62px;
+    font-size: 2rem;
+  }
+}
+
+/* ── Reduced motion — отключаем hover-эффекты ── */
+@media (prefers-reduced-motion: reduce) {
+  .item:hover,
+  .cart-empty__chip:hover,
+  .checkout-submit:hover,
+  .payment-option:hover .payment-option__body,
+  .promo-box__remove:hover {
+    transform: none;
   }
 }

@@ -1,0 +1,86 @@
+{% load static %}<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="x-apple-disable-message-reformatting">
+<title>{{ subject|default:site_name }}</title>
+<!--[if mso]>
+<style>table, td, th { border-collapse: collapse; mso-table-lspace: 0; mso-table-rspace: 0; }</style>
+<![endif]-->
+</head>
+<body style="margin:0; padding:0; background:#eef2f1; font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif; color:#1e2e33; -webkit-font-smoothing:antialiased;">
+
+{# Hidden preheader text (shown in inbox preview) #}
+<div style="display:none; max-height:0; overflow:hidden; opacity:0; font-size:1px; line-height:1px; color:#eef2f1;">
+  {{ preview|default:"Добро пожаловать в Paperly — канцтовары для офиса, школы и творчества." }}
+</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef2f1; padding:24px 12px;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:100%; background:#ffffff; border-radius:18px; overflow:hidden; box-shadow:0 4px 20px rgba(11,65,61,0.08);">
+
+        {# ─────── Header ─────── #}
+        <tr>
+          <td style="background:linear-gradient(135deg,#0e766e 0%,#14a69b 100%); padding:28px 32px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td>
+                  <a href="{{ site_url }}" style="text-decoration:none; color:#ffffff;">
+                    <span style="display:inline-block; width:40px; height:40px; background:rgba(255,255,255,0.18); border-radius:50%; text-align:center; line-height:40px; margin-right:10px; vertical-align:middle; font-size:18px;">✒</span>
+                    <span style="font-size:22px; font-weight:800; letter-spacing:-0.01em; vertical-align:middle;">{{ site_name|default:"Paperly" }}</span>
+                  </a>
+                </td>
+                <td align="right" style="color:rgba(255,255,255,0.9); font-size:13px;">
+                  {{ header_note|default:"канцтовары с заботой" }}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        {# ─────── Body (block overridable) ─────── #}
+        <tr>
+          <td style="padding:36px 32px 12px 32px;">
+            {% block body %}{% endblock %}
+          </td>
+        </tr>
+
+        {# ─────── Footer ─────── #}
+        <tr>
+          <td style="padding:24px 32px 28px 32px; background:#f5f8f8; border-top:1px solid rgba(14,118,110,0.08);">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="font-size:12px; color:#60757b; line-height:1.6;">
+                  <strong style="color:#1e2e33;">{{ site_name|default:"Paperly" }}</strong>
+                  {% if site_city or site_address %}· {{ site_address|default:"" }}{% if site_city %}, {{ site_city }}{% endif %}{% endif %}<br>
+                  {% if site_phone %}Тел.: {{ site_phone }} · {% endif %}{% if site_email %}<a href="mailto:{{ site_email }}" style="color:#0e766e; text-decoration:none;">{{ site_email }}</a>{% endif %}
+                </td>
+              </tr>
+              {% if unsubscribe_url %}
+              <tr>
+                <td style="padding-top:14px; font-size:11px; color:#8a9ca0;">
+                  Вы получили это письмо, потому что подписались на рассылку {{ site_name|default:"Paperly" }}.<br>
+                  <a href="{{ unsubscribe_url }}" style="color:#0e766e; text-decoration:underline;">Отписаться от рассылки</a> ·
+                  <a href="{{ site_url }}{% url 'legal_privacy' %}" style="color:#0e766e; text-decoration:underline;">Политика конфиденциальности</a>
+                </td>
+              </tr>
+              {% endif %}
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:100%;">
+        <tr>
+          <td align="center" style="padding:18px 12px 4px 12px; font-size:11px; color:#8a9ca0;">
+            © {% now "Y" %} {{ site_name|default:"Paperly" }}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

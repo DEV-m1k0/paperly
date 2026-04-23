@@ -9,11 +9,133 @@
 {% endblock %}
 
 {% block content %}
-<div class="container page">
-  <h1>Хиты продаж</h1>
-  <p class="lead">Самые покупаемые товары за последние 3 дня.</p>
-  <section class="products" id="bestsellersProducts" aria-live="polite">
-    <p class="empty-state">Загрузка хитов продаж...</p>
+<div class="container page bestsellers-page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <a href="{% url 'catalog' %}">Каталог</a>
+    <span>/</span>
+    <span>Хиты продаж</span>
+  </div>
+
+  <section class="bs-hero reveal">
+    <div class="bs-hero__bg" aria-hidden="true">
+      <span class="bs-blob bs-blob--amber"></span>
+      <span class="bs-blob bs-blob--teal"></span>
+      <span class="bs-blob bs-blob--gold"></span>
+    </div>
+    <div class="bs-hero__content">
+      <p class="eyebrow bs-hero__eyebrow">
+        <span class="bs-medal" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.39 4.84L20 7.7l-4 3.9.95 5.53L12 14.5l-4.95 2.63L8 11.6 4 7.7l5.61-.86L12 2z"/></svg>
+        </span>
+        Выбор тысяч покупателей
+      </p>
+      <h1 class="bs-hero__title">
+        Топ-продажи <span class="accent">Paperly</span> —<br>
+        <em>проверенные фавориты</em>
+      </h1>
+      <p class="bs-hero__lead">
+        Товары, которые чаще всего попадают в корзины наших клиентов.
+        Проверенное качество, хорошие цены и гарантия — то, за что вам точно не придётся переплачивать.
+      </p>
+      <ul class="bs-hero__stats" id="bsStats">
+        <li>
+          <span class="bs-hero__stats-num" id="bsStatCount">—</span>
+          <span class="bs-hero__stats-label">товаров в топе</span>
+        </li>
+        <li>
+          <span class="bs-hero__stats-num">10&nbsp;000+</span>
+          <span class="bs-hero__stats-label">довольных клиентов</span>
+        </li>
+        <li>
+          <span class="bs-hero__stats-num">4,9&nbsp;★</span>
+          <span class="bs-hero__stats-label">средняя оценка</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="bs-controls reveal" aria-label="Фильтр по категории">
+    <div class="bs-controls__label">
+      <i class="bi bi-filter-square" aria-hidden="true"></i>
+      Смотреть топ для:
+    </div>
+    <div class="bs-chips" role="tablist">
+      <button class="bs-chip is-active" type="button" role="tab" data-category="" aria-selected="true">Всех</button>
+      <button class="bs-chip" type="button" role="tab" data-category="notebooks">Тетрадей</button>
+      <button class="bs-chip" type="button" role="tab" data-category="writing">Ручек</button>
+      <button class="bs-chip" type="button" role="tab" data-category="art">Творчества</button>
+      <button class="bs-chip" type="button" role="tab" data-category="paper">Бумаги</button>
+      <button class="bs-chip" type="button" role="tab" data-category="organizers">Органайзеров</button>
+    </div>
+  </section>
+
+  <section class="products bs-products" id="bestsellersProducts" aria-live="polite">
+    <p class="empty-state">Загружаем хиты продаж...</p>
+  </section>
+
+  <section class="bs-empty" id="bsEmpty" hidden>
+    <div class="bs-empty__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L9 9H2l6 5-3 7 7-4 7 4-3-7 6-5h-7l-3-7z"/>
+      </svg>
+    </div>
+    <h3>В этой категории пока нет хитов</h3>
+    <p>Попробуйте другую категорию или посмотрите полный топ — там точно что-то приглянётся.</p>
+    <div class="bs-empty__actions">
+      <button type="button" class="btn btn--primary" id="bsShowAll">
+        <i class="bi bi-stars" aria-hidden="true"></i>
+        <span>Все хиты</span>
+      </button>
+      <a class="btn btn--ghost" href="{% url 'catalog' %}">
+        <i class="bi bi-grid" aria-hidden="true"></i>
+        <span>В каталог</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="bs-testimonial reveal" aria-label="Отзыв">
+    <div class="bs-testimonial__quote" aria-hidden="true">“</div>
+    <blockquote>
+      <p>Взяла блокноты для всей команды — пришли красиво упакованные, качество заметно выше средних офисных. Пользуемся уже третий месяц, коллеги просят ещё.</p>
+      <footer>
+        <span class="bs-testimonial__avatar" aria-hidden="true">АМ</span>
+        <span class="bs-testimonial__author">
+          <strong>Анна М.</strong>
+          <span>HR, продуктовая команда</span>
+        </span>
+      </footer>
+    </blockquote>
+    <div class="bs-testimonial__rating" aria-label="Рейтинг 5 из 5">
+      <svg viewBox="0 0 16 16" fill="#f59e0b" width="22" height="22"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/></svg>
+      <svg viewBox="0 0 16 16" fill="#f59e0b" width="22" height="22"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/></svg>
+      <svg viewBox="0 0 16 16" fill="#f59e0b" width="22" height="22"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/></svg>
+      <svg viewBox="0 0 16 16" fill="#f59e0b" width="22" height="22"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/></svg>
+      <svg viewBox="0 0 16 16" fill="#f59e0b" width="22" height="22"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/></svg>
+    </div>
+  </section>
+
+  <section class="bs-cta reveal">
+    <div class="bs-cta__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+    </div>
+    <div class="bs-cta__text">
+      <h2>Не нашли то, что искали?</h2>
+      <p>В полном каталоге — больше 40 товаров с удобными фильтрами по бренду, цене и назначению.</p>
+    </div>
+    <div class="bs-cta__actions">
+      <a class="btn btn--primary" href="{% url 'catalog' %}">
+        <i class="bi bi-grid" aria-hidden="true"></i>
+        <span>Весь каталог</span>
+      </a>
+      <a class="btn btn--ghost" href="{% url 'promotions' %}">
+        <i class="bi bi-tag" aria-hidden="true"></i>
+        <span>Акции</span>
+      </a>
+    </div>
   </section>
 </div>
 {% endblock %}

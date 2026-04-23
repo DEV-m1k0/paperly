@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let deliveryTariffs = [];
   let pickupPoints = [];
   let serverCart = null; // { id, items: [{id, product, quantity, price_snapshot}] }
+  let appliedPromo = null; // { code, discount, free_shipping, message, discount_type }
 
   // ---------- Helpers ----------
   function totalQty() {
@@ -45,14 +46,120 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderSummary() {
     const amount = totalAmount();
-    const delivery = getDeliveryPrice();
-    const total = amount + delivery;
+    let delivery = getDeliveryPrice();
+    const rows = [
+      `<div class="summary-row"><span>Товары (${totalQty()} шт)</span><strong>${formatMoney(amount)}</strong></div>`,
+    ];
 
-    summaryNode.innerHTML = `
-      <div class="summary-row"><span>Товары (${totalQty()} шт)</span><strong>${formatMoney(amount)}</strong></div>
-      <div class="summary-row"><span>Доставка</span><strong>${delivery ? formatMoney(delivery) : "0 ₽"}</strong></div>
-      <div class="summary-row"><span>Итого</span><strong>${formatMoney(total)}</strong></div>
-    `;
+    if (appliedPromo?.free_shipping) {
+      rows.push(`<div class="summary-row"><span>Доставка</span><strong>Бесплатно</strong></div>`);
+      delivery = 0;
+    } else {
+      rows.push(`<div class="summary-row"><span>Доставка</span><strong>${delivery ? formatMoney(delivery) : "0 ₽"}</strong></div>`);
+    }
+
+    let total = amount + delivery;
+    if (appliedPromo && !appliedPromo.free_shipping && appliedPromo.discount > 0) {
+      rows.push(`<div class="summary-row summary-row--discount"><span>Промокод ${appliedPromo.code}</span><strong>−${formatMoney(appliedPromo.discount)}</strong></div>`);
+      total = Math.max(0, total - appliedPromo.discount);
+    }
+
+    rows.push(`<div class="summary-row"><span>Итого</span><strong>${formatMoney(total)}</strong></div>`);
+    summaryNode.innerHTML = rows.join("");
+  }
+
+  // ---------- Promo code ----------
+  function renderPromoUI() {
+    const appliedBlock = document.getElementById("promoApplied");
+    const applyBtn = document.getElementById("promoApplyBtn");
+    const inputEl = document.getElementById("promoCodeInput");
+    const codeEl = document.getElementById("promoAppliedCode");
+    const msgEl = document.getElementById("promoAppliedMessage");
+    const statusEl = document.getElementById("promoStatus");
+
+    if (appliedPromo) {
+      if (inputEl) { inputEl.value = appliedPromo.code; inputEl.disabled = true; }
+      if (applyBtn) applyBtn.hidden = true;
+      if (appliedBlock) appliedBlock.hidden = false;
+      if (codeEl) codeEl.textContent = appliedPromo.code;
+      if (msgEl) msgEl.textContent = appliedPromo.message || "Скидка применена";
+      if (statusEl) statusEl.hidden = true;
+    } else {
+      if (inputEl) inputEl.disabled = false;
+      if (applyBtn) applyBtn.hidden = false;
+      if (appliedBlock) appliedBlock.hidden = true;
+    }
+  }
+
+  function cartPayloadForPromo() {
+    return {
+      items: items
+        .filter((it) => /^\d+$/.test(String(it.id)))
+        .map((it) => ({ product: Number(it.id), quantity: it.qty, unit_price: it.price })),
+      delivery_price: getDeliveryPrice(),
+      email: (document.getElementById("email")?.value || "").trim(),
+    };
+  }
+
+  async function applyPromoCode(rawCode) {
+    const code = (rawCode || "").trim().toUpperCase();
+    const statusEl = document.getElementById("promoStatus");
+    const applyBtn = document.getElementById("promoApplyBtn");
+    if (!code) {
+      if (statusEl) { statusEl.hidden = false; statusEl.className = "promo-box__status is-error"; statusEl.textContent = "Введите промокод."; }
+      return;
+    }
+    if (!items.length) {
+      if (statusEl) { statusEl.hidden = false; statusEl.className = "promo-box__status is-error"; statusEl.textContent = "Корзина пуста."; }
+      return;
+    }
+
+    if (statusEl) { statusEl.hidden = false; statusEl.className = "promo-box__status is-pending"; statusEl.textContent = "Проверяем промокод..."; }
+    if (applyBtn) applyBtn.disabled = true;
+
+    try {
+      const response = await apiFetch("/api/promo-codes/validate/", {
+        method: "POST",
+        body: { code, ...cartPayloadForPromo() },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && data.valid) {
+        appliedPromo = {
+          code: data.code,
+          discount: Number(data.discount || 0),
+          free_shipping: Boolean(data.free_shipping),
+          discount_type: data.discount_type,
+          message: data.message,
+        };
+        if (statusEl) statusEl.hidden = true;
+        renderPromoUI();
+        renderSummary();
+      } else {
+        appliedPromo = null;
+        if (statusEl) {
+          statusEl.hidden = false;
+          statusEl.className = "promo-box__status is-error";
+          statusEl.textContent = data.message || "Не удалось применить промокод.";
+        }
+        renderPromoUI();
+        renderSummary();
+      }
+    } catch {
+      appliedPromo = null;
+      if (statusEl) { statusEl.hidden = false; statusEl.className = "promo-box__status is-error"; statusEl.textContent = "Сетевая ошибка. Попробуйте ещё раз."; }
+    } finally {
+      if (applyBtn) applyBtn.disabled = false;
+    }
+  }
+
+  function removePromoCode() {
+    appliedPromo = null;
+    const inputEl = document.getElementById("promoCodeInput");
+    if (inputEl) inputEl.value = "";
+    const statusEl = document.getElementById("promoStatus");
+    if (statusEl) statusEl.hidden = true;
+    renderPromoUI();
+    renderSummary();
   }
 
   function renderItems() {
@@ -133,12 +240,15 @@ document.addEventListener("DOMContentLoaded", () => {
     items = items.map((item) => (item.id === id ? { ...item, qty: Math.max(1, nextQty) } : item));
     renderItems();
     persistCart();
+    // Re-check the promo (new subtotal may cross min-order thresholds).
+    if (appliedPromo) applyPromoCode(appliedPromo.code);
   }
 
   function removeItem(id) {
     items = items.filter((item) => item.id !== id);
     renderItems();
     persistCart();
+    if (appliedPromo) applyPromoCode(appliedPromo.code);
   }
 
   cartItemsNode.addEventListener("click", (event) => {
@@ -183,8 +293,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   deliveryTypeSelect?.addEventListener("change", () => {
     applyDeliveryTypeVisibility();
-    renderSummary();
+    // Re-validate promo because delivery change can alter min-order math / free-shipping.
+    if (appliedPromo) applyPromoCode(appliedPromo.code);
+    else renderSummary();
   });
+
+  // Wire promo-code UI (buttons + enter key)
+  document.getElementById("promoApplyBtn")?.addEventListener("click", () => {
+    applyPromoCode(document.getElementById("promoCodeInput")?.value || "");
+  });
+  document.getElementById("promoCodeInput")?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      applyPromoCode(event.currentTarget.value);
+    }
+  });
+  document.getElementById("promoRemoveBtn")?.addEventListener("click", removePromoCode);
 
   // Sync payment radio -> hidden input
   document.querySelectorAll('input[name="paymentType"]').forEach((radio) => {
@@ -568,8 +692,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const paymentType = document.getElementById("paymentType")?.value;
-    const deliveryPrice = getDeliveryPrice();
-    const total = totalAmount() + deliveryPrice;
+    let deliveryPrice = getDeliveryPrice();
+    if (appliedPromo?.free_shipping) deliveryPrice = 0;
+    let total = totalAmount() + deliveryPrice;
+    if (appliedPromo && !appliedPromo.free_shipping) total = Math.max(0, total - (appliedPromo.discount || 0));
 
     const createAccountCheckbox = document.getElementById("createAccount");
     const accountPasswordInput = document.getElementById("accountPassword");
@@ -618,6 +744,7 @@ document.addEventListener("DOMContentLoaded", () => {
       pickup_point: deliveryType === "pickup" ? pickupPointId : null,
       create_account: wantAccount,
       account_password: wantAccount ? accountPassword : "",
+      promo_code_input: appliedPromo?.code || "",
     };
 
     const amountText = formatMoney(total);

@@ -1,3 +1,5 @@
+import secrets
+
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -553,6 +555,10 @@ class Order(TimeStampedModel):
     delivery_price = models.DecimalField("Стоимость доставки", max_digits=12, decimal_places=2, default=0)
     discount_amount = models.DecimalField("Сумма скидки", max_digits=12, decimal_places=2, default=0)
     total = models.DecimalField("Итого", max_digits=12, decimal_places=2)
+    promo_code = models.ForeignKey(
+        "PromoCode", verbose_name="Промокод", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="orders",
+    )
 
     class Meta:
         ordering = ["-created_at"]
@@ -701,6 +707,7 @@ class SitePage(TimeStampedModel):
         PRIVACY = "privacy", "Политика конфиденциальности"
         TERMS = "terms", "Пользовательское соглашение"
         OFFER = "offer", "Договор оферты"
+        COOKIES = "cookies", "Политика cookie"
 
     title = models.CharField("Заголовок", max_length=255)
     slug = models.SlugField("Слаг", max_length=255, unique=True)
@@ -714,6 +721,255 @@ class SitePage(TimeStampedModel):
 
     def __str__(self) -> str:
         return self.title
+
+
+# ──────────────────────────────────────────────
+# Рассылка (newsletter)
+# ──────────────────────────────────────────────
+class SocialLink(TimeStampedModel):
+    """Icon link in the site footer — Telegram, VK, YouTube, Instagram, etc.
+
+    Admin can upload a custom icon image, or fall back to a Bootstrap Icons
+    class (e.g. ``bi-telegram``). The footer picks the upload if present.
+    """
+
+    label = models.CharField(
+        "Название", max_length=60,
+        help_text="Видно в aria-label. Например: «Telegram», «ВКонтакте».",
+    )
+    url = models.URLField("Ссылка", max_length=300)
+    icon_class = models.CharField(
+        "Bootstrap-иконка", max_length=60, blank=True,
+        help_text="Класс иконки из Bootstrap Icons, например: bi-telegram, bi-youtube. "
+                  "Используется, если не загружена картинка.",
+    )
+    icon_image = models.ImageField(
+        "Иконка (картинка)", upload_to="social-icons/", blank=True, null=True,
+        help_text="PNG/SVG ≈ 48×48. Если загружено — используется вместо bi-класса.",
+    )
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
+    is_active = models.BooleanField("Показывать в футере", default=True)
+
+    class Meta:
+        verbose_name = "Ссылка на соцсеть"
+        verbose_name_plural = "Ссылки на соцсети"
+        ordering = ["sort_order", "label"]
+
+    def __str__(self) -> str:
+        return self.label
+
+    @property
+    def icon_url(self) -> str:
+        try:
+            return self.icon_image.url if self.icon_image else ""
+        except Exception:
+            return ""
+
+
+class PromoCode(TimeStampedModel):
+    """Coupon code a customer can redeem at checkout for a discount."""
+
+    class DiscountType(models.TextChoices):
+        PERCENT = "percent", "Процент от суммы"
+        FIXED = "fixed", "Фиксированная сумма"
+        FREE_SHIPPING = "free_shipping", "Бесплатная доставка"
+
+    class Audience(models.TextChoices):
+        ALL = "all", "Все покупатели"
+        NEW_ONLY = "new_only", "Только для новых клиентов"
+        REGISTERED = "registered", "Только для зарегистрированных"
+
+    code = models.CharField(
+        "Код", max_length=32, unique=True, db_index=True,
+        help_text="Заглавные латиница/цифры. Например: PAPERLY10, SUMMER20.",
+    )
+    description = models.CharField("Описание (для админа)", max_length=200, blank=True)
+
+    discount_type = models.CharField(
+        "Тип скидки", max_length=16, choices=DiscountType.choices, default=DiscountType.PERCENT,
+    )
+    discount_value = models.DecimalField(
+        "Размер", max_digits=10, decimal_places=2, default=0,
+        help_text="Для процента — 1..100. Для фикс. суммы — рубли. Для free_shipping можно 0.",
+    )
+    max_discount_amount = models.DecimalField(
+        "Максимум скидки, ₽", max_digits=10, decimal_places=2, null=True, blank=True,
+        help_text="Необязательный потолок для процентных скидок. Оставьте пустым — без ограничения.",
+    )
+    min_order_amount = models.DecimalField(
+        "Мин. сумма заказа, ₽", max_digits=10, decimal_places=2, default=0,
+        help_text="Заказ ниже этой суммы не принимает промокод.",
+    )
+
+    valid_from = models.DateTimeField("Действует с", null=True, blank=True)
+    valid_until = models.DateTimeField("Действует до", null=True, blank=True)
+
+    usage_limit = models.PositiveIntegerField(
+        "Лимит использований всего", default=0,
+        help_text="0 = без ограничения. После достижения лимита код отключается.",
+    )
+    usage_limit_per_user = models.PositiveIntegerField(
+        "Лимит на пользователя", default=1,
+        help_text="Сколько раз один email может использовать код. 0 = без ограничения.",
+    )
+    used_count = models.PositiveIntegerField("Использовано раз", default=0, editable=False)
+
+    audience = models.CharField(
+        "Для кого", max_length=16, choices=Audience.choices, default=Audience.ALL,
+    )
+
+    applicable_products = models.ManyToManyField(
+        Product, blank=True, related_name="promo_codes",
+        help_text="Код действует только на выбранные товары. Пусто — весь каталог.",
+    )
+    applicable_categories = models.ManyToManyField(
+        "Category", blank=True, related_name="promo_codes",
+        help_text="Код действует только на товары из выбранных категорий.",
+    )
+
+    is_active = models.BooleanField("Активен", default=True)
+    is_public = models.BooleanField(
+        "Публиковать на сайте", default=False,
+        help_text="Показывать на странице /promotions/. Включайте только для «широких» "
+                  "кампаний (сезонные распродажи, баннерные акции). Точечные коды "
+                  "(для рассылок, cart-abandonment, VIP) оставляйте выключенными — "
+                  "они раздаются адресно.",
+    )
+
+    class Meta:
+        verbose_name = "Промокод"
+        verbose_name_plural = "Промокоды"
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return self.code
+
+    def save(self, *args, **kwargs):
+        if self.code:
+            self.code = self.code.strip().upper()
+        super().save(*args, **kwargs)
+
+    # Validation helpers ─────────────────────────────────────────────
+    def is_time_valid(self, now=None) -> bool:
+        from django.utils import timezone
+        now = now or timezone.now()
+        if self.valid_from and now < self.valid_from:
+            return False
+        if self.valid_until and now > self.valid_until:
+            return False
+        return True
+
+    def quota_available(self) -> bool:
+        if self.usage_limit == 0:
+            return True
+        return self.used_count < self.usage_limit
+
+    def user_quota_available(self, *, user=None, email: str = "") -> bool:
+        if self.usage_limit_per_user == 0:
+            return True
+        filters = models.Q()
+        if user and user.is_authenticated:
+            filters |= models.Q(user=user)
+        if email:
+            filters |= models.Q(email__iexact=email.strip())
+        if not filters:
+            return True  # anonymous guest with no email — nothing to check
+        count = self.redemptions.filter(filters).count()
+        return count < self.usage_limit_per_user
+
+
+class PromoCodeRedemption(TimeStampedModel):
+    """Log of every successful promo-code use — powers per-user limits + analytics."""
+
+    promo = models.ForeignKey(PromoCode, verbose_name="Промокод", on_delete=models.CASCADE, related_name="redemptions")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, verbose_name="Пользователь",
+        on_delete=models.SET_NULL, null=True, blank=True, related_name="promo_redemptions",
+    )
+    email = models.EmailField("Email", blank=True)
+    order = models.ForeignKey("Order", verbose_name="Заказ", on_delete=models.CASCADE, related_name="promo_redemptions")
+    amount_discounted = models.DecimalField("Сумма скидки", max_digits=12, decimal_places=2)
+
+    class Meta:
+        verbose_name = "Использование промокода"
+        verbose_name_plural = "Использования промокодов"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["promo", "user"]),
+            models.Index(fields=["promo", "email"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.promo.code} → {self.email or (self.user and self.user.email) or '—'}"
+
+
+class NewsletterSubscriber(TimeStampedModel):
+    """Stores an opted-in email address for marketing emails."""
+
+    email = models.EmailField("Email", unique=True)
+    is_active = models.BooleanField("Активна", default=True, help_text="Снимается при отписке.")
+    source = models.CharField(
+        "Источник", max_length=64, default="footer", blank=True,
+        help_text="Где оставили email: footer, checkout, manual...",
+    )
+    unsubscribe_token = models.CharField(
+        max_length=64, unique=True, editable=False,
+        help_text="Секретный токен для ссылки отписки.",
+    )
+    unsubscribed_at = models.DateTimeField("Отписался", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Подписчик рассылки"
+        verbose_name_plural = "Подписчики рассылки"
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return self.email
+
+    def save(self, *args, **kwargs):
+        if not self.unsubscribe_token:
+            self.unsubscribe_token = secrets.token_urlsafe(32)
+        super().save(*args, **kwargs)
+
+
+class NewsletterCampaign(TimeStampedModel):
+    """Admin-created campaign that gets emailed to all active subscribers."""
+
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Черновик"
+        SENDING = "sending", "Отправляется"
+        SENT = "sent", "Отправлено"
+
+    subject = models.CharField("Тема письма", max_length=200)
+    preview = models.CharField(
+        "Превью-строка", max_length=200, blank=True,
+        help_text="Короткая строка, которую показывают почтовые клиенты рядом с темой.",
+    )
+    heading = models.CharField("Заголовок в письме", max_length=200)
+    intro_html = models.TextField(
+        "Вступление (HTML)", blank=True,
+        help_text="Основной текст перед карточками товаров. Разрешён базовый HTML.",
+    )
+    cta_label = models.CharField("Текст кнопки", max_length=60, default="Перейти в каталог")
+    cta_url = models.CharField(
+        "Ссылка кнопки", max_length=300, default="/catalog/",
+        help_text="Абсолютная ссылка или относительная (будет преобразована).",
+    )
+    featured_products = models.ManyToManyField(
+        Product, blank=True, related_name="campaigns",
+        help_text="До 6 товаров, которые покажутся в письме карточками.",
+    )
+    status = models.CharField("Статус", max_length=16, choices=Status.choices, default=Status.DRAFT)
+    sent_at = models.DateTimeField("Отправлено", null=True, blank=True)
+    sent_count = models.PositiveIntegerField("Доставлено писем", default=0)
+
+    class Meta:
+        verbose_name = "Рассылка (кампания)"
+        verbose_name_plural = "Рассылки (кампании)"
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return self.subject
 
 
 # ──────────────────────────────────────────────

@@ -7,9 +7,70 @@ from django.db import IntegrityError, transaction
 from django.db.models import F
 from rest_framework import serializers
 
-from shop.models import Cart, CartItem, CustomerProfile, Order, OrderItem, Product
+from shop.models import Address, Cart, CartItem, CustomerProfile, Order, OrderItem, Product
+
+from .promo import PromoError, apply_promo, record_redemption
 
 User = get_user_model()
+
+
+def _sync_profile_from_order(user, order) -> None:
+    """Backfill the customer's profile/address from the order — but only for
+    fields that are empty. Never overwrite data the user has already saved.
+
+    Runs for authenticated buyers whenever an order lands so the next checkout
+    is faster: phone/name/address get captured the first time they enter them.
+    """
+    if not user or not user.is_authenticated:
+        return
+
+    profile, _ = CustomerProfile.objects.get_or_create(user=user)
+
+    # ── Name → profile.first_name/last_name + User.first_name/last_name ──
+    parsed_first = parsed_last = ""
+    full_name = (order.full_name or "").strip()
+    if full_name:
+        parsed_first, _, parsed_last = full_name.partition(" ")
+
+    changed_profile: list[str] = []
+    if not profile.first_name and parsed_first:
+        profile.first_name = parsed_first
+        changed_profile.append("first_name")
+    if not profile.last_name and parsed_last:
+        profile.last_name = parsed_last
+        changed_profile.append("last_name")
+    if not profile.phone and order.phone:
+        profile.phone = order.phone
+        changed_profile.append("phone")
+    if changed_profile:
+        profile.save(update_fields=changed_profile + ["updated_at"])
+
+    changed_user: list[str] = []
+    if not user.first_name and parsed_first:
+        user.first_name = parsed_first
+        changed_user.append("first_name")
+    if not user.last_name and parsed_last:
+        user.last_name = parsed_last
+        changed_user.append("last_name")
+    if not user.email and order.email:
+        user.email = order.email
+        changed_user.append("email")
+    if changed_user:
+        user.save(update_fields=changed_user)
+
+    # ── Shipping address → create if none exists yet (courier orders only) ──
+    # Pickup orders store the PVZ name/address in `order.address`, not the user's home.
+    if order.delivery_type == Order.DeliveryType.COURIER and order.city and order.address:
+        has_shipping = profile.addresses.filter(address_type=Address.AddressType.SHIPPING).exists()
+        if not has_shipping:
+            Address.objects.create(
+                profile=profile,
+                address_type=Address.AddressType.SHIPPING,
+                city=order.city,
+                street=order.address,
+                comment=order.comment or "",
+                is_default=True,
+            )
 
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -88,6 +149,11 @@ class OrderSerializer(serializers.ModelSerializer):
     create_account = serializers.BooleanField(required=False, default=False, write_only=True)
     account_password = serializers.CharField(required=False, allow_blank=True, write_only=True, trim_whitespace=False)
     account_created = serializers.BooleanField(read_only=True, required=False)
+    promo_code_input = serializers.CharField(
+        required=False, allow_blank=True, write_only=True, source="_promo_code_input",
+        help_text="Code typed by the customer in checkout.",
+    )
+    promo_code_applied = serializers.CharField(read_only=True, required=False)
 
     class Meta:
         model = Order
@@ -97,6 +163,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "pickup_point", "subtotal", "delivery_price", "discount_amount",
             "total", "items", "created_at",
             "create_account", "account_password", "account_created",
+            "promo_code_input", "promo_code_applied",
         ]
         read_only_fields = ('user', 'number', 'subtotal', 'total')
 
@@ -163,6 +230,7 @@ class OrderSerializer(serializers.ModelSerializer):
         items_data = validated_data.pop('items')
         create_account = validated_data.pop('create_account', False)
         password = validated_data.pop('account_password', '') or ''
+        promo_code_input = (validated_data.pop('_promo_code_input', '') or '').strip()
         request = self.context.get("request")
 
         # ───── Optional: создаём аккаунт + логиним пользователя в сессию ─────
@@ -223,8 +291,36 @@ class OrderSerializer(serializers.ModelSerializer):
 
         validated_data['subtotal'] = subtotal
         delivery_price = validated_data.get('delivery_price', Decimal('0'))
-        discount_amount = validated_data.get('discount_amount', Decimal('0'))
-        validated_data['total'] = subtotal + delivery_price - discount_amount
+
+        # ───── Apply promo code (re-validated server-side) ─────
+        promo_application = None
+        if promo_code_input:
+            try:
+                promo_application = apply_promo(
+                    promo_code_input,
+                    subtotal=subtotal,
+                    delivery_price=delivery_price,
+                    items=items_data,
+                    user=validated_data.get('user'),
+                    email=(validated_data.get('email') or '').strip(),
+                )
+            except PromoError as exc:
+                raise serializers.ValidationError({"promo_code_input": str(exc)})
+
+        if promo_application:
+            if promo_application.free_shipping:
+                validated_data['delivery_price'] = Decimal('0')
+                delivery_price = Decimal('0')
+                validated_data['discount_amount'] = Decimal('0')
+                discount_amount = Decimal('0')
+            else:
+                validated_data['discount_amount'] = promo_application.discount
+                discount_amount = promo_application.discount
+            validated_data['promo_code'] = promo_application.promo
+        else:
+            discount_amount = validated_data.get('discount_amount', Decimal('0'))
+
+        validated_data['total'] = max(Decimal('0'), subtotal + delivery_price - discount_amount)
 
         try:
             order = Order.objects.create(**validated_data)
@@ -243,6 +339,20 @@ class OrderSerializer(serializers.ModelSerializer):
                 item_data['sku_snapshot'] = product.sku
             OrderItem.objects.create(order=order, **item_data)
             Product.objects.filter(pk=product.pk).update(stock=F('stock') - quantity)
+
+        # Record promo redemption (atomic: bumps used_count + creates log row)
+        if promo_application:
+            record_redemption(
+                promo_application,
+                order=order,
+                user=validated_data.get('user'),
+                email=validated_data.get('email', ''),
+            )
+            order.promo_code_applied = promo_application.promo.code  # type: ignore[attr-defined]
+
+        # Backfill customer profile + address from this order where empty.
+        # Covers both freshly-registered and pre-existing authenticated users.
+        _sync_profile_from_order(validated_data.get('user'), order)
 
         # Stash flag on instance so serializer renders `account_created` in response.
         order.account_created = account_created  # type: ignore[attr-defined]

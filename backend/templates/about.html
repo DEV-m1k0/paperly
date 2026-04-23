@@ -3,8 +3,12 @@
 
 {% block title %}{{ site.site_name|default:"Paperly" }} — {{ page_title|default:"О магазине" }}{% endblock %}
 
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/about.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="container page">
+<div class="container page about-page">
   <div class="breadcrumbs">
     <a href="{% url 'home' %}">Главная</a>
     <span>/</span>

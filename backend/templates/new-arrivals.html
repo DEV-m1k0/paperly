@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ site.site_name|default:"Paperly" }} — Новинки{% endblock %}
+{% block title %}{{ site.site_name|default:"Paperly" }} — Новинки каталога{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/new-arrivals.css' %}">
@@ -9,11 +9,112 @@
 {% endblock %}
 
 {% block content %}
-<div class="container page">
-  <h1>Новинки</h1>
-  <p class="lead">Свежие товары за последние 3 дня.</p>
-  <section class="products" id="newArrivalsProducts" aria-live="polite">
+<div class="container page new-arrivals-page">
+  <div class="breadcrumbs">
+    <a href="{% url 'home' %}">Главная</a>
+    <span>/</span>
+    <a href="{% url 'catalog' %}">Каталог</a>
+    <span>/</span>
+    <span>Новинки</span>
+  </div>
+
+  <section class="na-hero reveal">
+    <div class="na-hero__bg" aria-hidden="true">
+      <span class="na-blob na-blob--teal"></span>
+      <span class="na-blob na-blob--amber"></span>
+      <span class="na-blob na-blob--mint"></span>
+    </div>
+    <div class="na-hero__content">
+      <p class="eyebrow na-hero__eyebrow">
+        <span class="na-pulse" aria-hidden="true"></span>
+        Только что на полках
+      </p>
+      <h1 class="na-hero__title">
+        Свежие <span class="accent">поступления</span> —<br>
+        <em>выбирайте первыми</em>
+      </h1>
+      <p class="na-hero__lead">
+        Каждую неделю пополняем каталог новыми тетрадями, блокнотами и канцелярскими мелочами.
+        Всё, что появилось за последние дни — на этой странице.
+      </p>
+      <ul class="na-hero__stats" id="naStats">
+        <li>
+          <span class="na-hero__stats-num" id="naStatCount">—</span>
+          <span class="na-hero__stats-label">позиций в подборке</span>
+        </li>
+        <li>
+          <span class="na-hero__stats-num">Еженедельно</span>
+          <span class="na-hero__stats-label">обновляем ассортимент</span>
+        </li>
+        <li>
+          <span class="na-hero__stats-num">10+</span>
+          <span class="na-hero__stats-label">брендов в наличии</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="na-controls reveal" aria-label="Фильтр по периоду">
+    <div class="na-controls__label">
+      <i class="bi bi-calendar-week" aria-hidden="true"></i>
+      Показать новинки за:
+    </div>
+    <div class="na-chips" role="tablist">
+      <button class="na-chip" type="button" role="tab" data-period="3">3 дня</button>
+      <button class="na-chip is-active" type="button" role="tab" data-period="7" aria-selected="true">Неделю</button>
+      <button class="na-chip" type="button" role="tab" data-period="14">2 недели</button>
+      <button class="na-chip" type="button" role="tab" data-period="30">Месяц</button>
+    </div>
+  </section>
+
+  <section class="products na-products" id="newArrivalsProducts" aria-live="polite">
     <p class="empty-state">Загрузка новинок...</p>
+  </section>
+
+  <section class="na-empty" id="naEmpty" hidden>
+    <div class="na-empty__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="5" width="18" height="16" rx="2"/>
+        <path d="M3 9h18"/>
+        <path d="M8 3v4"/>
+        <path d="M16 3v4"/>
+        <path d="M9 15l2 2 4-4"/>
+      </svg>
+    </div>
+    <h3>За выбранный период новинок нет</h3>
+    <p>Попробуйте расширить период или загляните в основной каталог — там много интересного.</p>
+    <div class="na-empty__actions">
+      <button type="button" class="btn btn--primary" id="naEmptyExpand">
+        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+        <span>Показать за месяц</span>
+      </button>
+      <a class="btn btn--ghost" href="{% url 'catalog' %}">
+        <i class="bi bi-grid" aria-hidden="true"></i>
+        <span>В каталог</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="na-notify reveal" aria-label="Подписка на новинки">
+    <div class="na-notify__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </div>
+    <div class="na-notify__text">
+      <h3>Будьте первыми в курсе</h3>
+      <p>Раз в 2 недели присылаем подборку новинок и персональные промокоды. Отписаться можно в один клик.</p>
+    </div>
+    <form class="na-notify__form" id="naSubscribeForm" novalidate>
+      <label class="visually-hidden" for="naSubscribeInput">Email</label>
+      <input id="naSubscribeInput" type="email" name="email" placeholder="Ваш email" autocomplete="email" required>
+      <button type="submit" class="btn btn--primary">
+        <i class="bi bi-send" aria-hidden="true"></i>
+        <span>Подписаться</span>
+      </button>
+    </form>
+    <p class="na-notify__status" id="naSubscribeStatus" role="status" aria-live="polite" hidden></p>
   </section>
 </div>
 {% endblock %}

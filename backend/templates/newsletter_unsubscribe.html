@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Отписка от рассылки — {{ site.site_name|default:"Paperly" }}{% endblock %}
+
+{% block page_css %}<link rel="stylesheet" href="{% static 'css/legal.css' %}">{% endblock %}
+
+{% block content %}
+<section class="legal-page">
+  <div class="container">
+    <div class="legal-shell" style="max-width:640px; margin-inline:auto; text-align:center;">
+      <span class="eyebrow">Рассылка</span>
+
+      {% if state == "confirm" %}
+        <h1>Отписаться от рассылки?</h1>
+        <p class="legal-lead">Адрес <strong>{{ email }}</strong> больше не будет получать письма от {{ site.site_name|default:"Paperly" }}.</p>
+        <form method="post" style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:24px;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn--primary">
+            <i class="bi bi-envelope-slash" aria-hidden="true"></i>
+            <span>Да, отписаться</span>
+          </button>
+          <a href="{% url 'home' %}" class="btn btn--ghost">Передумал(а)</a>
+        </form>
+
+      {% elif state == "done" %}
+        <h1>Вы отписаны</h1>
+        <p class="legal-lead">Адрес <strong>{{ email }}</strong> удалён из списка рассылки. Передумаете — всегда можно подписаться снова внизу страницы.</p>
+        <a href="{% url 'home' %}" class="btn btn--primary" style="margin-top:18px;">
+          <i class="bi bi-arrow-left" aria-hidden="true"></i>
+          <span>На главную</span>
+        </a>
+
+      {% elif state == "already" %}
+        <h1>Уже отписаны</h1>
+        <p class="legal-lead">Адрес <strong>{{ email }}</strong> уже не получает рассылку. Письма вам больше не приходят.</p>
+        <a href="{% url 'home' %}" class="btn btn--primary" style="margin-top:18px;">На главную</a>
+
+      {% else %}
+        <h1>Ссылка недействительна</h1>
+        <p class="legal-lead">Возможно, вы уже отписались или ссылка устарела. Напишите нам на <a href="mailto:{{ site.email }}">{{ site.email }}</a>, мы разберёмся.</p>
+        <a href="{% url 'home' %}" class="btn btn--primary" style="margin-top:18px;">На главную</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

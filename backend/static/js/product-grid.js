@@ -3,7 +3,11 @@
   "use strict";
   const P = window.paperly;
 
-  const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=900&q=80";
+  // Локальный SVG-плейсхолдер (брендовый, tiny, работает оффлайн).
+  // Используется если у товара вдруг нет ни одной картинки —
+  // нормально у засеянных товаров картинка всегда есть (seed_demo_data
+  // либо берёт файл из media/, либо генерит Pillow'ом плейсхолдер).
+  const FALLBACK_IMAGE = "/static/img/placeholder-product.svg";
 
   function primaryImage(product) {
     return product.images?.[0]?.image_url || FALLBACK_IMAGE;
@@ -157,7 +161,11 @@
       if (button.dataset.bound === "true") return;
       button.dataset.bound = "true";
 
-      button.addEventListener("click", () => {
+      button.addEventListener("click", (event) => {
+        // Stop the click from bubbling to the card's navigation handler —
+        // otherwise a click on "В корзину" also opens the product page.
+        event.preventDefault();
+        event.stopPropagation();
         if (typeof window.paperlyAddToCart === "function") {
           window.paperlyAddToCart(button);
         }

@@ -98,6 +98,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const trigger = event.target.closest("button.add, button.add-to-cart, button.add-btn, #addToCart, .add");
       if (!trigger || trigger.dataset.cartBound === "true" || event.defaultPrevented) return;
 
+      // Keep the click from bubbling to the surrounding card (which would
+      // navigate to the product page) or to any wrapping anchor.
+      event.preventDefault();
+      event.stopPropagation();
+
       let quantity = 1;
       if (trigger.id === "addToCart") {
         const qtyInput = document.getElementById("qtyInput");
@@ -117,6 +122,55 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     true
   );
+
+  // --- Footer newsletter subscription ---
+  const subscribeForm = document.getElementById("footerSubscribeForm");
+  const subscribeStatus = document.getElementById("footerSubscribeStatus");
+  if (subscribeForm) {
+    subscribeForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const input = subscribeForm.querySelector('input[type="email"]');
+      const submitBtn = subscribeForm.querySelector("button[type='submit']");
+      const email = (input?.value || "").trim();
+      if (!email) return;
+
+      if (subscribeStatus) {
+        subscribeStatus.hidden = false;
+        subscribeStatus.className = "site-footer__status is-pending";
+        subscribeStatus.textContent = "Отправляем...";
+      }
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        const response = await P.apiFetch("/api/newsletter/subscribe/", {
+          method: "POST",
+          body: { email, source: "footer" },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok) {
+          if (subscribeStatus) {
+            subscribeStatus.className = "site-footer__status is-success";
+            subscribeStatus.textContent = data.message || "Готово — проверьте почту!";
+          }
+          subscribeForm.reset();
+        } else {
+          const fieldError = Array.isArray(data.email) ? data.email[0] : null;
+          const msg = fieldError || data.detail || data.message || "Не удалось подписаться. Попробуйте позже.";
+          if (subscribeStatus) {
+            subscribeStatus.className = "site-footer__status is-error";
+            subscribeStatus.textContent = msg;
+          }
+        }
+      } catch (err) {
+        if (subscribeStatus) {
+          subscribeStatus.className = "site-footer__status is-error";
+          subscribeStatus.textContent = "Сетевая ошибка. Проверьте подключение.";
+        }
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
+  }
 
   // --- Animations on scroll ---
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;

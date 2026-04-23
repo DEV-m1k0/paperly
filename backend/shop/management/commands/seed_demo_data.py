@@ -1,6 +1,8 @@
+import hashlib
 import random
 import shutil
 from datetime import timedelta
+from io import BytesIO
 from pathlib import Path
 
 from django.conf import settings
@@ -45,8 +47,11 @@ from shop.models import (
 
 MEDIA_SRC = Path(settings.BASE_DIR) / "media"
 
-# Each product gets its own unique image by SKU
-# Images are stored in media/products/{SKU}.jpg
+# Each product/blog/category gets its own unique local image.
+# Реальные JPG лежат в backend/media/{products,blog,categories,brands}/...
+# (они трекаются в git специально — см. .gitignore).
+# Если конкретного файла нет — генерим плейсхолдер Pillow'ом на лету,
+# так что на Render ничего никогда не ломается.
 
 CATEGORY_IMAGES = {
     "paper": "categories/paper.jpg",
@@ -54,6 +59,18 @@ CATEGORY_IMAGES = {
     "art": "categories/art.jpg",
     "office": "categories/office.jpg",
     "kids": "categories/kids.jpg",
+}
+
+# Цветовая палитра для plaseholder'ов по категории товара (SKU-prefix → цвет).
+# Подобрано под брендинг Paperly (teal + янтарный акцент).
+PLACEHOLDER_COLORS = {
+    "NB": ("#0e766e", "#14a398"),   # тетради — teal
+    "PP": ("#0a5f58", "#0e766e"),   # бумага — тёмный teal
+    "WR": ("#f59e0b", "#fbbf24"),   # ручки/карандаши — янтарный
+    "AR": ("#e85d75", "#f27a8b"),   # художка — розовый
+    "OF": ("#475569", "#64748b"),   # офис — графитовый
+    "KD": ("#7c3aed", "#a78bfa"),   # школа/дети — фиолетовый
+    "_default": ("#0e766e", "#14a398"),
 }
 
 BLOG_IMAGES = ["blog/blog_01.jpg", "blog/blog_02.jpg", "blog/blog_03.jpg", "blog/blog_04.jpg", "blog/blog_05.jpg"]
@@ -78,14 +95,142 @@ REVIEW_TEXTS = [
 ]
 
 
-def _attach_image(instance, field_name, src_path):
-    """Set model's ImageField to point at an existing file in MEDIA_ROOT."""
+def _hex_to_rgb(hex_color):
+    hex_color = hex_color.lstrip("#")
+    return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+
+
+def _generate_placeholder_jpg(dest_path: Path, label: str, subtitle: str = "", palette_key: str = "_default"):
+    """Draw a 600×600 JPG placeholder: градиент + центрированный текст.
+
+    Запускается только если реального файла нет (когда конкретная картинка
+    не была подготовлена вручную, либо её удалили из media/).
+    """
+    from PIL import Image, ImageDraw, ImageFont
+
+    start_hex, end_hex = PLACEHOLDER_COLORS.get(palette_key, PLACEHOLDER_COLORS["_default"])
+    start = _hex_to_rgb(start_hex)
+    end = _hex_to_rgb(end_hex)
+
+    size = 600
+    img = Image.new("RGB", (size, size), start)
+    draw = ImageDraw.Draw(img)
+
+    # Диагональный градиент
+    for y in range(size):
+        ratio = y / size
+        r = int(start[0] * (1 - ratio) + end[0] * ratio)
+        g = int(start[1] * (1 - ratio) + end[1] * ratio)
+        b = int(start[2] * (1 - ratio) + end[2] * ratio)
+        draw.line([(0, y), (size, y)], fill=(r, g, b))
+
+    # Декоративный круг в углу — добавляет визуального интереса
+    draw.ellipse([size - 180, -60, size + 120, 240], fill=(255, 255, 255, 40), outline=None)
+
+    # Шрифты — ищем кириллический TTF. Порядок важен: сначала Linux
+    # (Render = Ubuntu, DejaVu всегда есть), потом macOS, потом Windows.
+    # Дефолтный PIL bitmap-шрифт кириллицу не поддерживает, поэтому если
+    # вдруг ничего не нашли — показываем только SKU-подпись латиницей.
+    _font_candidates_bold = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
+        "/Library/Fonts/Arial Bold.ttf",
+        "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+        "C:/Windows/Fonts/arialbd.ttf",
+        "C:/Windows/Fonts/segoeuib.ttf",
+        "DejaVuSans-Bold.ttf",                  # в PATH
+    ]
+    _font_candidates_regular = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/TTF/DejaVuSans.ttf",
+        "/Library/Fonts/Arial.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "C:/Windows/Fonts/arial.ttf",
+        "C:/Windows/Fonts/segoeui.ttf",
+        "DejaVuSans.ttf",
+    ]
+
+    def _load_font(paths, size):
+        for p in paths:
+            try:
+                return ImageFont.truetype(p, size)
+            except (OSError, IOError):
+                continue
+        return None
+
+    font_title = _load_font(_font_candidates_bold, 42)
+    font_sub = _load_font(_font_candidates_regular, 24)
+    cyrillic_ok = font_title is not None
+    if font_title is None:
+        font_title = ImageFont.load_default()
+    if font_sub is None:
+        font_sub = ImageFont.load_default()
+
+    # Если кириллического шрифта не нашли — заменяем заголовок на SKU,
+    # чтобы не рисовать "квадраты" вместо текста
+    if not cyrillic_ok and subtitle:
+        label, subtitle = subtitle, ""
+
+    # Вписываем заголовок в 3 строки максимум
+    words = label.split()
+    lines, line = [], ""
+    for w in words:
+        test = (line + " " + w).strip()
+        if len(test) > 22 and line:
+            lines.append(line)
+            line = w
+        else:
+            line = test
+    if line:
+        lines.append(line)
+    lines = lines[:3]
+
+    total_h = len(lines) * 52
+    y0 = (size - total_h) // 2 - 20
+    for i, ln in enumerate(lines):
+        bbox = draw.textbbox((0, 0), ln, font=font_title)
+        w = bbox[2] - bbox[0]
+        draw.text(((size - w) // 2, y0 + i * 52), ln, fill="white", font=font_title)
+
+    if subtitle:
+        bbox = draw.textbbox((0, 0), subtitle, font=font_sub)
+        w = bbox[2] - bbox[0]
+        draw.text(((size - w) // 2, y0 + total_h + 20), subtitle, fill=(255, 255, 255, 200), font=font_sub)
+
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(dest_path, format="JPEG", quality=82, optimize=True)
+
+
+def _attach_image(instance, field_name, src_path, *, label=None, subtitle=None, palette_key="_default", stdout=None):
+    """Set model's ImageField to point at a file in MEDIA_ROOT.
+
+    Если файл уже есть (например, закоммичен в git и доехал на сервер) —
+    просто присваиваем относительный путь полю. Если нет — генерим
+    plausible-placeholder через Pillow и кладём в MEDIA_ROOT, чтобы
+    карточки товаров никогда не были пустыми.
+    """
     full_path = MEDIA_SRC / src_path
     if not full_path.exists():
-        return
-    # Just set the relative path — the file already exists in MEDIA_ROOT
+        if label is None:
+            # Нет данных для плейсхолдера — нечем заполнить, пропускаем
+            if stdout:
+                stdout.write(f"  [skip] Нет картинки {src_path}, нет label для fallback")
+            return
+        if stdout:
+            stdout.write(f"  [gen]  Генерим плейсхолдер {src_path} для '{label}'")
+        try:
+            _generate_placeholder_jpg(full_path, label, subtitle or "", palette_key)
+        except Exception as e:
+            if stdout:
+                stdout.write(f"  [err]  Не удалось сгенерить {src_path}: {e}")
+            return
+
     setattr(instance, field_name, src_path)
-    instance.save(update_fields=[field_name, "updated_at"])
+    # update_at не у всех моделей — сохраняем без update_fields, чтобы не падать
+    try:
+        instance.save(update_fields=[field_name, "updated_at"])
+    except Exception:
+        instance.save()
 
 
 class Command(BaseCommand):
@@ -94,38 +239,45 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--reset", action="store_true", help="Delete old demo entities before seeding")
 
-    @transaction.atomic
     def handle(self, *args, **options):
+        # Каждая секция — в своей транзакции + try/except. Так если одна
+        # упадёт (например, валидация новой модели), остальные — в т.ч.
+        # привязка картинок к товарам/блогу — сохранятся.
         if options["reset"]:
             self.stdout.write("Resetting demo entities...")
-            self._reset_data()
+            with transaction.atomic():
+                self._reset_data()
 
-        self.stdout.write("Seeding categories...")
-        categories_map = self._seed_categories()
-        self.stdout.write("Seeding brands...")
-        brands = self._seed_brands()
-        self.stdout.write("Seeding products...")
-        products = self._seed_products(categories_map, brands)
-        self.stdout.write("Seeding marketing...")
-        self._seed_marketing(products)
-        self.stdout.write("Seeding logistics...")
-        self._seed_logistics()
-        self.stdout.write("Seeding content...")
-        self._seed_content()
-        self.stdout.write("Seeding wholesale...")
-        self._seed_wholesale()
-        self.stdout.write("Seeding filters...")
-        self._seed_filters(brands)
-        self.stdout.write("Seeding gift certificates...")
-        self._seed_gift_certificates()
-        self.stdout.write("Seeding customer data...")
-        self._seed_customer_data(products)
-        self.stdout.write("Seeding returns...")
-        self._seed_returns()
-        self.stdout.write("Seeding site settings...")
-        self._seed_site_settings()
+        categories_map, brands, products = None, None, None
 
-        self.stdout.write(self.style.SUCCESS(f"Done! Created {len(products)} products."))
+        def _section(label, fn, *args, **kwargs):
+            self.stdout.write(f"Seeding {label}...")
+            try:
+                with transaction.atomic():
+                    return fn(*args, **kwargs)
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"  ✗ {label} failed: {e}"))
+                return None
+
+        categories_map = _section("categories", self._seed_categories)
+        brands = _section("brands", self._seed_brands)
+        if categories_map is not None and brands is not None:
+            products = _section("products", self._seed_products, categories_map, brands)
+        if products is not None:
+            _section("marketing", self._seed_marketing, products)
+        _section("logistics", self._seed_logistics)
+        _section("content", self._seed_content)
+        _section("wholesale", self._seed_wholesale)
+        if brands is not None:
+            _section("filters", self._seed_filters, brands)
+        _section("gift certificates", self._seed_gift_certificates)
+        if products is not None:
+            _section("customer data", self._seed_customer_data, products)
+        _section("returns", self._seed_returns)
+        _section("site settings", self._seed_site_settings)
+
+        count = len(products) if products else 0
+        self.stdout.write(self.style.SUCCESS(f"Done! Created {count} products."))
 
     def _reset_data(self):
         for model in [
@@ -189,6 +341,9 @@ class Command(BaseCommand):
             },
         }
 
+        # Сопоставление ключа категории → префикс SKU для подбора цвета плейсхолдера
+        palette_for_group = {"paper": "NB", "writing": "WR", "art": "AR", "office": "OF", "kids": "KD"}
+
         categories_map = {}
         for idx, (key, payload) in enumerate(tree.items(), start=1):
             parent, _ = Category.objects.get_or_create(
@@ -197,7 +352,13 @@ class Command(BaseCommand):
             )
             img_path = CATEGORY_IMAGES.get(key)
             if img_path and not parent.image:
-                _attach_image(parent, "image", img_path)
+                _attach_image(
+                    parent, "image", img_path,
+                    label=payload["title"],
+                    subtitle="Paperly",
+                    palette_key=palette_for_group.get(key, "_default"),
+                    stdout=self.stdout,
+                )
             categories_map[key] = [parent]
             for child_idx, child in enumerate(payload["children"], start=1):
                 child_obj, _ = Category.objects.get_or_create(
@@ -229,7 +390,11 @@ class Command(BaseCommand):
                 defaults={"name": name, "description": desc},
             )
             if not brand.logo:
-                _attach_image(brand, "logo", f"brands/{slug}.jpg")
+                _attach_image(
+                    brand, "logo", f"brands/{slug}.jpg",
+                    label=name, subtitle="BRAND",
+                    palette_key="_default", stdout=self.stdout,
+                )
             by_slug[slug] = brand
         return by_slug
 
@@ -320,15 +485,26 @@ class Command(BaseCommand):
                 },
             )
 
-            # Attach unique image by SKU
+            # Привязываем уникальную картинку по SKU. Цвет плейсхолдера —
+            # по префиксу SKU (NB/PP/WR/AR/OF/KD).
             img_file = f"products/{item['sku']}.jpg"
+            sku_prefix = item["sku"].split("-")[0]
             pi1, pi_created1 = ProductImage.objects.get_or_create(
                 product=product,
                 sort_order=1,
                 defaults={"is_primary": True, "alt_text": item["title"]},
             )
-            if pi_created1:
-                _attach_image(pi1, "image", img_file)
+            # Идемпотентно: если у записи нет реального файла — всё равно
+            # вызываем attach, он либо найдёт существующий файл, либо
+            # сгенерит плейсхолдер.
+            if not pi1.image:
+                _attach_image(
+                    pi1, "image", img_file,
+                    label=item["title"],
+                    subtitle=item["sku"],
+                    palette_key=sku_prefix,
+                    stdout=self.stdout,
+                )
 
             # Categories
             for cat in categories_map[item["group"]][:2]:
@@ -532,6 +708,8 @@ class Command(BaseCommand):
              "Тюбики гуаши после вскрытия закрывайте плотно — гуашь быстро засыхает.\n\n"
              "Маркеры и фломастеры храните горизонтально, чтобы чернила распределялись равномерно."),
         ]
+        # Палитра обложек блога — варьируем, чтобы посты не были однотонные
+        blog_palettes = ["NB", "WR", "AR", "OF", "KD", "PP"]
         for idx, (title, cat_key, excerpt, content) in enumerate(posts):
             bp, created = BlogPost.objects.get_or_create(
                 slug=f"post-{idx + 1}",
@@ -544,9 +722,16 @@ class Command(BaseCommand):
                     "published_at": timezone.now() - timedelta(days=idx * 5),
                 },
             )
-            if created:
+            # Идемпотентно: перепривязываем обложку только если её нет
+            if not bp.cover:
                 img_file = f"blog/post_{idx + 1:02d}.jpg"
-                _attach_image(bp, "cover", img_file)
+                _attach_image(
+                    bp, "cover", img_file,
+                    label=title,
+                    subtitle=blog_cats[cat_key].title.upper(),
+                    palette_key=blog_palettes[idx % len(blog_palettes)],
+                    stdout=self.stdout,
+                )
 
         pages = [
             (SitePage.PageType.INDEX, "Главная", ""),
@@ -576,13 +761,19 @@ class Command(BaseCommand):
 
     # ─── Wholesale ───────────────────────────────
     def _seed_wholesale(self):
-        for segment, title in [
-            (WholesalePriceList.Segment.BUSINESS, "Прайс для юрлиц"),
-            (WholesalePriceList.Segment.SCHOOL, "Прайс для школ"),
-            (WholesalePriceList.Segment.UNIVERSITY, "Прайс для университетов"),
-        ]:
+        # ВАЖНО: slug'и задаём явно латиницей. Django'вский slugify() без
+        # allow_unicode=True на кириллице возвращает пустую строку → все
+        # три записи получают slug="" → IntegrityError на UNIQUE → вся
+        # транзакция seed отката → картинки товаров и обложки блога НЕ
+        # сохраняются. Этот баг уже ломал Render-деплой.
+        pricelists = [
+            ("wholesale-business", WholesalePriceList.Segment.BUSINESS, "Прайс для юрлиц"),
+            ("wholesale-school", WholesalePriceList.Segment.SCHOOL, "Прайс для школ"),
+            ("wholesale-university", WholesalePriceList.Segment.UNIVERSITY, "Прайс для университетов"),
+        ]
+        for slug, segment, title in pricelists:
             WholesalePriceList.objects.get_or_create(
-                slug=slugify(title),
+                slug=slug,
                 defaults={"title": title, "segment": segment, "file_url": "#"},
             )
 

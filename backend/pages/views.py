@@ -20,6 +20,7 @@ from shop.models import (
     Category,
     CustomerProfile,
     DeliveryTariff,
+    NewsletterSubscriber,
     NotificationSetting,
     Order,
     PickupPoint,
@@ -27,6 +28,7 @@ from shop.models import (
     SitePage,
     SiteSetting,
 )
+from django.utils import timezone
 
 from .forms import LoginByEmailForm, PasswordRestoreForm, RegistrationForm
 
@@ -87,6 +89,55 @@ PAGE_TYPE_MAP = {
 }
 
 PROTECTED_PAGES = {"profile", "order_history"}
+
+
+def _checkout_prefill(user):
+    """Return cart-form defaults for an authenticated user — pulled from
+    CustomerProfile + most-recent default shipping Address."""
+    profile = getattr(user, "profile", None)
+    first_name = (profile.first_name if profile else "") or user.first_name or ""
+    last_name = (profile.last_name if profile else "") or user.last_name or ""
+    full_name = " ".join(part for part in (first_name, last_name) if part).strip()
+
+    phone = (profile.phone if profile else "") or ""
+
+    address_row = None
+    if profile:
+        address_row = (
+            profile.addresses
+            .filter(address_type=Address.AddressType.SHIPPING)
+            .order_by("-is_default", "-updated_at")
+            .first()
+        )
+        if not address_row:
+            address_row = profile.addresses.order_by("-is_default", "-updated_at").first()
+
+    city = ""
+    street_line = ""
+    if address_row:
+        city = address_row.city or ""
+        pieces = [address_row.street]
+        if address_row.flat_or_office:
+            flat = str(address_row.flat_or_office).strip()
+            # Don't double-prefix if user already stored "кв. 45" / "офис 7".
+            if not re.match(r"^(кв|оф)", flat, re.IGNORECASE):
+                flat = f"кв. {flat}"
+            pieces.append(flat)
+        if address_row.entrance:
+            ent = str(address_row.entrance).strip()
+            if not re.match(r"^подъезд", ent, re.IGNORECASE):
+                ent = f"подъезд {ent}"
+            pieces.append(ent)
+        street_line = ", ".join(p for p in pieces if p)
+
+    return {
+        "full_name": full_name,
+        "email": user.email or "",
+        "phone": phone,
+        "city": city,
+        "address": street_line,
+        "comment": getattr(address_row, "comment", "") if address_row else "",
+    }
 
 
 def _build_initials(first_name, last_name, email):
@@ -174,6 +225,26 @@ def page_view(request, page_name):
         context["pickup_points"] = list(
             PickupPoint.objects.filter(is_active=True).order_by("city", "name")
         )
+
+    if page_name == "cart" and request.user.is_authenticated:
+        context["checkout_prefill"] = _checkout_prefill(request.user)
+
+    if page_name == "promotions":
+        from shop.models import Promotion, PromoCode
+        now = timezone.now()
+        context["promotions"] = list(
+            Promotion.objects.filter(is_active=True).order_by("-start_at", "-created_at")
+        )
+        # Only admin-marked public codes are shown. Point-targeted codes
+        # (welcome / cart-abandonment / VIP) stay private and are distributed
+        # via email so they retain their marketing value.
+        broadcast_codes = PromoCode.objects.filter(
+            is_active=True, is_public=True,
+        ).order_by("-created_at")
+        context["public_promocodes"] = [
+            code for code in broadcast_codes
+            if code.is_time_valid(now) and code.quota_available()
+        ][:6]
 
     if page_name == "blog":
         slug = request.GET.get("slug")
@@ -479,7 +550,7 @@ LEGAL_META = {
         "updated": "15 марта 2026",
     },
     "cookies": {
-        "page_type": SitePage.PageType.TERMS,
+        "page_type": SitePage.PageType.COOKIES,
         "title": "Политика использования cookie",
         "eyebrow": "Правовая информация",
         "summary": "Для чего сайт использует cookie-файлы и как управлять настройками.",
@@ -489,17 +560,23 @@ LEGAL_META = {
 
 
 def legal_view(request, kind):
+    """Render a legal page — privacy / offer / cookies.
+
+    Контент сначала берётся из `shop.SitePage` с соответствующим `page_type`
+    (заполняется в админке). Если админ не заполнил — показываем встроенный
+    fallback из `pages.legal_content.LEGAL_FALLBACK`. Админка всегда
+    перебивает fallback, так что редактировать текст можно прямо в /admin/.
+    """
+    from .legal_content import LEGAL_FALLBACK
+
     meta = LEGAL_META.get(kind)
     if not meta:
         return redirect("home")
 
-    site_page = (
-        SitePage.objects.filter(page_type=meta["page_type"], is_published=True).first()
-        if kind != "cookies"
-        else None
-    )
+    site_page = SitePage.objects.filter(
+        page_type=meta["page_type"], is_published=True,
+    ).first()
 
-    # Per-kind default HTML content (used when admin hasn't filled SitePage).
     fallback = LEGAL_FALLBACK.get(kind, "")
     content_html = (site_page.content if site_page and site_page.content else fallback)
 
@@ -518,108 +595,34 @@ def legal_view(request, kind):
     )
 
 
-LEGAL_FALLBACK = {
-    "privacy": """
-<p>Настоящая политика конфиденциальности (далее — «Политика») описывает, какие персональные данные собирает интернет-магазин, как они используются, хранятся и защищаются.</p>
-
-<h2>1. Какие данные мы собираем</h2>
-<ul>
-  <li>Имя и фамилия — для оформления заказа и обращения.</li>
-  <li>Email — для уведомлений о статусе заказа и восстановления пароля.</li>
-  <li>Телефон — для связи курьера и оператора при доставке.</li>
-  <li>Адрес доставки — только для выполнения заказа.</li>
-  <li>Технические данные (IP-адрес, cookie, UA браузера) — для работы сайта и аналитики.</li>
-</ul>
-
-<h2>2. Как используются данные</h2>
-<p>Данные обрабатываются исключительно для:</p>
-<ul>
-  <li>выполнения и доставки заказов;</li>
-  <li>информирования об акциях и новинках (при вашем согласии);</li>
-  <li>улучшения работы сайта и сервиса;</li>
-  <li>выполнения обязательств по 152-ФЗ «О персональных данных».</li>
-</ul>
-
-<h2>3. Передача третьим лицам</h2>
-<p>Мы не продаём и не передаём ваши данные третьим лицам, за исключением:</p>
-<ul>
-  <li>служб доставки — в объёме, необходимом для вручения заказа;</li>
-  <li>платёжных систем — при безналичной оплате (по защищённому каналу);</li>
-  <li>государственных органов — по обоснованному запросу.</li>
-</ul>
-
-<h2>4. Хранение и защита</h2>
-<p>Данные хранятся на серверах в РФ. Доступ ограничен сотрудниками, которым он необходим для исполнения служебных обязанностей. Используются TLS-шифрование, контроль доступа и регулярные бэкапы.</p>
-
-<h2>5. Ваши права</h2>
-<p>Вы можете в любой момент:</p>
-<ul>
-  <li>запросить состав своих данных;</li>
-  <li>внести изменения или уточнить их;</li>
-  <li>отозвать согласие на обработку — написав на email, указанный в контактах.</li>
-</ul>
-
-<h2>6. Cookie-файлы</h2>
-<p>Подробности — в <a href="/legal/cookies/">Политике cookie</a>.</p>
-
-<h2>7. Изменения политики</h2>
-<p>Мы вправе обновлять Политику. Актуальная версия всегда доступна на этой странице.</p>
-""",
-    "offer": """
-<p>Настоящий документ является публичной офертой (далее — «Оферта») — адресованным любому физическому или юридическому лицу предложением заключить договор купли-продажи товаров дистанционным способом.</p>
-
-<h2>1. Общие положения</h2>
-<ul>
-  <li>Оферта считается принятой с момента оформления заказа покупателем.</li>
-  <li>Сайт предоставляет актуальную информацию о товарах, их стоимости и условиях доставки.</li>
-  <li>Изображения товаров носят ознакомительный характер и могут отличаться от реального товара.</li>
-</ul>
-
-<h2>2. Заказ и оплата</h2>
-<p>Заказ оформляется покупателем самостоятельно через сайт. После оформления покупатель получает подтверждение на указанный email.</p>
-<p>Оплата производится одним из способов: банковская карта, СБП, при получении (курьеру или в пункте выдачи). Для юрлиц — счёт с безналичной оплатой.</p>
-
-<h2>3. Доставка</h2>
-<p>Доставка осуществляется курьерской службой или через сеть пунктов самовывоза. Сроки и стоимость указываются на странице <a href="/delivery/">«Доставка и оплата»</a>.</p>
-
-<h2>4. Возврат и обмен</h2>
-<p>Возврат производится в соответствии с Законом РФ «О защите прав потребителей». Подробности — на странице <a href="/guarantee/">«Гарантия и возврат»</a>.</p>
-
-<h2>5. Ответственность</h2>
-<p>Продавец не несёт ответственности за задержки, вызванные форс-мажором, действиями служб доставки или неверно указанными покупателем данными.</p>
-
-<h2>6. Контакты</h2>
-<p>По всем вопросам — свяжитесь с нами по email или телефону, указанным в футере сайта.</p>
-""",
-    "cookies": """
-<p>Мы используем cookie-файлы, чтобы сайт работал корректно и был удобен для вас.</p>
-
-<h2>1. Что такое cookie</h2>
-<p>Cookie — небольшие текстовые файлы, которые сохраняются в вашем браузере при посещении сайта. Они не содержат вредоносного кода и не могут запускать программы.</p>
-
-<h2>2. Какие cookie мы используем</h2>
-<ul>
-  <li><strong>Технические</strong> — необходимы для работы корзины, авторизации и сохранения выбора товаров. Отключить нельзя.</li>
-  <li><strong>Аналитические</strong> — помогают понять, как пользователи работают с сайтом (агрегированно, без идентификации). Используются Яндекс.Метрика и Google Analytics.</li>
-  <li><strong>Функциональные</strong> — запоминают ваши предпочтения (например, недавние поисковые запросы).</li>
-</ul>
-
-<h2>3. Как управлять</h2>
-<p>Вы можете отключить cookie в настройках браузера. Обратите внимание: некоторые функции сайта (корзина, избранное, вход в аккаунт) без cookie могут работать некорректно.</p>
-
-<h2>4. Хранение</h2>
-<p>Сессионные cookie удаляются при закрытии браузера. Постоянные — хранятся до 12 месяцев, если не удалены раньше.</p>
-
-<h2>5. Согласие</h2>
-<p>Продолжая использовать сайт, вы соглашаетесь с применением cookie. Подробнее — в <a href="/legal/privacy/">Политике конфиденциальности</a>.</p>
-""",
-}
+# Legal page fallback HTML is kept in pages/legal_content.py — чтобы не засорять views.py.
 
 
 @require_POST
 def logout_view(request):
     logout(request)
     return redirect("home")
+
+
+def newsletter_unsubscribe_view(request, token):
+    """One-click unsubscribe page — GET shows confirmation, POST deactivates."""
+    try:
+        subscriber = NewsletterSubscriber.objects.get(unsubscribe_token=token)
+    except NewsletterSubscriber.DoesNotExist:
+        subscriber = None
+
+    if request.method == "POST" and subscriber:
+        if subscriber.is_active:
+            subscriber.is_active = False
+            subscriber.unsubscribed_at = timezone.now()
+            subscriber.save(update_fields=["is_active", "unsubscribed_at", "updated_at"])
+        return render(request, "newsletter_unsubscribe.html", {"state": "done", "email": subscriber.email})
+
+    if not subscriber:
+        return render(request, "newsletter_unsubscribe.html", {"state": "invalid"})
+    if not subscriber.is_active:
+        return render(request, "newsletter_unsubscribe.html", {"state": "already", "email": subscriber.email})
+    return render(request, "newsletter_unsubscribe.html", {"state": "confirm", "email": subscriber.email})
 
 
 

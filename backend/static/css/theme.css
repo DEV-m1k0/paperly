@@ -873,7 +873,10 @@ a:focus-visible {
     flex-direction: column;
   }
   .page-hero__actions .btn {
+    /* Отменяем `flex: 1 1 180px` из @media 720px — в column-flex это растягивает кнопки по высоте */
+    flex: 0 0 auto;
     width: 100%;
+    min-height: 48px;
   }
   .page-section {
     margin-top: 2rem;

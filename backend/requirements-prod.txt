@@ -1,0 +1,18 @@
+# Production-зависимости для Render / PythonAnywhere.
+# Без Celery/Redis (не нужны), без dev-утилит.
+
+Django==4.2
+django-jazzmin==3.0.1
+djangorestframework==3.15.2
+pillow==12.2.0
+python-dotenv==1.0.1
+openai>=1.50.0
+whitenoise==6.8.2
+sqlparse==0.5.5
+asgiref==3.11.1
+tzdata==2026.1
+
+# ── Render / production-only ──
+gunicorn==23.0.0
+dj-database-url==2.3.0
+psycopg2-binary==2.9.10

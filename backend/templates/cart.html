@@ -79,15 +79,15 @@
           <div class="checkout-section__body">
             <label class="field field--full">
               <span class="field__label"><i class="bi bi-person" aria-hidden="true"></i> Имя и фамилия</span>
-              <input id="fullName" type="text" required placeholder="Иван Иванов">
+              <input id="fullName" type="text" required placeholder="Иван Иванов" value="{{ checkout_prefill.full_name|default:'' }}" autocomplete="name">
             </label>
             <label class="field">
               <span class="field__label"><i class="bi bi-telephone" aria-hidden="true"></i> Телефон</span>
-              <input id="phone" type="tel" required placeholder="+7 (...) ...-..-..">
+              <input id="phone" type="tel" required placeholder="+7 (...) ...-..-.." value="{{ checkout_prefill.phone|default:'' }}" autocomplete="tel">
             </label>
             <label class="field">
               <span class="field__label"><i class="bi bi-envelope" aria-hidden="true"></i> Email</span>
-              <input id="email" type="email" required placeholder="mail@example.com">
+              <input id="email" type="email" required placeholder="mail@example.com" value="{{ checkout_prefill.email|default:'' }}" autocomplete="email">
             </label>
           </div>
         </div>
@@ -117,15 +117,15 @@
             </label>
             <label class="field" data-delivery-field="courier">
               <span class="field__label"><i class="bi bi-buildings" aria-hidden="true"></i> Город</span>
-              <input id="city" type="text" required placeholder="Курск">
+              <input id="city" type="text" required placeholder="Курск" value="{{ checkout_prefill.city|default:'' }}" autocomplete="address-level2">
             </label>
             <label class="field" data-delivery-field="courier">
               <span class="field__label"><i class="bi bi-signpost" aria-hidden="true"></i> Адрес</span>
-              <input id="address" type="text" required placeholder="ул. Ленина, 12">
+              <input id="address" type="text" required placeholder="ул. Ленина, 12" value="{{ checkout_prefill.address|default:'' }}" autocomplete="street-address">
             </label>
             <label class="field field--full" data-delivery-field="courier">
               <span class="field__label"><i class="bi bi-chat-left-text" aria-hidden="true"></i> Комментарий курьеру</span>
-              <textarea id="comment" rows="3" placeholder="Домофон, этаж, ориентир"></textarea>
+              <textarea id="comment" rows="3" placeholder="Домофон, этаж, ориентир">{{ checkout_prefill.comment|default:'' }}</textarea>
             </label>
           </div>
         </div>
@@ -213,6 +213,29 @@
 
       <div class="checkout-summary" id="checkoutSummary">
         <h3><i class="bi bi-receipt-cutoff" aria-hidden="true"></i> Ваш заказ</h3>
+
+        <div class="promo-box" id="promoBox">
+          <label class="promo-box__label" for="promoCodeInput">
+            <i class="bi bi-ticket-perforated" aria-hidden="true"></i>
+            <span>Промокод</span>
+          </label>
+          <div class="promo-box__row">
+            <input id="promoCodeInput" type="text" placeholder="Например, PAPERLY10" autocomplete="off" spellcheck="false">
+            <button type="button" class="promo-box__apply" id="promoApplyBtn">Применить</button>
+          </div>
+          <p class="promo-box__status" id="promoStatus" role="status" aria-live="polite" hidden></p>
+          <div class="promo-box__applied" id="promoApplied" hidden>
+            <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+            <div>
+              <strong id="promoAppliedCode"></strong>
+              <span id="promoAppliedMessage"></span>
+            </div>
+            <button type="button" class="promo-box__remove" id="promoRemoveBtn" aria-label="Убрать промокод">
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
         <div class="summary" id="summary"></div>
         <button class="btn btn--primary checkout-submit" id="checkoutSubmit" type="submit" form="checkoutForm">
           <i class="bi bi-check2-circle" aria-hidden="true"></i>
