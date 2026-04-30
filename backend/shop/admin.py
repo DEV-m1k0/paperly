@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+from django.utils.safestring import mark_safe
 
 from . import models
 
@@ -124,7 +125,7 @@ class ProductAdmin(BaseAdmin):
         ("Цена и наличие", {"fields": ("price", "old_price", "stock")}),
         ("Ограничения", {
             "fields": ("max_order_quantity",),
-            "description": (
+            "description": mark_safe(
                 "<b>Макс. кол-во в заказе</b> — сколько штук одного товара покупатель "
                 "может добавить в корзину и заказать за один раз. "
                 "<b>0 = без ограничения</b>. Лимит проверяется и на клиенте (кнопки в "
@@ -294,6 +295,25 @@ class SitePageAdmin(BaseAdmin):
     search_fields = ("title", "slug")
     prepopulated_fields = {"slug": ("title",)}
     list_editable = ("is_published",)
+    fieldsets = (
+        ("Основное", {"fields": ("title", "slug", "page_type", "is_published")}),
+        ("Контент", {
+            "fields": ("content",),
+            "description": mark_safe(
+                "<b>HTML-контент страницы.</b> Если на странице есть кастомный шаблон "
+                "(например, главная), этот блок может быть проигнорирован — см. описание "
+                "конкретного типа страницы в шаблоне."
+            ),
+        }),
+        ("SEO / соцсети", {
+            "fields": ("meta_title", "meta_description", "og_image", "og_image_url"),
+            "classes": ("collapse",),
+            "description": mark_safe(
+                "Метаданные для поисковиков и превью при репосте в соцсетях. "
+                "Все поля опциональны — при пустом значении используются дефолты сайта."
+            ),
+        }),
+    )
 
 
 @admin.register(models.SocialLink)
@@ -325,9 +345,22 @@ class SocialLinkAdmin(BaseAdmin):
 @admin.register(models.SiteSetting)
 class SiteSettingAdmin(admin.ModelAdmin):
     fieldsets = (
-        ("Основное", {"fields": ("site_name", "tagline")}),
-        ("Контакты", {"fields": ("phone", "email", "city", "address")}),
-        ("Прочее", {"fields": ("copyright_text",)}),
+        ("Основное", {"fields": ("site_name", "tagline", "copyright_text")}),
+        ("Контакты — телефоны и email", {
+            "fields": ("phone", "secondary_phone", "email", "sales_email", "wholesale_email"),
+            "description": mark_safe(
+                "Телефоны и email отображаются в шапке, футере и на странице «Контакты». "
+                "Дополнительные поля опциональны — при пустом значении используется основной телефон/email."
+            ),
+        }),
+        ("Адрес и часы работы", {
+            "fields": ("city", "address", "work_hours", "work_hours_short", "latitude", "longitude"),
+            "description": "Координаты используются для карты на странице контактов.",
+        }),
+        ("Маркетинговые плашки", {
+            "fields": ("free_shipping_from", "free_shipping_text", "cookies_banner_text"),
+            "classes": ("collapse",),
+        }),
     )
 
     def has_add_permission(self, request):
@@ -335,6 +368,282 @@ class SiteSettingAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+# ──────────────────────────────────────────────
+# Главная страница (singleton + inline-блоки)
+# ──────────────────────────────────────────────
+class HomeHeroCardInline(admin.TabularInline):
+    model = models.HomeHeroCard
+    extra = 0
+    fields = ("badge", "title", "description", "icon_class", "url", "color_variant", "sort_order", "is_active")
+
+
+class HomeCategoryCardInline(admin.TabularInline):
+    model = models.HomeCategoryCard
+    extra = 0
+    fields = ("title", "subtitle", "icon_class", "url", "color_modifier", "sort_order", "is_active")
+
+
+class HomeFeatureInline(admin.TabularInline):
+    model = models.HomeFeature
+    extra = 0
+    fields = ("icon_class", "color_variant", "title", "description", "sort_order", "is_active")
+
+
+@admin.register(models.HomePage)
+class HomePageAdmin(admin.ModelAdmin):
+    inlines = (HomeHeroCardInline, HomeCategoryCardInline, HomeFeatureInline)
+    save_on_top = True
+    filter_horizontal = ("featured_categories", "featured_products")
+    fieldsets = (
+        ("Hero — главный экран", {
+            "fields": (
+                "hero_eyebrow", "hero_title", "hero_title_accent", "hero_subtitle",
+                ("hero_cta_primary_label", "hero_cta_primary_url", "hero_cta_primary_icon"),
+                ("hero_cta_secondary_label", "hero_cta_secondary_url", "hero_cta_secondary_icon"),
+            ),
+            "description": mark_safe(
+                "Все поля опциональны: при пустом значении в hero показывается "
+                "встроенный дизайн. Заполняйте только то, что хотите изменить."
+            ),
+        }),
+        ("Видимость секций", {
+            "fields": (
+                "show_stats", "show_categories", "show_promotions",
+                "show_new_arrivals", "show_bestsellers", "show_brands",
+                "show_services", "show_features",
+            ),
+            "description": "Снимите галочку, чтобы спрятать соответствующий блок на главной.",
+        }),
+        ("Заголовки секций", {
+            "fields": ("features_eyebrow", "features_title"),
+            "classes": ("collapse",),
+        }),
+        ("Подборки", {
+            "fields": ("featured_categories", "featured_products"),
+            "classes": ("collapse",),
+            "description": "Если оставить пустыми — блоки берут данные из общих источников.",
+        }),
+    )
+
+    def has_add_permission(self, request):
+        # Singleton — только одна запись
+        return not models.HomePage.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        # Если строки ещё нет — сразу открываем форму редактирования.
+        from django.shortcuts import redirect
+        from django.urls import reverse
+        obj = models.HomePage.objects.first()
+        if obj is None:
+            obj = models.HomePage.load()
+        return redirect(reverse("admin:shop_homepage_change", args=[obj.pk]))
+
+
+# ──────────────────────────────────────────────
+# Singleton-mixin — общая логика для одностраничных моделей
+# ──────────────────────────────────────────────
+class _SingletonAdminMixin:
+    """Mixin для моделей-синглтонов: запрещает добавление >1, удаление,
+    и редиректит /changelist/ сразу на форму редактирования."""
+
+    save_on_top = True
+    _singleton_model = None  # subclass overrides
+
+    def has_add_permission(self, request):
+        return not self._singleton_model.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        from django.shortcuts import redirect
+        from django.urls import reverse
+        obj = self._singleton_model.objects.first()
+        if obj is None:
+            obj = self._singleton_model.load()
+        opts = self._singleton_model._meta
+        return redirect(reverse(f"admin:{opts.app_label}_{opts.model_name}_change", args=[obj.pk]))
+
+
+# ──────────────────────────────────────────────
+# Страница «О магазине» (singleton + inlines)
+# ──────────────────────────────────────────────
+class AboutFeatureInline(admin.TabularInline):
+    model = models.AboutFeature
+    extra = 0
+    fields = ("icon_class", "color_variant", "title", "description", "meta_label", "sort_order", "is_active")
+
+
+class AboutStepInline(admin.TabularInline):
+    model = models.AboutStep
+    extra = 0
+    fields = ("sort_order", "title", "description", "is_active")
+
+
+class AboutMissionBulletInline(admin.TabularInline):
+    model = models.AboutMissionBullet
+    extra = 0
+    fields = ("icon_class", "label", "sort_order", "is_active")
+
+
+class AboutB2BBulletInline(admin.TabularInline):
+    model = models.AboutB2BBullet
+    extra = 0
+    fields = ("icon_class", "label", "sort_order", "is_active")
+
+
+@admin.register(models.AboutPage)
+class AboutPageAdmin(_SingletonAdminMixin, admin.ModelAdmin):
+    _singleton_model = models.AboutPage
+    inlines = (AboutFeatureInline, AboutStepInline, AboutMissionBulletInline, AboutB2BBulletInline)
+    fieldsets = (
+        ("Hero — главный экран страницы", {
+            "fields": (
+                "hero_eyebrow", "hero_title", "hero_title_accent", "hero_subtitle",
+                ("hero_cta_primary_label", "hero_cta_primary_url", "hero_cta_primary_icon"),
+                ("hero_cta_secondary_label", "hero_cta_secondary_url", "hero_cta_secondary_icon"),
+            ),
+            "description": mark_safe(
+                "Все поля опциональны. При пустом значении используются дефолтные тексты "
+                "из шаблона."
+            ),
+        }),
+        ("Mission — правая карточка hero", {
+            "fields": ("mission_eyebrow", "mission_title", "mission_text", "mission_icon"),
+        }),
+        ("Видимость секций", {
+            "fields": ("show_stats", "show_features", "show_steps", "show_b2b_cta", "show_contacts"),
+        }),
+        ("Заголовки секций", {
+            "fields": (
+                ("features_eyebrow", "features_title"),
+                ("steps_eyebrow", "steps_title"),
+                ("contacts_eyebrow", "contacts_title"),
+            ),
+            "classes": ("collapse",),
+        }),
+        ("B2B CTA-блок", {
+            "fields": ("b2b_eyebrow", "b2b_title", "b2b_text", "b2b_button_label", "b2b_button_url"),
+            "classes": ("collapse",),
+        }),
+    )
+
+
+# ──────────────────────────────────────────────
+# Страница «Доставка» (singleton + inlines)
+# ──────────────────────────────────────────────
+class DeliveryFreeCardItemInline(admin.TabularInline):
+    model = models.DeliveryFreeCardItem
+    extra = 0
+    fields = ("label", "value", "sort_order", "is_active")
+
+
+class DeliveryStepInline(admin.TabularInline):
+    model = models.DeliveryStep
+    extra = 0
+    fields = ("sort_order", "icon_class", "title", "description", "is_active")
+
+
+class DeliveryPayMethodInline(admin.TabularInline):
+    model = models.DeliveryPayMethod
+    extra = 0
+    fields = ("icon_class", "color_variant", "title", "description", "badges_text", "sort_order", "is_active")
+
+
+class DeliveryFAQInline(admin.TabularInline):
+    model = models.DeliveryFAQ
+    extra = 0
+    fields = ("sort_order", "question", "answer", "is_active")
+
+
+@admin.register(models.DeliveryPage)
+class DeliveryPageAdmin(_SingletonAdminMixin, admin.ModelAdmin):
+    _singleton_model = models.DeliveryPage
+    inlines = (DeliveryFreeCardItemInline, DeliveryStepInline, DeliveryPayMethodInline, DeliveryFAQInline)
+    fieldsets = (
+        ("Hero — главный экран страницы", {
+            "fields": (
+                "hero_eyebrow", "hero_title", "hero_title_accent", "hero_subtitle",
+                ("hero_cta_primary_label", "hero_cta_primary_url", "hero_cta_primary_icon"),
+                ("hero_cta_secondary_label", "hero_cta_secondary_url", "hero_cta_secondary_icon"),
+            ),
+        }),
+        ("Карточка «Бесплатная доставка»", {
+            "fields": ("free_card_ribbon", "free_card_kicker", "free_card_title", "free_card_subtitle"),
+            "description": "Список под карточкой настраивается ниже в инлайн-блоке «Пункты карточки».",
+        }),
+        ("Видимость секций", {
+            "fields": ("show_calc", "show_steps", "show_pay_methods", "show_faq", "show_final_cta"),
+        }),
+        ("Заголовки секций", {
+            "fields": (
+                ("tariffs_eyebrow", "tariffs_title", "tariffs_subtitle"),
+                ("steps_eyebrow", "steps_title"),
+                ("pay_eyebrow", "pay_title"),
+                ("faq_eyebrow", "faq_title"),
+            ),
+            "classes": ("collapse",),
+        }),
+        ("Финальный CTA «Готовы оформить заказ?»", {
+            "fields": ("final_cta_title", "final_cta_text"),
+            "classes": ("collapse",),
+        }),
+    )
+
+
+# ──────────────────────────────────────────────
+# Страница «Опт» (singleton + inlines)
+# ──────────────────────────────────────────────
+class WholesaleFeatureInline(admin.TabularInline):
+    model = models.WholesaleFeature
+    extra = 0
+    fields = ("icon_class", "color_variant", "title", "description", "sort_order", "is_active")
+
+
+class WholesaleStepInline(admin.TabularInline):
+    model = models.WholesaleStep
+    extra = 0
+    fields = ("sort_order", "title", "description", "is_active")
+
+
+class WholesaleSideBulletInline(admin.TabularInline):
+    model = models.WholesaleSideBullet
+    extra = 0
+    fields = ("icon_class", "label", "sort_order", "is_active")
+
+
+@admin.register(models.WholesalePage)
+class WholesalePageAdmin(_SingletonAdminMixin, admin.ModelAdmin):
+    _singleton_model = models.WholesalePage
+    inlines = (WholesaleFeatureInline, WholesaleStepInline, WholesaleSideBulletInline)
+    fieldsets = (
+        ("Hero — главный экран", {
+            "fields": (
+                "hero_eyebrow", "hero_title", "hero_title_accent", "hero_subtitle",
+                ("hero_cta_primary_label", "hero_cta_primary_url", "hero_cta_primary_icon"),
+            ),
+        }),
+        ("Side-карточка hero", {
+            "fields": ("side_eyebrow", "side_title", "side_text", "side_icon"),
+        }),
+        ("Видимость секций", {
+            "fields": ("show_features", "show_steps", "show_form"),
+        }),
+        ("Заголовки секций", {
+            "fields": (
+                ("features_eyebrow", "features_title"),
+                ("steps_eyebrow", "steps_title"),
+                ("form_eyebrow", "form_title"),
+                ("form_intro_title", "form_intro_text"),
+            ),
+            "classes": ("collapse",),
+        }),
+    )
 
 
 # ──────────────────────────────────────────────

@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.contrib.auth.tokens import default_token_generator
+from django.core.cache import cache
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.encoding import force_str
@@ -13,13 +14,16 @@ from django.utils.http import url_has_allowed_host_and_scheme, urlsafe_base64_de
 from django.views.decorators.http import require_POST
 
 from shop.models import (
+    AboutPage,
     Address,
     BlogCategory,
     BlogPost,
     Brand,
     Category,
     CustomerProfile,
+    DeliveryPage,
     DeliveryTariff,
+    HomePage,
     NewsletterSubscriber,
     NotificationSetting,
     Order,
@@ -27,6 +31,7 @@ from shop.models import (
     Product,
     SitePage,
     SiteSetting,
+    WholesalePage,
 )
 from django.utils import timezone
 
@@ -140,6 +145,25 @@ def _checkout_prefill(user):
     }
 
 
+def _seo_meta_from_page(site_page, *, default_title="", default_description=""):
+    """Build a SEO meta dict from a SitePage row + sensible fallbacks.
+
+    Returned shape is consumed by base.html's <head> block. All keys are
+    always present; consumers can safely `{% if meta.description %}`.
+    """
+    if site_page is None:
+        return {
+            "title": default_title or "",
+            "description": default_description or "",
+            "og_image": "",
+        }
+    return {
+        "title": site_page.meta_title or default_title or site_page.title,
+        "description": site_page.meta_description or default_description or "",
+        "og_image": site_page.og_image_display_url,
+    }
+
+
 def _build_initials(first_name, last_name, email):
     initials = ""
     if first_name:
@@ -151,9 +175,22 @@ def _build_initials(first_name, last_name, email):
     return initials or "PL"
 
 
+_ABOUT_CONTEXT_CACHE_KEY = "pages:about_context:v1"
+_ABOUT_CONTEXT_CACHE_TTL = 60 * 30  # 30 минут — данные низкочастотные
+
+
 def _about_context():
-    products_qs = Product.objects.filter(status=Product.ProductStatus.ACTIVE)
-    products_count = products_qs.count()
+    """Build counters/labels for the home + about pages.
+
+    Cached for 30 min: product/brand/category counts move on the order of
+    minutes-to-hours, not per-request. Without this every home page hit
+    fired ~6 COUNT queries plus a tariffs scan.
+    """
+    cached = cache.get(_ABOUT_CONTEXT_CACHE_KEY)
+    if cached is not None:
+        return cached
+
+    products_count = Product.objects.filter(status=Product.ProductStatus.ACTIVE).count()
     brands_count = Brand.objects.filter(is_active=True).count()
     categories_count = Category.objects.filter(is_active=True).count()
     pickup_count = PickupPoint.objects.filter(is_active=True).count()
@@ -162,10 +199,13 @@ def _about_context():
 
     courier_tariffs = DeliveryTariff.objects.filter(
         is_active=True, delivery_type=DeliveryTariff.DeliveryType.COURIER
-    )
-    eta_values = [t.eta_min_days for t in courier_tariffs if t.eta_min_days] + [
-        t.eta_max_days for t in courier_tariffs if t.eta_max_days
-    ]
+    ).only("eta_min_days", "eta_max_days")
+    eta_values = []
+    for tariff in courier_tariffs:
+        if tariff.eta_min_days:
+            eta_values.append(tariff.eta_min_days)
+        if tariff.eta_max_days:
+            eta_values.append(tariff.eta_max_days)
     delivery_min = min(eta_values) if eta_values else None
     delivery_max = max(eta_values) if eta_values else None
     if delivery_min and delivery_max:
@@ -177,7 +217,7 @@ def _about_context():
 
     site = SiteSetting.load()
 
-    return {
+    payload = {
         "about_stats": [
             {"value": str(products_count) if products_count else "—", "label": "активных товаров"},
             {"value": f"{brands_count}" if brands_count else "—", "label": "брендов в каталоге"},
@@ -190,6 +230,8 @@ def _about_context():
             "orders_done": orders_done,
         },
     }
+    cache.set(_ABOUT_CONTEXT_CACHE_KEY, payload, _ABOUT_CONTEXT_CACHE_TTL)
+    return payload
 
 
 def page_view(request, page_name):
@@ -201,19 +243,107 @@ def page_view(request, page_name):
     context = {}
 
     page_type = PAGE_TYPE_MAP.get(page_name)
+    site_page = None
     if page_type:
         site_page = SitePage.objects.filter(page_type=page_type, is_published=True).first()
         if site_page:
             context["page_content"] = site_page.content
             context["page_title"] = site_page.title
 
+    # SEO meta (всегда присутствует в контексте, даже если SitePage нет —
+    # base.html делает фолбэк на {{ site.site_name }}).
+    context["meta"] = _seo_meta_from_page(site_page)
+
     if page_name == "about":
         context.update(_about_context())
+        # Кастомизируемый контент страницы /about/ (singleton + inlines).
+        about_page = (
+            AboutPage.objects
+            .prefetch_related("features", "steps", "mission_bullets", "b2b_bullets")
+            .first()
+        )
+        context["about_page"] = about_page
+        if about_page is not None:
+            context["about_features"] = [f for f in about_page.features.all() if f.is_active]
+            context["about_steps"] = [s for s in about_page.steps.all() if s.is_active]
+            context["about_mission_bullets"] = [b for b in about_page.mission_bullets.all() if b.is_active]
+            context["about_b2b_bullets"] = [b for b in about_page.b2b_bullets.all() if b.is_active]
+        else:
+            context["about_features"] = []
+            context["about_steps"] = []
+            context["about_mission_bullets"] = []
+            context["about_b2b_bullets"] = []
+
+    if page_name == "delivery":
+        delivery_page = (
+            DeliveryPage.objects
+            .prefetch_related("free_card_items", "steps", "pay_methods", "faqs")
+            .first()
+        )
+        context["delivery_page"] = delivery_page
+        if delivery_page is not None:
+            context["delivery_free_card_items"] = [i for i in delivery_page.free_card_items.all() if i.is_active]
+            context["delivery_custom_steps"] = [s for s in delivery_page.steps.all() if s.is_active]
+            context["delivery_pay_methods"] = [m for m in delivery_page.pay_methods.all() if m.is_active]
+            context["delivery_faqs"] = [f for f in delivery_page.faqs.all() if f.is_active]
+        else:
+            context["delivery_free_card_items"] = []
+            context["delivery_custom_steps"] = []
+            context["delivery_pay_methods"] = []
+            context["delivery_faqs"] = []
+
+    if page_name == "wholesale":
+        wholesale_page = (
+            WholesalePage.objects
+            .prefetch_related("features", "steps", "side_bullets")
+            .first()
+        )
+        context["wholesale_page"] = wholesale_page
+        if wholesale_page is not None:
+            context["wholesale_features"] = [f for f in wholesale_page.features.all() if f.is_active]
+            context["wholesale_steps"] = [s for s in wholesale_page.steps.all() if s.is_active]
+            context["wholesale_side_bullets"] = [b for b in wholesale_page.side_bullets.all() if b.is_active]
+        else:
+            context["wholesale_features"] = []
+            context["wholesale_steps"] = []
+            context["wholesale_side_bullets"] = []
 
     if page_name == "home":
         home_ctx = _about_context()
         context["home_stats"] = home_ctx["about_stats"]
         context["home_extras"] = home_ctx["about_extras"]
+        # Подгружаем настраиваемый контент главной + связанные блоки.
+        # Singleton: одна запись на проект.
+        home = (
+            HomePage.objects
+            .prefetch_related(
+                "hero_cards",
+                "category_cards",
+                "features",
+                "featured_categories",
+                "featured_products__images",
+                "featured_products__brand",
+            )
+            .first()
+        )
+        context["home"] = home
+        # Активные инлайны (отфильтрованы здесь, чтобы шаблон оставался простым).
+        if home is not None:
+            context["home_hero_cards"] = [c for c in home.hero_cards.all() if c.is_active]
+            context["home_category_cards"] = [c for c in home.category_cards.all() if c.is_active]
+            context["home_features"] = [f for f in home.features.all() if f.is_active]
+            context["home_featured_categories"] = list(
+                home.featured_categories.filter(is_active=True).order_by("sort_order", "name")
+            )
+            context["home_featured_products"] = list(
+                home.featured_products.filter(status=Product.ProductStatus.ACTIVE)[:8]
+            )
+        else:
+            context["home_hero_cards"] = []
+            context["home_category_cards"] = []
+            context["home_features"] = []
+            context["home_featured_categories"] = []
+            context["home_featured_products"] = []
 
     if page_name == "delivery":
         context["delivery_tariffs"] = list(
@@ -580,6 +710,12 @@ def legal_view(request, kind):
     fallback = LEGAL_FALLBACK.get(kind, "")
     content_html = (site_page.content if site_page and site_page.content else fallback)
 
+    seo_meta = _seo_meta_from_page(
+        site_page,
+        default_title=meta["title"],
+        default_description=meta["summary"],
+    )
+
     return render(
         request,
         "legal.html",
@@ -591,6 +727,7 @@ def legal_view(request, kind):
             "legal_updated": meta["updated"],
             "legal_content": content_html,
             "is_admin_content": bool(site_page and site_page.content),
+            "meta": seo_meta,
         },
     )
 

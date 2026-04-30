@@ -1,3 +1,5 @@
+import secrets
+from datetime import datetime
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model, login
@@ -5,11 +7,27 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import F
+from django.utils import timezone
 from rest_framework import serializers
 
-from shop.models import Address, Cart, CartItem, CustomerProfile, Order, OrderItem, Product
+from shop.models import Address, Cart, CartItem, CustomerProfile, Order, OrderItem, Product, PromoCode
 
 from .promo import PromoError, apply_promo, record_redemption
+
+
+def _generate_order_number() -> str:
+    """Generate a unique order number in format ORD-YYYYMMDD-XXXXXX.
+
+    Uses date prefix + 6-character random suffix from a 32-symbol alphabet.
+    Collision space: 32^6 ≈ 1 billion per day — virtually zero collision risk
+    for any realistic order volume. Far safer than the previous max(id)+1
+    approach which had a real race condition under concurrent checkout.
+    """
+    today = timezone.localdate().strftime("%Y%m%d")
+    # Crockford-style alphabet (no I/O/0/1 to avoid look-alikes in printed receipts)
+    alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+    suffix = "".join(secrets.choice(alphabet) for _ in range(6))
+    return f"ORD-{today}-{suffix}"
 
 User = get_user_model()
 
@@ -233,8 +251,11 @@ class OrderSerializer(serializers.ModelSerializer):
         promo_code_input = (validated_data.pop('_promo_code_input', '') or '').strip()
         request = self.context.get("request")
 
-        # ───── Optional: создаём аккаунт + логиним пользователя в сессию ─────
+        # ───── Optional: prepare account creation but DON'T login yet.
+        # If anything below fails, we don't want a half-state with a logged-in
+        # user but no order. Login is deferred to after the order succeeds.
         account_created = False
+        new_user = None
         if create_account and request and not request.user.is_authenticated:
             email = validated_data.get('email', '').strip().lower()
             full_name = validated_data.get('full_name', '').strip()
@@ -247,7 +268,7 @@ class OrderSerializer(serializers.ModelSerializer):
                 suffix += 1
                 username = f"{base_username}{suffix}"
 
-            user = User.objects.create_user(
+            new_user = User.objects.create_user(
                 username=username,
                 email=email,
                 password=password,
@@ -255,30 +276,34 @@ class OrderSerializer(serializers.ModelSerializer):
                 last_name=last_name or '',
             )
             CustomerProfile.objects.get_or_create(
-                user=user,
+                user=new_user,
                 defaults={
                     'first_name': first_name or '',
                     'last_name': last_name or '',
                     'phone': validated_data.get('phone', '') or '',
                 },
             )
-            # Log them in using the session backend so subsequent requests are authenticated.
-            user.backend = 'django.contrib.auth.backends.ModelBackend'
-            login(request, user)
-            validated_data['user'] = user
+            validated_data['user'] = new_user
             account_created = True
         elif request and request.user.is_authenticated:
             validated_data['user'] = request.user
 
-        # Generate unique order number
-        last_id = Order.objects.select_for_update().order_by('-id').values_list('id', flat=True).first()
-        validated_data['number'] = f"ORD-{(last_id or 0) + 1:06d}"
-
-        # Lock products and re-validate stock inside transaction
+        # ───── Lock products with select_for_update + re-validate stock ─────
+        # Single query (FOR UPDATE) to lock all products at once, ordered by pk
+        # to avoid deadlock with parallel transactions touching the same set.
+        product_ids = sorted({int(item['product'].pk) for item in items_data})
+        locked_products = {
+            p.pk: p
+            for p in Product.objects.select_for_update().filter(pk__in=product_ids).order_by('pk')
+        }
         subtotal = Decimal('0')
         for item in items_data:
-            product = Product.objects.select_for_update().get(pk=item['product'].pk)
-            quantity = item.get('quantity', 1)
+            product = locked_products.get(item['product'].pk)
+            if product is None:
+                raise serializers.ValidationError(
+                    f'Товар #{item["product"].pk} больше не доступен.'
+                )
+            quantity = int(item.get('quantity', 1) or 1)
             if product.stock < quantity:
                 raise serializers.ValidationError(
                     f'Недостаточно товара "{product.title}" на складе '
@@ -292,12 +317,18 @@ class OrderSerializer(serializers.ModelSerializer):
         validated_data['subtotal'] = subtotal
         delivery_price = validated_data.get('delivery_price', Decimal('0'))
 
-        # ───── Apply promo code (re-validated server-side) ─────
+        # ───── Apply promo code (re-validated server-side, with row lock) ─────
+        # Lock the PromoCode row BEFORE re-validating to close the race window
+        # between quota_available() check and used_count increment.
         promo_application = None
         if promo_code_input:
+            normalized_code = promo_code_input.strip().upper()
+            # Lock the row; other concurrent checkouts will block here until
+            # this transaction commits/rollbacks. Then re-validate quota.
+            list(PromoCode.objects.select_for_update().filter(code=normalized_code))
             try:
                 promo_application = apply_promo(
-                    promo_code_input,
+                    normalized_code,
                     subtotal=subtotal,
                     delivery_price=delivery_price,
                     items=items_data,
@@ -322,22 +353,30 @@ class OrderSerializer(serializers.ModelSerializer):
 
         validated_data['total'] = max(Decimal('0'), subtotal + delivery_price - discount_amount)
 
-        try:
-            order = Order.objects.create(**validated_data)
-        except IntegrityError:
-            # Order number collision — regenerate
-            last_id = Order.objects.order_by('-id').values_list('id', flat=True).first()
-            validated_data['number'] = f"ORD-{(last_id or 0) + 1:06d}"
-            order = Order.objects.create(**validated_data)
+        # ───── Create the order (with retry on number collision) ─────
+        # The new generator (date+random) makes collisions vanishingly rare,
+        # but we still retry a few times rather than crashing the request.
+        order = None
+        for attempt in range(5):
+            validated_data['number'] = _generate_order_number()
+            try:
+                order = Order.objects.create(**validated_data)
+                break
+            except IntegrityError:
+                if attempt == 4:
+                    raise
+                continue
 
         for item_data in items_data:
             product = item_data['product']
-            quantity = item_data.get('quantity', 1)
+            quantity = int(item_data.get('quantity', 1) or 1)
             if not item_data.get('title_snapshot'):
                 item_data['title_snapshot'] = product.title
             if not item_data.get('sku_snapshot'):
                 item_data['sku_snapshot'] = product.sku
             OrderItem.objects.create(order=order, **item_data)
+            # Atomic stock decrement; CHECK constraint (stock >= 0) prevents
+            # going negative even if validation was bypassed.
             Product.objects.filter(pk=product.pk).update(stock=F('stock') - quantity)
 
         # Record promo redemption (atomic: bumps used_count + creates log row)
@@ -351,8 +390,14 @@ class OrderSerializer(serializers.ModelSerializer):
             order.promo_code_applied = promo_application.promo.code  # type: ignore[attr-defined]
 
         # Backfill customer profile + address from this order where empty.
-        # Covers both freshly-registered and pre-existing authenticated users.
         _sync_profile_from_order(validated_data.get('user'), order)
+
+        # ───── Login the freshly-created user only AFTER everything succeeded.
+        # Use transaction.on_commit so the session cookie is set only when the
+        # whole transaction is durably committed.
+        if new_user is not None and request is not None:
+            new_user.backend = 'django.contrib.auth.backends.ModelBackend'
+            transaction.on_commit(lambda u=new_user, r=request: login(r, u))
 
         # Stash flag on instance so serializer renders `account_created` in response.
         order.account_created = account_created  # type: ignore[attr-defined]

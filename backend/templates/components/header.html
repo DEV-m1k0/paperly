@@ -1,4 +1,36 @@
 <header class="site-header" role="banner">
+  {# Топ-бар с дополнительной информацией (часы работы, телефон, бесплатная доставка). #}
+  {# Рендерится только если в админке заполнено хотя бы одно из полей — иначе скрыт. #}
+  {% if site.work_hours_short or site.work_hours or site.secondary_phone or site.free_shipping_from or site.free_shipping_text %}
+  <div class="site-topbar" aria-label="Информация магазина">
+    <div class="container site-topbar__inner">
+      {% if site.work_hours_short or site.work_hours %}
+        <span class="site-topbar__item">
+          <i class="bi bi-clock" aria-hidden="true"></i>
+          <span>{{ site.work_hours_short|default:site.work_hours }}</span>
+        </span>
+      {% endif %}
+      {% if site.secondary_phone %}
+        <a class="site-topbar__item" href="tel:{{ site.secondary_phone }}">
+          <i class="bi bi-headset" aria-hidden="true"></i>
+          <span>{{ site.secondary_phone }}</span>
+        </a>
+      {% endif %}
+      {% if site.free_shipping_text %}
+        <span class="site-topbar__item site-topbar__item--accent">
+          <i class="bi bi-truck" aria-hidden="true"></i>
+          <span>{{ site.free_shipping_text }}</span>
+        </span>
+      {% elif site.free_shipping_from %}
+        <span class="site-topbar__item site-topbar__item--accent">
+          <i class="bi bi-truck" aria-hidden="true"></i>
+          <span>Бесплатная доставка от {{ site.free_shipping_from|floatformat:"0" }} ₽</span>
+        </span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
   <div class="container site-header__row">
     <a class="site-logo" href="{% url 'home' %}" aria-label="{{ site.site_name|default:'Paperly' }} — главная">
       <span class="site-logo__mark" aria-hidden="true">

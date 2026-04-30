@@ -127,6 +127,22 @@
   }
 }
 
+/* Дополнительная подпись в карточке контактов (второй телефон / sales-email / город). */
+.contact-card__sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7780;
+  line-height: 1.4;
+}
+.contact-card__sub a {
+  color: #0e766e;
+  text-decoration: none;
+}
+.contact-card__sub a:hover {
+  text-decoration: underline;
+}
+
 /* ═══════════════════════════════════════════════════════════════
  * Page hero — на очень узких экранах (<380px)
  * ═══════════════════════════════════════════════════════════════ */

@@ -24,16 +24,34 @@
             <span>{{ site.phone }}</span>
           </a>
           {% endif %}
+          {% if site.secondary_phone %}
+          <a class="site-footer__contact" href="tel:{{ site.secondary_phone }}">
+            <i class="bi bi-headset" aria-hidden="true"></i>
+            <span>{{ site.secondary_phone }}</span>
+          </a>
+          {% endif %}
           {% if site.email %}
           <a class="site-footer__contact" href="mailto:{{ site.email }}">
             <i class="bi bi-envelope-fill" aria-hidden="true"></i>
             <span>{{ site.email }}</span>
           </a>
           {% endif %}
+          {% if site.sales_email and site.sales_email != site.email %}
+          <a class="site-footer__contact" href="mailto:{{ site.sales_email }}">
+            <i class="bi bi-briefcase-fill" aria-hidden="true"></i>
+            <span>{{ site.sales_email }}</span>
+          </a>
+          {% endif %}
           {% if site.address %}
           <span class="site-footer__contact">
             <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
             <span>{{ site.address }}</span>
+          </span>
+          {% endif %}
+          {% if site.work_hours %}
+          <span class="site-footer__contact">
+            <i class="bi bi-clock-fill" aria-hidden="true"></i>
+            <span>{{ site.work_hours }}</span>
           </span>
           {% endif %}
         </div>

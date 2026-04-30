@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from django.core.cache import cache
 from django.db.models import Max, Min
 
 from shop.models import (
@@ -23,6 +24,13 @@ from shop.models import (
     Category,
     Product,
 )
+
+
+# Cache key + TTL for the assembled schema. Invalidated by save/delete
+# signals on Product/Brand/Category/CatalogFilterGroup/CatalogFilterOption
+# (see signal handler at the bottom of this module).
+_SCHEMA_CACHE_KEY = "catalog:filter_schema:v1"
+_SCHEMA_CACHE_TTL = 60 * 5  # 5 minutes
 
 
 # --------- Defaults -----------------------------------------------------------
@@ -253,4 +261,20 @@ def build_custom_groups():
 
 
 def build_full_schema():
-    return build_default_schema() + build_custom_groups()
+    """Cached entry point — used by the /api/catalog-filters/ endpoint.
+
+    The underlying queries are stable for minutes at a time (admin edits to
+    catalog data are rare), so we serve from cache by default and rebuild on
+    miss or admin save (see signal handler in shop.signals).
+    """
+    cached = cache.get(_SCHEMA_CACHE_KEY)
+    if cached is not None:
+        return cached
+    schema = build_default_schema() + build_custom_groups()
+    cache.set(_SCHEMA_CACHE_KEY, schema, _SCHEMA_CACHE_TTL)
+    return schema
+
+
+def invalidate_schema_cache() -> None:
+    """Drop the cached schema. Called from save/delete signals."""
+    cache.delete(_SCHEMA_CACHE_KEY)

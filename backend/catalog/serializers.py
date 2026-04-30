@@ -45,24 +45,38 @@ class CatalogFilterOptionSerializer(serializers.ModelSerializer):
 class CatalogFilterGroupSerializer(serializers.ModelSerializer):
     options = serializers.SerializerMethodField()
 
+    # Brands list is cached per-context (one shared list per serializer
+    # instantiation cycle) so a paginated list of N filter groups doesn't
+    # produce N separate `Brand.objects.filter(...)` queries.
+    def _get_brands_cached(self):
+        cached = self.context.get("_brand_options_cache")
+        if cached is not None:
+            return cached
+        brands = list(Brand.objects.filter(is_active=True).order_by("name"))
+        payload = [
+            {
+                "id": brand.id,
+                "label": brand.name,
+                "query_param": "brand",
+                "value": brand.slug,
+                "sort_order": 0,
+            }
+            for brand in brands
+        ]
+        self.context["_brand_options_cache"] = payload
+        return payload
+
     def get_options(self, obj):
         slug = (obj.slug or "").strip().lower()
         title = (obj.title or "").strip().lower()
-        has_brand_option = obj.options.filter(query_param="brand", is_active=True).exists()
+        # Walk in-memory `options` (prefetched) instead of running a fresh
+        # SELECT every serialize.
+        active_options = [opt for opt in obj.options.all() if opt.is_active]
+        has_brand_option = any(opt.query_param == "brand" for opt in active_options)
         is_brand_group = slug in {"brand", "brands"} or "бренд" in title or has_brand_option
         if is_brand_group:
-            brands = Brand.objects.filter(is_active=True).order_by("name")
-            return [
-                {
-                    "id": brand.id,
-                    "label": brand.name,
-                    "query_param": "brand",
-                    "value": brand.slug,
-                    "sort_order": 0,
-                }
-                for brand in brands
-            ]
-        return CatalogFilterOptionSerializer(obj.options.all(), many=True).data
+            return self._get_brands_cached()
+        return CatalogFilterOptionSerializer(active_options, many=True).data
 
     class Meta:
         model = CatalogFilterGroup
@@ -78,10 +92,11 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
     def get_image_url(self, obj):
         if obj.image:
+            version = int(obj.updated_at.timestamp()) if obj.updated_at else obj.pk
             request = self.context.get("request")
             if request:
-                return request.build_absolute_uri(obj.image.url)
-            return obj.image.url
+                return request.build_absolute_uri(f"{obj.image.url}?v={version}")
+            return f"{obj.image.url}?v={version}"
         return obj.image_url
 
 

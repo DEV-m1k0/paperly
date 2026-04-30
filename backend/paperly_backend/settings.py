@@ -58,6 +58,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "pages.context_processors.site_settings",
+                "shop.context_processors.admin_notifications",
             ],
         },
     },
@@ -143,10 +144,79 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.ScopedRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
         "anon": "60/minute",
         "user": "200/minute",
+        # Custom scopes — referenced via `throttle_scope` on individual views.
+        # checkout: каст. throttling for guest order creation (защита от спама).
+        "checkout": "10/minute",
+    },
+}
+
+# ── Caching ──
+# По умолчанию Django использует LocMemCache (per-process), что не работает
+# между worker'ами. Если задан явный REDIS_URL — используем Redis. Иначе
+# LocMem (приемлемо для одного worker'а в DEBUG / single-process деплое).
+#
+# Намеренно НЕ переиспользуем CELERY_BROKER_URL — он имеет дефолтное значение,
+# и если Redis не запущен локально, кэш-операции падали бы при первом GET.
+_REDIS_URL = os.environ.get("REDIS_URL", "").strip()
+if _REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": _REDIS_URL,
+            "TIMEOUT": 300,  # 5 минут default
+            "KEY_PREFIX": "paperly",
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "paperly-default",
+            "TIMEOUT": 300,
+        }
+    }
+
+# ── Logging ──
+# Без явной конфигурации Django скрывает большинство ошибок в production.
+# Шлём логи в stdout/stderr, чтобы платформа (Render/Heroku/journald)
+# забирала их штатно. Уровни легко переопределяются через env.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} [{levelname}] {name}: {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "[{levelname}] {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose" if not DEBUG else "simple",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": os.environ.get("LOG_LEVEL", "INFO"),
+    },
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        "django.security": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        # Наши приложения
+        "checkout": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "marketing": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "catalog": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "shop": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
 }
 
@@ -187,8 +257,8 @@ JAZZMIN_SETTINGS = {
 
     # ── Top menu ──
     "topmenu_links": [
-        {"name": _("Сайт"), "url": "home", "new_window": True, "icon": "fas fa-globe"},
-        {"name": _("Каталог"), "url": "/catalog/", "new_window": True, "icon": "fas fa-grip"},
+        {"name": _("Сайт"), "url": "home", "new_window": False, "icon": "fas fa-globe"},
+        {"name": _("Каталог"), "url": "/catalog/", "new_window": False, "icon": "fas fa-grip"},
         {"model": "shop.Order"},
         {"model": "shop.Product"},
     ],
@@ -202,7 +272,25 @@ JAZZMIN_SETTINGS = {
     "show_sidebar": True,
     "navigation_expanded": False,          # collapsed groups — cleaner look
     "hide_apps": [],
-    "hide_models": ["shop.GiftCertificate"],
+    "hide_models": [
+        "shop.GiftCertificate",
+        # Inline-блоки HomePage — редактируются только из формы главной.
+        "shop.HomeHeroCard",
+        "shop.HomeCategoryCard",
+        "shop.HomeFeature",
+        # Inline-блоки AboutPage / DeliveryPage / WholesalePage.
+        "shop.AboutFeature",
+        "shop.AboutStep",
+        "shop.AboutMissionBullet",
+        "shop.AboutB2BBullet",
+        "shop.DeliveryFreeCardItem",
+        "shop.DeliveryStep",
+        "shop.DeliveryPayMethod",
+        "shop.DeliveryFAQ",
+        "shop.WholesaleFeature",
+        "shop.WholesaleStep",
+        "shop.WholesaleSideBullet",
+    ],
     "order_with_respect_to": [
         # Group 1: Магазин
         "shop",
@@ -239,6 +327,10 @@ JAZZMIN_SETTINGS = {
         "shop.ReturnRequest",
         "shop.ReturnRequestItem",
         # Group 6: Контент
+        "shop.HomePage",
+        "shop.AboutPage",
+        "shop.DeliveryPage",
+        "shop.WholesalePage",
         "shop.SitePage",
         "shop.SocialLink",
         "shop.SiteSetting",
@@ -293,6 +385,13 @@ JAZZMIN_SETTINGS = {
         "shop.returnrequestitem": "fas fa-reply",
 
         # Контент сайта
+        "shop.homepage": "fas fa-house-laptop",
+        "shop.aboutpage": "fas fa-circle-info",
+        "shop.deliverypage": "fas fa-truck-fast",
+        "shop.wholesalepage": "fas fa-warehouse",
+        "shop.homeherocard": "fas fa-id-card-clip",
+        "shop.homecategorycard": "fas fa-grip",
+        "shop.homefeature": "fas fa-star-of-life",
         "shop.sitepage": "fas fa-file-lines",
         "shop.sitesetting": "fas fa-sliders",
         "shop.sociallink": "fas fa-share-nodes",

@@ -4,7 +4,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{{ site.site_name|default:"Paperly" }}{% endblock %}</title>
+
+  {# ── SEO meta. `meta` приходит из view'ов; на нестрогих страницах его нет — все блоки внизу безопасны через |default. #}
+  {% with default_title=site.site_name|default:"Paperly" %}
+    <title>{% if meta.title %}{{ meta.title }}{% else %}{% block title %}{{ default_title }}{% endblock %}{% endif %}</title>
+    {% if meta.description %}<meta name="description" content="{{ meta.description }}">{% elif site.tagline %}<meta name="description" content="{{ site.tagline }}">{% endif %}
+
+    {# Open Graph / Twitter — для красивых превью при репосте. #}
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ default_title }}">
+    <meta property="og:title" content="{% if meta.title %}{{ meta.title }}{% else %}{{ default_title }}{% endif %}">
+    {% if meta.description %}<meta property="og:description" content="{{ meta.description }}">{% endif %}
+    {% if meta.og_image %}<meta property="og:image" content="{{ meta.og_image }}">{% endif %}
+    <meta name="twitter:card" content="{% if meta.og_image %}summary_large_image{% else %}summary{% endif %}">
+  {% endwith %}
+
   <link rel="stylesheet" href="{% static 'vendor/fonts/fonts.css' %}">
   <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
   <link rel="stylesheet" href="{% static 'vendor/flatpickr/flatpickr.min.css' %}">

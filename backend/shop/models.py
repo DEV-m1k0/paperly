@@ -20,10 +20,57 @@ class TimeStampedModel(models.Model):
 class SiteSetting(models.Model):
     site_name = models.CharField("Название сайта", max_length=255, default="Paperly")
     tagline = models.CharField("Слоган", max_length=500, blank=True)
-    phone = models.CharField("Телефон", max_length=32, blank=True)
-    email = models.EmailField("Email", blank=True)
+
+    # ── Контакты ──
+    phone = models.CharField("Телефон (основной)", max_length=32, blank=True)
+    secondary_phone = models.CharField(
+        "Телефон (дополнительный)", max_length=32, blank=True,
+        help_text="Например, для оптовых клиентов или другого региона.",
+    )
+    email = models.EmailField("Email (основной)", blank=True)
+    sales_email = models.EmailField(
+        "Email отдела продаж", blank=True,
+        help_text="Если оставить пустым — везде показывается основной email.",
+    )
+    wholesale_email = models.EmailField(
+        "Email для оптовых клиентов", blank=True,
+        help_text="Используется на странице «Оптовым клиентам». Пусто — основной email.",
+    )
+
+    # ── Локация / часы ──
     city = models.CharField("Город", max_length=120, blank=True)
     address = models.CharField("Адрес офиса", max_length=255, blank=True)
+    work_hours = models.CharField(
+        "Часы работы (полные)", max_length=255, blank=True,
+        help_text="Например: «Пн–Пт 09:00–21:00, Сб–Вс 10:00–18:00».",
+    )
+    work_hours_short = models.CharField(
+        "Часы работы (короткая запись)", max_length=120, blank=True,
+        help_text="Для шапки/футера: «09:00–21:00 ежедневно».",
+    )
+    latitude = models.DecimalField(
+        "Широта офиса", max_digits=9, decimal_places=6, null=True, blank=True,
+        help_text="Координата для карты на странице «Контакты».",
+    )
+    longitude = models.DecimalField(
+        "Долгота офиса", max_digits=9, decimal_places=6, null=True, blank=True,
+    )
+
+    # ── Маркетинговые плашки ──
+    free_shipping_from = models.DecimalField(
+        "Бесплатная доставка от суммы, ₽", max_digits=10, decimal_places=2,
+        null=True, blank=True,
+        help_text="Если задано — на сайте показывается плашка «Бесплатная доставка от X ₽».",
+    )
+    free_shipping_text = models.CharField(
+        "Текст плашки бесплатной доставки", max_length=200, blank=True,
+        help_text="Если оставить пустым, текст соберётся автоматически.",
+    )
+    cookies_banner_text = models.TextField(
+        "Текст cookie-баннера", blank=True,
+        help_text="Если пусто — используется стандартный текст.",
+    )
+
     copyright_text = models.CharField("Текст копирайта", max_length=255, blank=True)
 
     class Meta:
@@ -62,6 +109,10 @@ class Category(TimeStampedModel):
     class Meta:
         ordering = ["sort_order", "name"]
         constraints = [models.UniqueConstraint(fields=["parent", "name"], name="uniq_category_name_in_parent")]
+        indexes = [
+            # Menu-builder queries always pair "active" with parent traversal.
+            models.Index(fields=["parent", "is_active"]),
+        ]
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
 
@@ -82,7 +133,7 @@ class Brand(TimeStampedModel):
     logo_url = models.URLField("URL логотипа", blank=True)
     logo = models.ImageField("Логотип", upload_to="brands/", blank=True)
     website = models.URLField("Сайт", blank=True)
-    is_active = models.BooleanField("Активен", default=True)
+    is_active = models.BooleanField("Активен", default=True, db_index=True)
 
     class Meta:
         ordering = ["name"]
@@ -194,7 +245,15 @@ class Product(TimeStampedModel):
             models.CheckConstraint(
                 check=models.Q(old_price__isnull=True) | models.Q(old_price__gte=models.F("price")),
                 name="old_price_gte_price_or_null",
-            )
+            ),
+            # DB-level guard against negative stock. PositiveIntegerField at
+            # the Python level only validates via forms/serializers, but raw
+            # F('stock') - quantity updates bypass that. This constraint makes
+            # the DB reject the update transactionally.
+            models.CheckConstraint(
+                check=models.Q(stock__gte=0),
+                name="product_stock_non_negative",
+            ),
         ]
         verbose_name = "Товар"
         verbose_name_plural = "Товары"
@@ -292,6 +351,12 @@ class Promotion(TimeStampedModel):
 
     class Meta:
         ordering = ["-start_at"]
+        indexes = [
+            # apply_product_filters and the catalog page query promotions by
+            # is_active + start/end window — this triple-column index makes
+            # it an index-only scan.
+            models.Index(fields=["is_active", "start_at", "end_at"]),
+        ]
         verbose_name = "Акция"
         verbose_name_plural = "Акции"
 
@@ -445,6 +510,16 @@ class Address(TimeStampedModel):
     class Meta:
         verbose_name = "Адрес"
         verbose_name_plural = "Адреса"
+        constraints = [
+            # At most one default address per (profile, address_type). The
+            # _checkout_prefill code always picks the first default — having
+            # multiple flagged led to non-deterministic prefills.
+            models.UniqueConstraint(
+                fields=["profile", "address_type"],
+                condition=models.Q(is_default=True),
+                name="uniq_default_address_per_profile_type",
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"{self.city}, {self.street}"
@@ -562,6 +637,13 @@ class Order(TimeStampedModel):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            # Guest-order tracking by email; admin search ("моё имя"); promo
+            # quota lookup by email.
+            models.Index(fields=["email"]),
+            # Admin date_hierarchy + status filters use this together a lot.
+            models.Index(fields=["status", "created_at"]),
+        ]
         verbose_name = "Заказ"
         verbose_name_plural = "Заказы"
 
@@ -715,12 +797,41 @@ class SitePage(TimeStampedModel):
     content = models.TextField("Содержание (HTML)", blank=True, help_text="HTML-контент страницы. Отображается в основном блоке.")
     is_published = models.BooleanField("Опубликована", default=True)
 
+    # ── SEO meta (опциональные; при пустом значении используются дефолты сайта) ──
+    meta_title = models.CharField(
+        "SEO заголовок (title)", max_length=200, blank=True,
+        help_text="То, что видно во вкладке браузера и в выдаче поисковиков. "
+                  "Если пусто — берётся обычный заголовок страницы.",
+    )
+    meta_description = models.CharField(
+        "SEO описание (description)", max_length=300, blank=True,
+        help_text="2–3 предложения для сниппета в поисковой выдаче (≤160 симв. идеально).",
+    )
+    og_image = models.ImageField(
+        "Картинка для соцсетей (OG image)", upload_to="seo/", blank=True,
+        help_text="Превью при репосте ссылки в Telegram/VK/Facebook. Рекомендуем 1200×630.",
+    )
+    og_image_url = models.URLField(
+        "URL картинки для соцсетей", blank=True,
+        help_text="Если файл не загружен, можно указать прямую ссылку.",
+    )
+
     class Meta:
         verbose_name = "Инфо-страница"
         verbose_name_plural = "Инфо-страницы"
 
     def __str__(self) -> str:
         return self.title
+
+    @property
+    def og_image_display_url(self) -> str:
+        """Resolve the OG image: uploaded file first, fallback to URL."""
+        if self.og_image:
+            try:
+                return self.og_image.url
+            except Exception:
+                pass
+        return self.og_image_url or ""
 
 
 # ──────────────────────────────────────────────
@@ -973,14 +1084,687 @@ class NewsletterCampaign(TimeStampedModel):
 
 
 # ──────────────────────────────────────────────
-# Автогенерация slug
+# Контент главной страницы (singleton + блоки)
 # ──────────────────────────────────────────────
+class HomePage(TimeStampedModel):
+    """Singleton-модель с настраиваемым контентом главной.
+
+    Все поля опциональны: если не заполнены, шаблон index.html использует
+    встроенные дефолтные значения (как было до внедрения админки). Это
+    позволяет включать кастомизацию инкрементально.
+    """
+
+    # ── Hero ──
+    hero_eyebrow = models.CharField(
+        "Hero · подпись над заголовком", max_length=120, blank=True,
+        help_text='Маленькая строка над h1. Пример: «Paperly — канцтовары».',
+    )
+    hero_title = models.CharField(
+        "Hero · основной заголовок", max_length=255, blank=True,
+        help_text='Главный заголовок страницы. Пример: «Соберите идеальный набор».',
+    )
+    hero_title_accent = models.CharField(
+        "Hero · акцентный фрагмент", max_length=200, blank=True,
+        help_text="Часть заголовка, которая выделится цветом. Пример: «учёбы, офиса и творчества».",
+    )
+    hero_subtitle = models.TextField(
+        "Hero · подзаголовок (lead)", blank=True,
+        help_text="2–3 предложения под заголовком. Можно писать обычным текстом.",
+    )
+    hero_cta_primary_label = models.CharField("Hero · CTA #1 · текст", max_length=60, blank=True)
+    hero_cta_primary_url = models.CharField(
+        "Hero · CTA #1 · ссылка", max_length=300, blank=True,
+        help_text="Абсолютная или относительная ссылка. Пример: «/catalog/», «https://…».",
+    )
+    hero_cta_primary_icon = models.CharField(
+        "Hero · CTA #1 · иконка", max_length=60, blank=True,
+        help_text="Bootstrap-icons класс, например: bi-grid, bi-arrow-right.",
+    )
+    hero_cta_secondary_label = models.CharField("Hero · CTA #2 · текст", max_length=60, blank=True)
+    hero_cta_secondary_url = models.CharField("Hero · CTA #2 · ссылка", max_length=300, blank=True)
+    hero_cta_secondary_icon = models.CharField("Hero · CTA #2 · иконка", max_length=60, blank=True)
+
+    # ── Управление видимостью секций ──
+    show_stats = models.BooleanField(
+        "Показывать блок «цифры о магазине»", default=True,
+        help_text="Плашка с автоматическими цифрами (товары/бренды/пункты).",
+    )
+    show_categories = models.BooleanField("Показывать «Популярные категории»", default=True)
+    show_promotions = models.BooleanField("Показывать «Акции и скидки»", default=True)
+    show_new_arrivals = models.BooleanField("Показывать «Новинки»", default=True)
+    show_bestsellers = models.BooleanField("Показывать «Хиты продаж»", default=True)
+    show_brands = models.BooleanField("Показывать «Популярные бренды»", default=True)
+    show_services = models.BooleanField("Показывать карточки сервисов (доставка/пункты/опт)", default=True)
+    show_features = models.BooleanField("Показывать блок «Почему покупают»", default=True)
+
+    # ── Заголовки секций (опциональные оверрайды) ──
+    features_title = models.CharField(
+        "Заголовок блока «Почему мы»", max_length=200, blank=True,
+        help_text='Если пусто — «Почему покупают в {название_сайта}».',
+    )
+    features_eyebrow = models.CharField(
+        "Подпись над «Почему мы»", max_length=120, blank=True,
+        help_text='По умолчанию — «Почему мы».',
+    )
+
+    # ── Подборки ──
+    featured_categories = models.ManyToManyField(
+        "Category", verbose_name="Витринные категории", blank=True, related_name="featured_on_homepage",
+        help_text="Если выбраны — заменяют дефолтные карточки в блоке «Популярные категории». "
+                  "Иконка/цвет берётся из «Карточек категорий на главной» (см. ниже) при совпадении.",
+    )
+    featured_products = models.ManyToManyField(
+        "Product", verbose_name="Витринные товары (опц.)", blank=True, related_name="featured_on_homepage",
+        help_text="Если задано — рендерятся под hero как «Рекомендуем». До 8 шт по sort_order.",
+    )
+
+    class Meta:
+        verbose_name = "Главная страница"
+        verbose_name_plural = "Главная страница"
+
+    def __str__(self) -> str:
+        return "Главная страница"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        """Singleton accessor — always returns the row, creating if missing."""
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    @property
+    def hero_image_url(self) -> str:
+        """Currently no hero image field — reserved for future expansion."""
+        return ""
+
+
+class HomeHeroCard(TimeStampedModel):
+    """Карточка справа от hero-блока (сейчас их 3: «Снова в школу», «Офис», «Творческая зона»)."""
+
+    class ColorVariant(models.TextChoices):
+        SCHOOL = "school", "Школа (бирюза)"
+        OFFICE = "office", "Офис (нейтральный)"
+        ART = "art", "Творчество (амбер)"
+        DEFAULT = "default", "Базовый"
+
+    home = models.ForeignKey(HomePage, verbose_name="Главная", on_delete=models.CASCADE, related_name="hero_cards")
+    badge = models.CharField(
+        "Бейдж (необязательно)", max_length=60, blank=True,
+        help_text='Маленькая плашка над заголовком, например «Снова в школу».',
+    )
+    title = models.CharField("Заголовок карточки", max_length=120)
+    description = models.CharField("Описание", max_length=200, blank=True)
+    icon_class = models.CharField(
+        "Иконка", max_length=60, blank=True,
+        help_text="Bootstrap-icons класс, например: bi-backpack, bi-briefcase, bi-palette.",
+    )
+    url = models.CharField(
+        "Ссылка", max_length=300,
+        help_text="Куда ведёт карточка. Пример: «/catalog/?category=kids».",
+    )
+    color_variant = models.CharField(
+        "Цветовая схема", max_length=16, choices=ColorVariant.choices, default=ColorVariant.DEFAULT,
+    )
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
+    is_active = models.BooleanField("Показывать", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Hero · карточка"
+        verbose_name_plural = "Hero · карточки"
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class HomeCategoryCard(TimeStampedModel):
+    """Карточки в блоке «Популярные категории».
+
+    Когда заданы — полностью заменяют дефолтные 6 захардкоженных карточек.
+    Пусто — рендерится дефолт из шаблона.
+    """
+
+    home = models.ForeignKey(HomePage, verbose_name="Главная", on_delete=models.CASCADE, related_name="category_cards")
+    title = models.CharField("Заголовок", max_length=120)
+    subtitle = models.CharField("Подпись (мелкая)", max_length=200, blank=True)
+    icon_class = models.CharField(
+        "Иконка", max_length=60, blank=True,
+        help_text="Bootstrap-icons класс. Примеры: bi-journal-bookmark, bi-pencil, bi-palette.",
+    )
+    url = models.CharField(
+        "Ссылка", max_length=300,
+        help_text="Например: «/catalog/?category=paper» или «/brands/».",
+    )
+    color_modifier = models.CharField(
+        "CSS-модификатор", max_length=24, blank=True,
+        help_text="Хвост к классу .category-card—. Допустимые: paper, writing, art, office, kids, brands. "
+                  "Пусто — без подсветки.",
+    )
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
+    is_active = models.BooleanField("Показывать", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Карточка категории"
+        verbose_name_plural = "Карточки категорий"
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class HomeFeature(TimeStampedModel):
+    """Блок «Почему покупают в Paperly» — 4 преимущества."""
+
+    class ColorVariant(models.TextChoices):
+        TEAL = "teal", "Бирюзовый"
+        AMBER = "amber", "Янтарный"
+        ROSE = "rose", "Розовый"
+        INDIGO = "indigo", "Индиго"
+
+    home = models.ForeignKey(HomePage, verbose_name="Главная", on_delete=models.CASCADE, related_name="features")
+    icon_class = models.CharField(
+        "Иконка", max_length=60,
+        help_text="Bootstrap-icons. Примеры: bi-box-seam, bi-lightning-charge, bi-arrow-counterclockwise, bi-percent.",
+    )
+    color_variant = models.CharField(
+        "Цвет иконки", max_length=16, choices=ColorVariant.choices, default=ColorVariant.TEAL,
+    )
+    title = models.CharField("Заголовок", max_length=120)
+    description = models.CharField("Описание", max_length=300)
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
+    is_active = models.BooleanField("Показывать", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Преимущество"
+        verbose_name_plural = "Преимущества"
+
+    def __str__(self) -> str:
+        return self.title
+
+
+# ──────────────────────────────────────────────
+# Контент страниц About / Delivery / Wholesale (singleton-ы)
+# ──────────────────────────────────────────────
+# Все три модели следуют единому паттерну:
+#   * singleton (одна запись на проект, pk=1)
+#   * Hero-блок (eyebrow / title / accent / subtitle / 2 CTA)
+#   * Видимость секций (булевые флаги show_*)
+#   * Inline-блоки (features / steps / faq / bullets)
+#   * Шаблон делает fallback на захардкоженный дизайн, если запись пустая
+#     или не создана — это гарантирует совместимость с существующим сайтом.
+
+
+class AboutPage(TimeStampedModel):
+    """Singleton для контента страницы /about/."""
+
+    # ── Hero ──
+    hero_eyebrow = models.CharField("Hero · подпись", max_length=120, blank=True)
+    hero_title = models.CharField("Hero · заголовок", max_length=255, blank=True)
+    hero_title_accent = models.CharField("Hero · акцент в заголовке", max_length=200, blank=True)
+    hero_subtitle = models.TextField("Hero · подзаголовок", blank=True)
+    hero_cta_primary_label = models.CharField("Hero · CTA #1 · текст", max_length=60, blank=True)
+    hero_cta_primary_url = models.CharField("Hero · CTA #1 · ссылка", max_length=300, blank=True)
+    hero_cta_primary_icon = models.CharField("Hero · CTA #1 · иконка", max_length=60, blank=True)
+    hero_cta_secondary_label = models.CharField("Hero · CTA #2 · текст", max_length=60, blank=True)
+    hero_cta_secondary_url = models.CharField("Hero · CTA #2 · ссылка", max_length=300, blank=True)
+    hero_cta_secondary_icon = models.CharField("Hero · CTA #2 · иконка", max_length=60, blank=True)
+
+    # ── Mission card (правый блок hero) ──
+    mission_eyebrow = models.CharField("Mission · заголовок", max_length=120, blank=True)
+    mission_title = models.CharField("Mission · подпись", max_length=200, blank=True)
+    mission_text = models.TextField("Mission · описание", blank=True)
+    mission_icon = models.CharField(
+        "Mission · иконка", max_length=60, blank=True,
+        help_text="Bootstrap-icons класс (bi-compass и т.п.). Пусто — дефолт.",
+    )
+
+    # ── Section visibility ──
+    show_stats = models.BooleanField("Показывать «цифры о магазине»", default=True)
+    show_features = models.BooleanField("Показывать «Преимущества»", default=True)
+    show_steps = models.BooleanField("Показывать «Как мы работаем»", default=True)
+    show_b2b_cta = models.BooleanField("Показывать B2B CTA", default=True)
+    show_contacts = models.BooleanField("Показывать «Контакты»", default=True)
+
+    # ── Section titles (опциональные оверрайды) ──
+    features_eyebrow = models.CharField("Features · подпись", max_length=120, blank=True)
+    features_title = models.CharField("Features · заголовок", max_length=200, blank=True)
+    steps_eyebrow = models.CharField("Steps · подпись", max_length=120, blank=True)
+    steps_title = models.CharField("Steps · заголовок", max_length=200, blank=True)
+    contacts_eyebrow = models.CharField("Contacts · подпись", max_length=120, blank=True)
+    contacts_title = models.CharField("Contacts · заголовок", max_length=200, blank=True)
+
+    # ── B2B CTA section ──
+    b2b_eyebrow = models.CharField("B2B · подпись", max_length=120, blank=True)
+    b2b_title = models.CharField("B2B · заголовок", max_length=200, blank=True)
+    b2b_text = models.TextField("B2B · описание", blank=True)
+    b2b_button_label = models.CharField("B2B · текст кнопки", max_length=60, blank=True)
+    b2b_button_url = models.CharField("B2B · ссылка кнопки", max_length=300, blank=True)
+
+    class Meta:
+        verbose_name = "Страница «О магазине»"
+        verbose_name_plural = "Страница «О магазине»"
+
+    def __str__(self) -> str:
+        return "Страница «О магазине»"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+class AboutFeature(TimeStampedModel):
+    """Карточки в блоке «Преимущества» страницы /about/."""
+
+    class ColorVariant(models.TextChoices):
+        TEAL = "teal", "Бирюзовый"
+        AMBER = "amber", "Янтарный"
+        ROSE = "rose", "Розовый"
+        INDIGO = "indigo", "Индиго"
+
+    page = models.ForeignKey(AboutPage, on_delete=models.CASCADE, related_name="features", verbose_name="Страница")
+    icon_class = models.CharField("Иконка", max_length=60, help_text="Bootstrap-icons. Пример: bi-box-seam.")
+    color_variant = models.CharField("Цвет иконки", max_length=16, choices=ColorVariant.choices, default=ColorVariant.TEAL)
+    title = models.CharField("Заголовок", max_length=120)
+    description = models.CharField("Описание", max_length=300)
+    meta_label = models.CharField(
+        "Доп. подпись", max_length=120, blank=True,
+        help_text='Например, "12 категорий". Опционально.',
+    )
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
+    is_active = models.BooleanField("Показывать", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "About · преимущество"
+        verbose_name_plural = "About · преимущества"
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class AboutStep(TimeStampedModel):
+    """Шаги «Как мы работаем» на странице /about/."""
+
+    page = models.ForeignKey(AboutPage, on_delete=models.CASCADE, related_name="steps", verbose_name="Страница")
+    title = models.CharField("Заголовок", max_length=120)
+    description = models.CharField("Описание", max_length=300)
+    sort_order = models.PositiveIntegerField("Порядок (номер шага)", default=0)
+    is_active = models.BooleanField("Показывать", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "About · шаг"
+        verbose_name_plural = "About · шаги"
+
+    def __str__(self) -> str:
+        return f"{self.sort_order}. {self.title}"
+
+
+class AboutMissionBullet(TimeStampedModel):
+    """Список buzz-points в правой карточке «Наша миссия» страницы /about/."""
+
+    page = models.ForeignKey(AboutPage, on_delete=models.CASCADE, related_name="mission_bullets", verbose_name="Страница")
+    icon_class = models.CharField("Иконка", max_length=60, help_text="Например: bi-patch-check-fill.")
+    label = models.CharField("Текст", max_length=200)
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
+    is_active = models.BooleanField("Показывать", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "About · пункт миссии"
+        verbose_name_plural = "About · пункты миссии"
+
+    def __str__(self) -> str:
+        return self.label
+
+
+class AboutB2BBullet(TimeStampedModel):
+    """Список преимуществ внутри B2B CTA-блока на странице /about/."""
+
+    page = models.ForeignKey(AboutPage, on_delete=models.CASCADE, related_name="b2b_bullets", verbose_name="Страница")
+    icon_class = models.CharField(
+        "Иконка", max_length=60, blank=True,
+        help_text="Опционально. По умолчанию используется bi-check2-circle.",
+    )
+    label = models.CharField("Текст", max_length=200)
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
+    is_active = models.BooleanField("Показывать", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "About · B2B пункт"
+        verbose_name_plural = "About · B2B пункты"
+
+    def __str__(self) -> str:
+        return self.label
+
+
+# ─────────── Delivery ────────────────────────────────────────────────
+
+
+class DeliveryPage(TimeStampedModel):
+    """Singleton для контента страницы /delivery/."""
+
+    # ── Hero ──
+    hero_eyebrow = models.CharField("Hero · подпись", max_length=120, blank=True)
+    hero_title = models.CharField("Hero · заголовок", max_length=255, blank=True)
+    hero_title_accent = models.CharField("Hero · акцент", max_length=200, blank=True)
+    hero_subtitle = models.TextField("Hero · подзаголовок", blank=True)
+    hero_cta_primary_label = models.CharField("Hero · CTA #1 · текст", max_length=60, blank=True)
+    hero_cta_primary_url = models.CharField("Hero · CTA #1 · ссылка", max_length=300, blank=True)
+    hero_cta_primary_icon = models.CharField("Hero · CTA #1 · иконка", max_length=60, blank=True)
+    hero_cta_secondary_label = models.CharField("Hero · CTA #2 · текст", max_length=60, blank=True)
+    hero_cta_secondary_url = models.CharField("Hero · CTA #2 · ссылка", max_length=300, blank=True)
+    hero_cta_secondary_icon = models.CharField("Hero · CTA #2 · иконка", max_length=60, blank=True)
+
+    # ── Free-delivery card (правый блок hero) ──
+    free_card_ribbon = models.CharField("Карточка · ribbon", max_length=40, blank=True)
+    free_card_kicker = models.CharField("Карточка · kicker", max_length=40, blank=True)
+    free_card_title = models.CharField(
+        "Карточка · заголовок", max_length=120, blank=True,
+        help_text="Можно использовать <br> для переноса строки.",
+    )
+    free_card_subtitle = models.CharField(
+        "Карточка · подпись", max_length=200, blank=True,
+        help_text="Например: «при заказе от <b>2 500 ₽</b>». HTML разрешён (только b/strong/em).",
+    )
+
+    # ── Section visibility ──
+    show_calc = models.BooleanField("Показывать «Калькулятор бесплатной доставки»", default=True)
+    show_steps = models.BooleanField("Показывать «От оформления до получения»", default=True)
+    show_pay_methods = models.BooleanField("Показывать «Способы оплаты»", default=True)
+    show_faq = models.BooleanField("Показывать FAQ", default=True)
+    show_final_cta = models.BooleanField("Показывать финальный CTA «Готовы оформить заказ?»", default=True)
+
+    # ── Section titles ──
+    tariffs_eyebrow = models.CharField("Tariffs · подпись", max_length=120, blank=True)
+    tariffs_title = models.CharField("Tariffs · заголовок", max_length=200, blank=True)
+    tariffs_subtitle = models.CharField("Tariffs · подпись под заголовком", max_length=300, blank=True)
+    steps_eyebrow = models.CharField("Steps · подпись", max_length=120, blank=True)
+    steps_title = models.CharField("Steps · заголовок", max_length=200, blank=True)
+    pay_eyebrow = models.CharField("Pay · подпись", max_length=120, blank=True)
+    pay_title = models.CharField("Pay · заголовок", max_length=200, blank=True)
+    faq_eyebrow = models.CharField("FAQ · подпись", max_length=120, blank=True)
+    faq_title = models.CharField("FAQ · заголовок", max_length=200, blank=True)
+
+    # ── Final CTA ──
+    final_cta_title = models.CharField("Final CTA · заголовок", max_length=200, blank=True)
+    final_cta_text = models.CharField("Final CTA · текст", max_length=300, blank=True)
+
+    class Meta:
+        verbose_name = "Страница «Доставка»"
+        verbose_name_plural = "Страница «Доставка»"
+
+    def __str__(self) -> str:
+        return "Страница «Доставка»"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+class DeliveryFreeCardItem(TimeStampedModel):
+    """Пункты внутри free-delivery карточки (правый блок hero)."""
+
+    page = models.ForeignKey(DeliveryPage, on_delete=models.CASCADE, related_name="free_card_items", verbose_name="Страница")
+    label = models.CharField("Что", max_length=120, help_text='Например, «По городу Курск».')
+    value = models.CharField("Срок / условие", max_length=120, help_text='Например, «1–2 дня».')
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
+    is_active = models.BooleanField("Показывать", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Delivery · пункт карточки"
+        verbose_name_plural = "Delivery · пункты карточки"
+
+    def __str__(self) -> str:
+        return f"{self.label} — {self.value}"
+
+
+class DeliveryStep(TimeStampedModel):
+    """Шаги «От оформления до получения»."""
+
+    page = models.ForeignKey(DeliveryPage, on_delete=models.CASCADE, related_name="steps", verbose_name="Страница")
+    icon_class = models.CharField("Иконка", max_length=60, help_text="Например: bi-bag-check, bi-box-seam, bi-truck.")
+    title = models.CharField("Заголовок", max_length=120)
+    description = models.CharField("Описание", max_length=300)
+    sort_order = models.PositiveIntegerField("Порядок (номер шага)", default=0)
+    is_active = models.BooleanField("Показывать", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Delivery · шаг"
+        verbose_name_plural = "Delivery · шаги"
+
+    def __str__(self) -> str:
+        return f"{self.sort_order}. {self.title}"
+
+
+class DeliveryPayMethod(TimeStampedModel):
+    """Карточки «Способы оплаты»."""
+
+    class ColorVariant(models.TextChoices):
+        TEAL = "teal", "Бирюзовый"
+        AMBER = "amber", "Янтарный"
+        ROSE = "rose", "Розовый"
+        INDIGO = "indigo", "Индиго"
+
+    page = models.ForeignKey(DeliveryPage, on_delete=models.CASCADE, related_name="pay_methods", verbose_name="Страница")
+    icon_class = models.CharField("Иконка", max_length=60)
+    color_variant = models.CharField("Цвет", max_length=16, choices=ColorVariant.choices, default=ColorVariant.TEAL)
+    title = models.CharField("Заголовок", max_length=120)
+    description = models.CharField("Описание", max_length=300)
+    badges_text = models.CharField(
+        "Бейджи (через запятую)", max_length=200, blank=True,
+        help_text='Краткие пометки внизу карточки. Пример: «VISA, MasterCard, МИР».',
+    )
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
+    is_active = models.BooleanField("Показывать", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Delivery · способ оплаты"
+        verbose_name_plural = "Delivery · способы оплаты"
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class DeliveryFAQ(TimeStampedModel):
+    """Вопросы и ответы блока FAQ."""
+
+    page = models.ForeignKey(DeliveryPage, on_delete=models.CASCADE, related_name="faqs", verbose_name="Страница")
+    question = models.CharField("Вопрос", max_length=255)
+    answer = models.TextField("Ответ", help_text="Можно использовать HTML (ссылки и т.п.).")
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
+    is_active = models.BooleanField("Показывать", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Delivery · FAQ"
+        verbose_name_plural = "Delivery · FAQ"
+
+    def __str__(self) -> str:
+        return self.question
+
+
+# ─────────── Wholesale ───────────────────────────────────────────────
+
+
+class WholesalePage(TimeStampedModel):
+    """Singleton для контента страницы /wholesale/."""
+
+    # ── Hero ──
+    hero_eyebrow = models.CharField("Hero · подпись", max_length=120, blank=True)
+    hero_title = models.CharField("Hero · заголовок", max_length=255, blank=True)
+    hero_title_accent = models.CharField("Hero · акцент", max_length=200, blank=True)
+    hero_subtitle = models.TextField("Hero · подзаголовок", blank=True)
+    hero_cta_primary_label = models.CharField("Hero · CTA #1 · текст", max_length=60, blank=True)
+    hero_cta_primary_url = models.CharField(
+        "Hero · CTA #1 · ссылка", max_length=300, blank=True,
+        help_text='По умолчанию ведёт на форму заявки в этой же странице («#request»).',
+    )
+    hero_cta_primary_icon = models.CharField("Hero · CTA #1 · иконка", max_length=60, blank=True)
+
+    # ── Side card (правый блок hero) ──
+    side_eyebrow = models.CharField("Side · подпись", max_length=120, blank=True)
+    side_title = models.CharField("Side · заголовок", max_length=200, blank=True)
+    side_text = models.TextField("Side · описание", blank=True)
+    side_icon = models.CharField("Side · иконка", max_length=60, blank=True)
+
+    # ── Section visibility ──
+    show_features = models.BooleanField("Показывать «Условия»", default=True)
+    show_steps = models.BooleanField("Показывать «Как начать работу»", default=True)
+    show_form = models.BooleanField("Показывать форму заявки", default=True)
+
+    # ── Section titles ──
+    features_eyebrow = models.CharField("Features · подпись", max_length=120, blank=True)
+    features_title = models.CharField("Features · заголовок", max_length=200, blank=True)
+    steps_eyebrow = models.CharField("Steps · подпись", max_length=120, blank=True)
+    steps_title = models.CharField("Steps · заголовок", max_length=200, blank=True)
+    form_eyebrow = models.CharField("Form · подпись", max_length=120, blank=True)
+    form_title = models.CharField("Form · заголовок", max_length=200, blank=True)
+    form_intro_title = models.CharField("Form · заголовок интро-блока", max_length=200, blank=True)
+    form_intro_text = models.CharField("Form · текст интро-блока", max_length=300, blank=True)
+
+    class Meta:
+        verbose_name = "Страница «Опт»"
+        verbose_name_plural = "Страница «Опт»"
+
+    def __str__(self) -> str:
+        return "Страница «Опт»"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+class WholesaleFeature(TimeStampedModel):
+    """Преимущества опт-сотрудничества."""
+
+    class ColorVariant(models.TextChoices):
+        TEAL = "teal", "Бирюзовый"
+        AMBER = "amber", "Янтарный"
+        ROSE = "rose", "Розовый"
+        INDIGO = "indigo", "Индиго"
+
+    page = models.ForeignKey(WholesalePage, on_delete=models.CASCADE, related_name="features", verbose_name="Страница")
+    icon_class = models.CharField("Иконка", max_length=60)
+    color_variant = models.CharField("Цвет иконки", max_length=16, choices=ColorVariant.choices, default=ColorVariant.TEAL)
+    title = models.CharField("Заголовок", max_length=120)
+    description = models.CharField("Описание", max_length=300)
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
+    is_active = models.BooleanField("Показывать", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Wholesale · преимущество"
+        verbose_name_plural = "Wholesale · преимущества"
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class WholesaleStep(TimeStampedModel):
+    """Шаги «Как начать работу»."""
+
+    page = models.ForeignKey(WholesalePage, on_delete=models.CASCADE, related_name="steps", verbose_name="Страница")
+    title = models.CharField("Заголовок", max_length=120)
+    description = models.CharField("Описание", max_length=300)
+    sort_order = models.PositiveIntegerField("Порядок (номер шага)", default=0)
+    is_active = models.BooleanField("Показывать", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Wholesale · шаг"
+        verbose_name_plural = "Wholesale · шаги"
+
+    def __str__(self) -> str:
+        return f"{self.sort_order}. {self.title}"
+
+
+class WholesaleSideBullet(TimeStampedModel):
+    """Список преимуществ в правой side-карточке hero-блока."""
+
+    page = models.ForeignKey(WholesalePage, on_delete=models.CASCADE, related_name="side_bullets", verbose_name="Страница")
+    icon_class = models.CharField(
+        "Иконка", max_length=60, blank=True,
+        help_text="Опционально. По умолчанию bi-check2-circle.",
+    )
+    label = models.CharField("Текст", max_length=200)
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
+    is_active = models.BooleanField("Показывать", default=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Wholesale · пункт side-карточки"
+        verbose_name_plural = "Wholesale · пункты side-карточки"
+
+    def __str__(self) -> str:
+        return self.label
+
+
+# ──────────────────────────────────────────────
+# Автогенерация slug — с защитой от коллизий
+# ──────────────────────────────────────────────
+def _build_unique_slug(model_cls, base_slug: str, *, exclude_pk=None) -> str:
+    """Append -2, -3, ... if `base_slug` already taken in this model."""
+    if not base_slug:
+        return base_slug
+    qs = model_cls.objects.filter(slug=base_slug)
+    if exclude_pk is not None:
+        qs = qs.exclude(pk=exclude_pk)
+    if not qs.exists():
+        return base_slug
+    counter = 2
+    while True:
+        candidate = f"{base_slug}-{counter}"
+        if not model_cls.objects.filter(slug=candidate).exclude(pk=exclude_pk or 0).exists():
+            return candidate
+        counter += 1
+
+
 def set_slugs(sender, instance, **kwargs):
-    if hasattr(instance, "slug") and not instance.slug:
-        if hasattr(instance, "title") and instance.title:
-            instance.slug = slugify(instance.title, allow_unicode=True)
-        elif hasattr(instance, "name") and instance.name:
-            instance.slug = slugify(instance.name, allow_unicode=True)
+    """Pre-save signal: derive slug from title/name and ensure uniqueness.
+
+    Two products named "Тетрадь" used to crash on `.save()` because the
+    raw slugified value collided with the unique constraint. We now suffix
+    with -2, -3, ... up to a unique value.
+    """
+    if not hasattr(instance, "slug"):
+        return
+    if instance.slug:
+        return  # admin already set one explicitly
+
+    source = ""
+    if hasattr(instance, "title") and instance.title:
+        source = instance.title
+    elif hasattr(instance, "name") and instance.name:
+        source = instance.name
+    if not source:
+        return
+
+    base = slugify(source, allow_unicode=True)
+    instance.slug = _build_unique_slug(sender, base, exclude_pk=instance.pk)
 
 
 for model in [

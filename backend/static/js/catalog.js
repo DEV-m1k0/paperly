@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let previewCount = 0;          // count for "Показать (N)"
   const LABEL_MAP = new Map();   // `${queryParam}:${value}` -> label
   let applyTimer = null;
+  const CATALOG_PAGE_SIZE = 100;
 
   P.renderCartCount();
 
@@ -287,6 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function buildApiUrl() {
     const url = new URL("/api/products/", window.location.origin);
     const params = currentUrlParams();
+    url.searchParams.set("page_size", String(CATALOG_PAGE_SIZE));
 
     const q = params.get("q");
     if (q) url.searchParams.set("search", q);

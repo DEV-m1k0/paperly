@@ -25,43 +25,68 @@
     </div>
 
     <div class="page-hero__content">
-      <p class="eyebrow">О компании</p>
+      <p class="eyebrow">{% if about_page.hero_eyebrow %}{{ about_page.hero_eyebrow }}{% else %}О компании{% endif %}</p>
       <h1>
-        {{ site.site_name|default:"Paperly" }} —
-        <span class="accent">магазин канцтоваров</span>
-        для школы, офиса и творчества
+        {% if about_page.hero_title %}
+          {{ about_page.hero_title }}{% if about_page.hero_title_accent %}<span class="accent">{{ about_page.hero_title_accent }}</span>{% endif %}
+        {% else %}
+          {{ site.site_name|default:"Paperly" }} —
+          <span class="accent">магазин канцтоваров</span>
+          для школы, офиса и творчества
+        {% endif %}
       </h1>
       <p class="page-hero__lead">
-        Мы помогаем быстро собирать нужные товары: от тетрадей и ручек до комплексных решений для офисов и учебных центров.
-        {% if site.city %}Работаем в {{ site.city }}{% else %}Работаем{% endif %} и по всей России.
+        {% if about_page.hero_subtitle %}{{ about_page.hero_subtitle|linebreaksbr }}{% else %}Мы помогаем быстро собирать нужные товары: от тетрадей и ручек до комплексных решений для офисов и учебных центров.
+        {% if site.city %}Работаем в {{ site.city }}{% else %}Работаем{% endif %} и по всей России.{% endif %}
       </p>
 
       <div class="page-hero__actions">
-        <a class="btn btn--primary" href="{% url 'catalog' %}">
-          <i class="bi bi-grid" aria-hidden="true"></i>
-          <span>В каталог</span>
-        </a>
-        <a class="btn btn--ghost" href="{% url 'wholesale' %}">
-          <i class="bi bi-briefcase" aria-hidden="true"></i>
-          <span>Для организаций</span>
-        </a>
+        {% if about_page.hero_cta_primary_label and about_page.hero_cta_primary_url %}
+          <a class="btn btn--primary" href="{{ about_page.hero_cta_primary_url }}">
+            {% if about_page.hero_cta_primary_icon %}<i class="bi {{ about_page.hero_cta_primary_icon }}" aria-hidden="true"></i>{% endif %}
+            <span>{{ about_page.hero_cta_primary_label }}</span>
+          </a>
+        {% else %}
+          <a class="btn btn--primary" href="{% url 'catalog' %}">
+            <i class="bi bi-grid" aria-hidden="true"></i>
+            <span>В каталог</span>
+          </a>
+        {% endif %}
+        {% if about_page.hero_cta_secondary_label and about_page.hero_cta_secondary_url %}
+          <a class="btn btn--ghost" href="{{ about_page.hero_cta_secondary_url }}">
+            {% if about_page.hero_cta_secondary_icon %}<i class="bi {{ about_page.hero_cta_secondary_icon }}" aria-hidden="true"></i>{% endif %}
+            <span>{{ about_page.hero_cta_secondary_label }}</span>
+          </a>
+        {% else %}
+          <a class="btn btn--ghost" href="{% url 'wholesale' %}">
+            <i class="bi bi-briefcase" aria-hidden="true"></i>
+            <span>Для организаций</span>
+          </a>
+        {% endif %}
       </div>
     </div>
 
     <aside class="page-hero__side">
       <div class="page-hero__side-head">
-        <i class="bi bi-compass" aria-hidden="true"></i>
-        <h3>Наша миссия</h3>
+        <i class="bi {{ about_page.mission_icon|default:'bi-compass' }}" aria-hidden="true"></i>
+        <h3>{% if about_page.mission_eyebrow %}{{ about_page.mission_eyebrow }}{% else %}Наша миссия{% endif %}</h3>
       </div>
-      <p>Сделать покупку канцтоваров понятной, быстрой и предсказуемой по качеству.</p>
+      <p>{% if about_page.mission_text %}{{ about_page.mission_text }}{% else %}Сделать покупку канцтоваров понятной, быстрой и предсказуемой по качеству.{% endif %}</p>
       <ul>
-        <li><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Проверенные бренды</li>
-        <li><i class="bi bi-clock-history" aria-hidden="true"></i> Честные сроки поставки</li>
-        <li><i class="bi bi-headset" aria-hidden="true"></i> Поддержка на всех этапах заказа</li>
+        {% if about_mission_bullets %}
+          {% for b in about_mission_bullets %}
+            <li><i class="bi {{ b.icon_class|default:'bi-check2-circle' }}" aria-hidden="true"></i> {{ b.label }}</li>
+          {% endfor %}
+        {% else %}
+          <li><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Проверенные бренды</li>
+          <li><i class="bi bi-clock-history" aria-hidden="true"></i> Честные сроки поставки</li>
+          <li><i class="bi bi-headset" aria-hidden="true"></i> Поддержка на всех этапах заказа</li>
+        {% endif %}
       </ul>
     </aside>
   </section>
 
+  {% if about_page.show_stats|default_if_none:True %}
   <section class="page-stats reveal" aria-label="Цифры о магазине">
     {% for stat in about_stats %}
       <article class="page-stat">
@@ -70,89 +95,112 @@
       </article>
     {% endfor %}
   </section>
+  {% endif %}
 
+  {% if about_page.show_features|default_if_none:True %}
   <section class="page-section reveal">
     <header class="page-section__head">
-      <p class="eyebrow">Преимущества</p>
-      <h2>Почему выбирают нас</h2>
+      <p class="eyebrow">{% if about_page.features_eyebrow %}{{ about_page.features_eyebrow }}{% else %}Преимущества{% endif %}</p>
+      <h2>{% if about_page.features_title %}{{ about_page.features_title }}{% else %}Почему выбирают нас{% endif %}</h2>
     </header>
     <div class="feature-grid">
-      <article class="feature">
-        <div class="feature__icon feature__icon--teal"><i class="bi bi-box-seam" aria-hidden="true"></i></div>
-        <h3>Широкий ассортимент</h3>
-        <p>Всё для школы, офиса и творчества — от тетрадей до чертёжных инструментов.</p>
-        {% if about_extras.categories_count %}
-        <span class="feature__meta">{{ about_extras.categories_count }} категорий</span>
-        {% endif %}
-      </article>
-      <article class="feature">
-        <div class="feature__icon feature__icon--amber"><i class="bi bi-lightning-charge" aria-hidden="true"></i></div>
-        <h3>Быстрая отгрузка</h3>
-        <p>Передаём заказ в доставку в течение 24 часов после подтверждения.</p>
-      </article>
-      <article class="feature">
-        <div class="feature__icon feature__icon--rose"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></div>
-        <h3>Прозрачный возврат</h3>
-        <p>Понятные условия обмена и возврата в соответствии с ЗоЗПП.</p>
-      </article>
-      <article class="feature">
-        <div class="feature__icon feature__icon--indigo"><i class="bi bi-percent" aria-hidden="true"></i></div>
-        <h3>Оптовые условия</h3>
-        <p>Спеццены для компаний, школ и учебных центров — от одной коробки.</p>
-      </article>
+      {% if about_features %}
+        {% for f in about_features %}
+        <article class="feature">
+          <div class="feature__icon feature__icon--{{ f.color_variant }}"><i class="bi {{ f.icon_class }}" aria-hidden="true"></i></div>
+          <h3>{{ f.title }}</h3>
+          <p>{{ f.description }}</p>
+          {% if f.meta_label %}<span class="feature__meta">{{ f.meta_label }}</span>{% endif %}
+        </article>
+        {% endfor %}
+      {% else %}
+        <article class="feature">
+          <div class="feature__icon feature__icon--teal"><i class="bi bi-box-seam" aria-hidden="true"></i></div>
+          <h3>Широкий ассортимент</h3>
+          <p>Всё для школы, офиса и творчества — от тетрадей до чертёжных инструментов.</p>
+          {% if about_extras.categories_count %}
+          <span class="feature__meta">{{ about_extras.categories_count }} категорий</span>
+          {% endif %}
+        </article>
+        <article class="feature">
+          <div class="feature__icon feature__icon--amber"><i class="bi bi-lightning-charge" aria-hidden="true"></i></div>
+          <h3>Быстрая отгрузка</h3>
+          <p>Передаём заказ в доставку в течение 24 часов после подтверждения.</p>
+        </article>
+        <article class="feature">
+          <div class="feature__icon feature__icon--rose"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></div>
+          <h3>Прозрачный возврат</h3>
+          <p>Понятные условия обмена и возврата в соответствии с ЗоЗПП.</p>
+        </article>
+        <article class="feature">
+          <div class="feature__icon feature__icon--indigo"><i class="bi bi-percent" aria-hidden="true"></i></div>
+          <h3>Оптовые условия</h3>
+          <p>Спеццены для компаний, школ и учебных центров — от одной коробки.</p>
+        </article>
+      {% endif %}
     </div>
   </section>
+  {% endif %}
 
+  {% if about_page.show_steps|default_if_none:True %}
   <section class="page-section reveal">
     <header class="page-section__head">
-      <p class="eyebrow">Процесс</p>
-      <h2>Как мы работаем</h2>
+      <p class="eyebrow">{% if about_page.steps_eyebrow %}{{ about_page.steps_eyebrow }}{% else %}Процесс{% endif %}</p>
+      <h2>{% if about_page.steps_title %}{{ about_page.steps_title }}{% else %}Как мы работаем{% endif %}</h2>
     </header>
     <ol class="steps-grid">
-      <li class="step">
-        <span class="step__num">1</span>
-        <div>
-          <h3>Выбор товаров</h3>
-          <p>В каталоге — удобные фильтры по бренду, формату, назначению и цене.</p>
-        </div>
-      </li>
-      <li class="step">
-        <span class="step__num">2</span>
-        <div>
-          <h3>Оформление за минуту</h3>
-          <p>Контакты, адрес, способ оплаты — заказ уходит в работу сразу.</p>
-        </div>
-      </li>
-      <li class="step">
-        <span class="step__num">3</span>
-        <div>
-          <h3>Доставка</h3>
-          <p>Курьер домой или самовывоз из удобного пункта выдачи.</p>
-        </div>
-      </li>
-      <li class="step">
-        <span class="step__num">4</span>
-        <div>
-          <h3>Оплата</h3>
-          <p>Картой онлайн, через СБП или при получении — как удобно.</p>
-        </div>
-      </li>
+      {% if about_steps %}
+        {% for s in about_steps %}
+        <li class="step">
+          <span class="step__num">{{ forloop.counter }}</span>
+          <div>
+            <h3>{{ s.title }}</h3>
+            <p>{{ s.description }}</p>
+          </div>
+        </li>
+        {% endfor %}
+      {% else %}
+        <li class="step">
+          <span class="step__num">1</span>
+          <div><h3>Выбор товаров</h3><p>В каталоге — удобные фильтры по бренду, формату, назначению и цене.</p></div>
+        </li>
+        <li class="step">
+          <span class="step__num">2</span>
+          <div><h3>Оформление за минуту</h3><p>Контакты, адрес, способ оплаты — заказ уходит в работу сразу.</p></div>
+        </li>
+        <li class="step">
+          <span class="step__num">3</span>
+          <div><h3>Доставка</h3><p>Курьер домой или самовывоз из удобного пункта выдачи.</p></div>
+        </li>
+        <li class="step">
+          <span class="step__num">4</span>
+          <div><h3>Оплата</h3><p>Картой онлайн, через СБП или при получении — как удобно.</p></div>
+        </li>
+      {% endif %}
     </ol>
   </section>
+  {% endif %}
 
+  {% if about_page.show_b2b_cta|default_if_none:True %}
   <section class="cta-dark reveal">
     <div class="cta-dark__content">
-      <p class="eyebrow eyebrow--on-dark">B2B</p>
-      <h2>Для организаций</h2>
-      <p>Работаем с юрлицами, школами и университетами по договору с закрывающими документами.</p>
+      <p class="eyebrow eyebrow--on-dark">{% if about_page.b2b_eyebrow %}{{ about_page.b2b_eyebrow }}{% else %}B2B{% endif %}</p>
+      <h2>{% if about_page.b2b_title %}{{ about_page.b2b_title }}{% else %}Для организаций{% endif %}</h2>
+      <p>{% if about_page.b2b_text %}{{ about_page.b2b_text }}{% else %}Работаем с юрлицами, школами и университетами по договору с закрывающими документами.{% endif %}</p>
       <ul>
-        <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Персональные цены под объём</li>
-        <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Закрывающие документы в ЭДО</li>
-        <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Регулярные поставки по графику</li>
-        <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Выделенный менеджер</li>
+        {% if about_b2b_bullets %}
+          {% for b in about_b2b_bullets %}
+            <li><i class="bi {{ b.icon_class|default:'bi-check2-circle' }}" aria-hidden="true"></i> {{ b.label }}</li>
+          {% endfor %}
+        {% else %}
+          <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Персональные цены под объём</li>
+          <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Закрывающие документы в ЭДО</li>
+          <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Регулярные поставки по графику</li>
+          <li><i class="bi bi-check2-circle" aria-hidden="true"></i> Выделенный менеджер</li>
+        {% endif %}
       </ul>
-      <a class="btn btn--on-dark" href="{% url 'wholesale' %}">
-        <span>Оставить заявку</span>
+      <a class="btn btn--on-dark" href="{% if about_page.b2b_button_url %}{{ about_page.b2b_button_url }}{% else %}{% url 'wholesale' %}{% endif %}">
+        <span>{% if about_page.b2b_button_label %}{{ about_page.b2b_button_label }}{% else %}Оставить заявку{% endif %}</span>
         <i class="bi bi-arrow-right" aria-hidden="true"></i>
       </a>
     </div>
@@ -162,11 +210,13 @@
       <i class="bi bi-briefcase"></i>
     </div>
   </section>
+  {% endif %}
 
+  {% if about_page.show_contacts|default_if_none:True %}
   <section class="page-section reveal" aria-label="Контакты">
     <header class="page-section__head">
-      <p class="eyebrow">Контакты</p>
-      <h2>Есть вопрос? Мы на связи</h2>
+      <p class="eyebrow">{% if about_page.contacts_eyebrow %}{{ about_page.contacts_eyebrow }}{% else %}Контакты{% endif %}</p>
+      <h2>{% if about_page.contacts_title %}{{ about_page.contacts_title }}{% else %}Есть вопрос? Мы на связи{% endif %}</h2>
     </header>
     <div class="contact-grid">
       {% if site.phone %}
@@ -175,6 +225,7 @@
         <div>
           <span class="contact-card__label">Телефон</span>
           <strong>{{ site.phone }}</strong>
+          {% if site.secondary_phone %}<span class="contact-card__sub">также: <a href="tel:{{ site.secondary_phone }}">{{ site.secondary_phone }}</a></span>{% endif %}
         </div>
       </a>
       {% endif %}
@@ -184,6 +235,7 @@
         <div>
           <span class="contact-card__label">Email</span>
           <strong>{{ site.email }}</strong>
+          {% if site.sales_email and site.sales_email != site.email %}<span class="contact-card__sub">отдел продаж: <a href="mailto:{{ site.sales_email }}">{{ site.sales_email }}</a></span>{% endif %}
         </div>
       </a>
       {% endif %}
@@ -193,12 +245,23 @@
         <div>
           <span class="contact-card__label">Адрес</span>
           <strong>{{ site.address }}</strong>
+          {% if site.city %}<span class="contact-card__sub">{{ site.city }}</span>{% endif %}
+        </div>
+      </div>
+      {% endif %}
+      {% if site.work_hours %}
+      <div class="contact-card contact-card--static">
+        <i class="bi bi-clock" aria-hidden="true"></i>
+        <div>
+          <span class="contact-card__label">Часы работы</span>
+          <strong>{{ site.work_hours }}</strong>
         </div>
       </div>
       {% endif %}
     </div>
   </section>
-  {% endif %}
+  {% endif %} {# /show_contacts #}
+  {% endif %} {# /page_content #}
 </div>
 {% endblock %}
 

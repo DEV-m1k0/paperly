@@ -49,6 +49,10 @@ class OrderPermission(permissions.BasePermission):
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [OrderPermission]
+    # Tighter throttle on the create action — guest checkout is publicly
+    # reachable, so a single client cannot flood the orders table. Read
+    # actions still use the default user/anon throttle scopes.
+    throttle_scope = "checkout"
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
@@ -56,7 +60,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         return (
             Order.objects
             .filter(user=self.request.user)
-            .select_related("pickup_point")
+            .select_related("pickup_point", "promo_code")
             .prefetch_related("items")
         )
 

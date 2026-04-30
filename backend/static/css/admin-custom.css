@@ -41,6 +41,9 @@
   --pp-shadow-sm:      0 6px 16px -10px rgba(11, 65, 61, 0.18);
   --pp-shadow-md:      0 14px 34px -18px rgba(11, 65, 61, 0.22);
   --pp-shadow-brand:   0 10px 24px -12px rgba(14, 118, 110, 0.55);
+  --pp-sidebar-width: 250px;
+  --pp-sidebar-width-compact: 230px;
+  --pp-sidebar-width-collapsed: 64px;
 }
 
 /* ═════════ Base ═════════ */
@@ -50,6 +53,7 @@ html, body {
   color: var(--pp-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scrollbar-gutter: stable;
 }
 
 h1, h2, h3, h4, h5,
@@ -101,7 +105,7 @@ a:hover { color: var(--pp-primary-strong); }
   color: #fff !important;
 }
 
-/* Dropdown user menu */
+/* Dropdown user menu — base */
 .main-header .dropdown-menu {
   border: 1px solid var(--pp-line);
   border-radius: var(--pp-radius);
@@ -123,6 +127,190 @@ a:hover { color: var(--pp-primary-strong); }
 .main-header .dropdown-divider {
   margin: 6px 0;
   border-color: var(--pp-line);
+}
+
+/* ── Notification dropdown (pp-usermenu) ── */
+#jazzy-usermenu {
+  width: min(320px, calc(100vw - 16px));
+  min-width: 280px;
+  max-width: calc(100vw - 16px);
+  max-height: min(640px, calc(100vh - 76px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  /* Прижимаем к правому краю триггера на всех ширинах экрана.
+     !important нужен против Bootstrap inline style и .dropdown-menu-left/right */
+  right: 0 !important;
+  left: auto !important;
+  z-index: 1050 !important;
+}
+
+#jazzy-usermenu.show {
+  display: block !important;
+}
+
+.main-header .nav-item.dropdown > .nav-link[aria-controls="jazzy-usermenu"] {
+  position: relative;
+}
+
+.main-header .nav-item.dropdown.show > .nav-link[aria-controls="jazzy-usermenu"],
+.main-header .nav-item.dropdown > .nav-link[aria-controls="jazzy-usermenu"].show {
+  color: var(--pp-primary) !important;
+  background: var(--pp-primary-soft) !important;
+}
+
+/* Section headers */
+.pp-dropdown-header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--pp-muted);
+  padding: 6px 12px 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pp-badge-total {
+  background: var(--pp-danger);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+
+/* Notification items */
+.pp-notif-item {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px !important;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+.pp-notif-item:hover {
+  background: var(--pp-primary-soft) !important;
+  color: var(--pp-primary) !important;
+}
+.pp-notif-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+.pp-notif-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pp-notif-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+/* Colour variants for notification icons/badges */
+.pp-notif-primary .pp-notif-icon  { background: var(--pp-primary-soft); color: var(--pp-primary); }
+.pp-notif-primary .pp-notif-badge { background: var(--pp-primary); }
+.pp-notif-warning .pp-notif-icon  { background: var(--pp-accent-soft);  color: #b45309; }
+.pp-notif-warning .pp-notif-badge { background: var(--pp-accent); }
+.pp-notif-info .pp-notif-icon     { background: #e0f2fe; color: #0369a1; }
+.pp-notif-info .pp-notif-badge    { background: #0284c7; }
+.pp-notif-secondary .pp-notif-icon  { background: #f1f5f9; color: #475569; }
+.pp-notif-secondary .pp-notif-badge { background: #64748b; }
+
+/* Zero-count items — dimmed */
+.pp-notif-zero {
+  opacity: 0.45;
+  pointer-events: auto;
+}
+.pp-notif-zero:hover { opacity: 0.75; }
+
+/* Quick action items */
+.pp-action-item {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px !important;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--pp-text);
+}
+.pp-action-item:hover {
+  background: var(--pp-primary-soft) !important;
+  color: var(--pp-primary) !important;
+}
+.pp-action-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  flex-shrink: 0;
+  background: #ecfdf5;
+  color: var(--pp-success);
+}
+.pp-action-item:hover .pp-action-icon {
+  background: var(--pp-primary-soft);
+  color: var(--pp-primary);
+}
+
+/* Account items */
+.pp-account-item {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px !important;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+.pp-account-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  flex-shrink: 0;
+  background: #f1f5f9;
+  color: var(--pp-muted);
+}
+.pp-logout-form { margin: 0; }
+
+/* Navbar badge (notification count) — позиционируется относительно <li> */
+.pp-navbar-badge {
+  position: absolute;
+  /* Правый верхний угол иконки внутри nav-item:
+     right: 6px — отступ от правого края <li> (≈ padding кнопки)
+     top: 8px  — чуть ниже верхнего края, у правого плеча иконки */
+  top: 8px;
+  right: 6px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 4px;
+  min-width: 15px;
+  text-align: center;
+  border-radius: 10px;
+  background: var(--pp-danger);
+  color: #fff;
+  pointer-events: none;
+  /* Тонкая белая обводка — отделяет от иконки */
+  box-shadow: 0 0 0 1.5px #fff;
 }
 
 /* ═════════ BRAND (sidebar header) ═════════ */
@@ -158,10 +346,27 @@ a:hover { color: var(--pp-primary-strong); }
 }
 
 /* ═════════ SIDEBAR ═════════ */
+.pp-sidebar-close {
+  display: none;
+}
+
 .main-sidebar {
+  width: var(--pp-sidebar-width) !important;
   background: #ffffff !important;
   box-shadow: 2px 0 20px -14px rgba(11, 65, 61, 0.14);
   border-right: 1px solid var(--pp-line);
+}
+
+.main-sidebar > .brand-link,
+.main-sidebar > .sidebar {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.main-sidebar > .sidebar {
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
 }
 
 /* User panel — скрываем, он дублирует navbar-юзера */
@@ -172,11 +377,16 @@ a:hover { color: var(--pp-primary-strong); }
 /* Sidebar nav items */
 .main-sidebar .nav-sidebar {
   padding: 10px 0;
+  width: 100%;
+  min-width: 0;
 }
 
 .main-sidebar .nav-sidebar > .nav-item {
   padding: 0 12px;
   margin-bottom: 3px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .main-sidebar .nav-sidebar .nav-item > .nav-link {
@@ -188,6 +398,11 @@ a:hover { color: var(--pp-primary-strong); }
   display: flex !important;
   align-items: center !important;
   gap: 2px;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
   transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease !important;
   line-height: 1.3;
 }
@@ -233,6 +448,10 @@ a:hover { color: var(--pp-primary-strong); }
   color: var(--pp-muted) !important;
   border-radius: 8px !important;
   position: relative;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0;
+  box-sizing: border-box;
 }
 .main-sidebar .nav-treeview > .nav-item > .nav-link::before {
   content: "";
@@ -304,13 +523,13 @@ a:hover { color: var(--pp-primary-strong); }
 /* Ширина + сдвиг контента */
 .sidebar-mini.sidebar-collapse .main-sidebar,
 .sidebar-mini.sidebar-collapse .main-sidebar .brand-link {
-  width: 64px !important;
+  width: var(--pp-sidebar-width-collapsed) !important;
   transition: width 0.25s ease;
 }
 .sidebar-mini.sidebar-collapse .content-wrapper,
 .sidebar-mini.sidebar-collapse .main-footer,
 .sidebar-mini.sidebar-collapse .main-header {
-  margin-left: 64px !important;
+  margin-left: 0 !important;
   transition: margin-left 0.25s ease;
 }
 
@@ -655,6 +874,101 @@ a:hover { color: var(--pp-primary-strong); }
   padding: 10px 14px;
   margin-bottom: 14px;
   box-shadow: var(--pp-shadow-sm);
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) max-content minmax(220px, auto);
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 10px;
+  min-width: 0;
+}
+
+/* Каждый «логический» блок внутри .actions держим целым (label с select2,
+   кнопка "Выполнить", счётчик) — переносы только между ними. */
+#changelist .actions > * {
+  min-width: 0;
+}
+#changelist .actions > label:first-of-type {
+  min-width: 0;
+  width: 100%;
+}
+#changelist .actions label .select2-container {
+  width: 100% !important;
+  max-width: 100%;
+}
+#changelist .actions .action-counter {
+  white-space: normal;
+  color: var(--pp-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+#changelist .actions button[type="submit"] {
+  width: 100% !important;
+  white-space: nowrap;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+#changelist .actions .question,
+#changelist .actions .clear,
+#changelist .actions .all {
+  color: var(--pp-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+#changelist .actions .question a,
+#changelist .actions .clear a {
+  font-weight: 700;
+}
+
+/* На ширинах ≤ 1199px (попадает 1024px) пускаем счётчик на следующую строку
+   и не даём select2 расталкивать всё остальное. */
+@media (max-width: 1199px) {
+  #changelist .actions {
+    grid-template-columns: minmax(220px, 1fr) max-content;
+  }
+  #changelist .actions .action-counter,
+  #changelist .actions .all,
+  #changelist .actions .question,
+  #changelist .actions .clear {
+    grid-column: 1 / -1;
+  }
+}
+
+/* На планшетах — селект и кнопка в первой строке, инфо ниже цельным блоком. */
+@media (max-width: 767px) {
+  #changelist .actions {
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: stretch;
+  }
+  #changelist .actions > label:first-of-type {
+    min-width: 0;
+  }
+  #changelist .actions button[type="submit"] {
+    align-self: stretch;
+    max-width: none;
+  }
+}
+
+/* На совсем узких — всё в столбец, кнопка на всю ширину. */
+@media (max-width: 575px) {
+  #changelist .actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #changelist .actions button[type="submit"] {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+  #changelist .actions > label:first-of-type,
+  #changelist .actions button[type="submit"],
+  #changelist .actions .action-counter,
+  #changelist .actions .all,
+  #changelist .actions .question,
+  #changelist .actions .clear {
+    grid-column: 1;
+  }
+
+  .container-fluid {
+    padding: 0 !important;
+  }
 }
 
 /* ═════════ FORMS ═════════ */
@@ -694,6 +1008,36 @@ select:focus {
 }
 
 textarea { min-height: 110px; resize: vertical; }
+
+.pp-changeform-card input[type="file"] {
+  min-height: 42px;
+  padding: 8px !important;
+  line-height: 1.35;
+}
+
+.pp-changeform-card input[type="file"]::file-selector-button {
+  margin-right: 10px;
+  border: 1px solid var(--pp-line);
+  border-radius: 8px;
+  background: var(--pp-primary-soft);
+  color: var(--pp-primary-strong);
+  padding: 7px 10px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pp-changeform-card input[type="file"]::-webkit-file-upload-button {
+  margin-right: 10px;
+  border: 1px solid var(--pp-line);
+  border-radius: 8px;
+  background: var(--pp-primary-soft);
+  color: var(--pp-primary-strong);
+  padding: 7px 10px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
 
 /* Labels */
 .form-group > label,
@@ -743,6 +1087,21 @@ textarea { min-height: 110px; resize: vertical; }
   color: var(--pp-primary-strong) !important;
   border-radius: 8px !important;
   padding: 2px 10px !important;
+}
+
+select:not(.select2-hidden-accessible) {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--pp-surface) !important;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.41 0.84 6 5.42l4.59-4.58L12 2.25l-6 6-6-6z' fill='%236b7c8f'/%3E%3C/svg%3E");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 10px 7px;
+  padding-right: 34px !important;
+}
+
+select:not(.select2-hidden-accessible)::-ms-expand {
+  display: none;
 }
 
 /* ═════════ BUTTONS ═════════ */
@@ -919,6 +1278,82 @@ ul.messagelist li.success { background: rgba(16, 185, 129, 0.08); color: #065f46
 ul.messagelist li.warning { background: var(--pp-accent-soft);    color: #92400e; border-radius: var(--pp-radius-sm); padding: 10px 16px; }
 ul.messagelist li.error   { background: rgba(225, 29, 72, 0.08); color: #9f1239; border-radius: var(--pp-radius-sm); padding: 10px 16px; }
 ul.messagelist li.info    { background: var(--pp-primary-soft);  color: var(--pp-primary-strong); border-radius: var(--pp-radius-sm); padding: 10px 16px; }
+
+/* Changelist info row (счётчик + utility-кнопки).
+   Шаблон-override (templates/admin/pagination.html) оборачивает счётчик в
+   .dt-info-count и кнопки в .dt-info-actions, что позволяет железно
+   развести их на две строки независимо от ширины экрана. */
+.dataTables_info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  row-gap: 8px;
+  min-width: 0;
+}
+
+.dataTables_info .dt-info-count {
+  font-size: 0.92rem;
+  color: var(--pp-muted);
+  line-height: 1.4;
+}
+
+.dataTables_info .dt-info-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.dataTables_info .btn,
+.dataTables_info input[type="submit"] {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0;
+  min-height: 34px;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  padding: 6px 12px !important;
+  font-size: 0.82rem !important;
+  line-height: 1.2 !important;
+  vertical-align: middle;
+  flex: 0 0 auto;
+}
+
+/* ≤991px (планшет/узкое окно — 768px попадает): col-5/col-7 рядом не
+   умещаются → расталкиваем по вертикали. Каждый блок занимает 100%
+   ширины, info-строка получает свободное пространство. */
+@media (max-width: 991px) {
+  #changelist .row > .col-5,
+  #changelist .row > .col-7 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  #changelist .row > .col-7 .pagination {
+    float: none !important;
+    justify-content: flex-start !important;
+    margin-top: 8px !important;
+  }
+}
+
+/* ≤575px — телефоны: кнопки на всю ширину стопкой, тапать удобно. */
+@media (max-width: 575px) {
+  .dataTables_info .dt-info-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+  .dataTables_info .btn,
+  .dataTables_info input[type="submit"] {
+    width: 100% !important;
+  }
+  #changelist .row > .col-7 .pagination {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+}
 
 /* ═════════ CHANGELIST filters sidebar ═════════ */
 #changelist-filter {
@@ -1295,21 +1730,55 @@ body.register-page::before {
 /* ── Tablet большой (≤1200) — немного уплотняем ── */
 @media (max-width: 1200px) {
   .content-header h1 { font-size: 1.6rem !important; }
-  .main-sidebar { width: 230px !important; }
+  .main-sidebar { width: var(--pp-sidebar-width-compact) !important; }
   .sidebar-mini:not(.sidebar-collapse) .content-wrapper,
   .sidebar-mini:not(.sidebar-collapse) .main-footer,
   .sidebar-mini:not(.sidebar-collapse) .main-header {
-    margin-left: 230px !important;
+    margin-left: var(--pp-sidebar-width-compact) !important;
   }
 }
 
 /* ── Tablet/mobile (≤991) — AdminLTE прячет сайдбар, даём overlay-drawer ── */
 @media (max-width: 991px) {
   /* Контент во всю ширину когда сайдбар закрыт */
+  .sidebar-mini .content-wrapper,
+  .sidebar-mini .main-footer,
+  .sidebar-mini .main-header,
+  .sidebar-mini:not(.sidebar-collapse) .content-wrapper,
+  .sidebar-mini:not(.sidebar-collapse) .main-footer,
+  .sidebar-mini:not(.sidebar-collapse) .main-header,
+  body.sidebar-open .content-wrapper,
+  body.sidebar-open .main-footer,
+  body.sidebar-open .main-header {
+    margin-left: 0 !important;
+    width: auto !important;
+    left: auto !important;
+  }
+
   .content-wrapper,
   .main-footer,
   .main-header {
     margin-left: 0 !important;
+    transform: none !important;
+  }
+
+  .wrapper,
+  .content-wrapper,
+  .main-footer,
+  .main-header,
+  #jazzy-navbar {
+    transition: none !important;
+  }
+
+  body,
+  .wrapper,
+  .content-wrapper {
+    left: 0 !important;
+  }
+
+  .content-wrapper {
+    width: 100% !important;
+    min-width: 0 !important;
   }
 
   /* Sidebar становится off-canvas drawer */
@@ -1317,16 +1786,89 @@ body.register-page::before {
     position: fixed !important;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw !important;
+    max-width: 100vw !important;
     height: 100vh !important;
+    height: 100dvh !important;
     z-index: 1038;
     transform: translateX(-100%);
     transition: transform 0.28s ease !important;
+    overscroll-behavior: contain;
+    touch-action: none;
+  }
+
+  .main-sidebar > .brand-link {
+    width: 100% !important;
+    padding-right: 64px !important;
+  }
+
+  .pp-sidebar-close {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    z-index: 1040;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+    font-size: 1.65rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 8px 18px -12px rgba(0, 0, 0, 0.45);
+  }
+
+  .pp-sidebar-close:hover,
+  .pp-sidebar-close:focus {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    outline: 0;
+  }
+
+  .pp-sidebar-close:focus-visible {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.42);
+  }
+
+  .main-sidebar > .sidebar {
+    width: 100% !important;
+    height: calc(100vh - 58px);
+    height: calc(100dvh - 58px);
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+
+  #jazzy-navbar,
+  .main-header.navbar {
+    margin-left: 0 !important;
+    width: 100% !important;
+    left: 0 !important;
   }
 
   /* Когда открыт — выезжает и затемняет контент */
   body.sidebar-open .main-sidebar,
   body:not(.sidebar-collapse) .main-sidebar {
     transform: translateX(0);
+  }
+
+  body.sidebar-open .content-wrapper,
+  body.sidebar-open .main-footer,
+  body.sidebar-open .main-header,
+  body.sidebar-open #jazzy-navbar {
+    pointer-events: none !important;
+    user-select: none;
+  }
+
+  body.sidebar-open .main-sidebar {
+    pointer-events: auto !important;
   }
 
   /* Overlay за сайдбаром */
@@ -1480,11 +2022,6 @@ body.register-page::before {
     padding: 10px 0 6px !important;
   }
 
-  /* Inlines table → horizontal scroll */
-  .inline-group .tabular table,
-  .inline-related table {
-    min-width: 520px;
-  }
   .inline-group {
     padding: 12px 14px !important;
   }
@@ -1535,6 +2072,13 @@ body.register-page::before {
     right: 8px !important;
     left: auto;
   }
+  #jazzy-usermenu {
+    /* На узких экранах ограничиваем ширину viewport'ом */
+    width: min(320px, calc(100vw - 16px));
+    min-width: 260px;
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 72px);
+  }
 
   /* Pagination compact */
   .paginator a,
@@ -1547,8 +2091,26 @@ body.register-page::before {
 
 /* ── Mobile full (≤768) ── */
 @media (max-width: 768px) {
+  #jazzy-navbar > .navbar-nav:first-child .nav-item.d-none.d-sm-inline-block,
+  #jazzy-navbar > form.form-inline,
+  #jazzy-navbar .form-inline.ml-3 {
+    display: none !important;
+  }
+
+  #jazzy-navbar {
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  #jazzy-navbar > .navbar-nav:first-child,
+  #jazzy-navbar > .navbar-nav.ml-auto {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
   .main-sidebar {
-    width: 250px !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
   }
 
   .content-header h1 {
@@ -1570,6 +2132,24 @@ body.register-page::before {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  #jazzy-usermenu {
+    position: fixed !important;
+    top: 58px !important;
+    right: 8px !important;
+    left: 8px !important;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    max-height: calc(100vh - 66px);
+    margin-top: 0;
+  }
+
+  .pp-notif-item,
+  .pp-action-item,
+  .pp-account-item {
+    min-height: 42px;
   }
 
   /* Table cells — меньше padding */
@@ -1602,10 +2182,11 @@ body.register-page::before {
     padding: 9px 11px !important;
   }
 
-  /* Admin changelist actions (массовые операции) */
+  /* Admin changelist actions (массовые операции) — на планшетах компактнее.
+     Базовый flex+wrap уже задан в основном правиле выше. */
   #changelist .actions {
-    flex-wrap: wrap;
-    gap: 6px 8px;
+    column-gap: 8px;
+    row-gap: 6px;
     padding: 10px 12px;
   }
 
@@ -1899,6 +2480,70 @@ body.register-page::before {
   }
 }
 
+.pp-recent-actions {
+  min-width: 0;
+}
+
+.pp-recent-actions .timeline {
+  margin: 0;
+}
+
+.pp-recent-actions .timeline > div > .timeline-item {
+  margin-left: 52px;
+}
+
+.pp-recent-actions .timeline-item {
+  min-width: 0;
+}
+
+.pp-recent-actions .timeline-item .time {
+  float: none;
+  display: block;
+  margin: 0 0 8px;
+  color: var(--pp-muted);
+  font-size: 0.78rem;
+}
+
+.pp-recent-actions .timeline-header {
+  line-height: 1.35;
+}
+
+.pp-recent-actions .timeline-header a,
+.pp-recent-actions .timeline-header,
+.pp-recent-actions .timeline-body li {
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1199px) {
+  .dashboard > .col-xl-9,
+  .dashboard > .col-xl-3 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .dashboard #content-related {
+    margin-top: 18px;
+  }
+
+  .pp-recent-actions .timeline > div > .timeline-item {
+    margin-left: 46px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pp-recent-actions .timeline > div > .timeline-item {
+    margin-left: 0;
+    margin-top: 12px;
+  }
+
+  .pp-recent-actions .timeline > div > i,
+  .pp-recent-actions .timeline > div:last-child {
+    display: none;
+  }
+}
+
 /* ── Sidebar: длинный текст («Пользователи и группы» клипался на «ы»).
  *    Решаем через расширение полезной ширины (меньше padding + меньше
  *    icon-margin) + гарантируем перенос на 2 строки при необходимости. ── */
@@ -2044,9 +2689,10 @@ html, body {
   min-width: 0;
 }
 
-/* На узкой мобиле (<576) полностью прячем navbar-поиски — пользователь
- * всё равно ищет через list-search внутри changelist'а. */
-@media (max-width: 575px) {
+/* В tablet/mobile navbar не хватает места одновременно на top links и два
+ * быстрых поиска. На changelist есть собственный поиск внутри контента, а на
+ * change-form верхний поиск не критичен, поэтому убираем формы уже до 991px. */
+@media (max-width: 991px) {
   .main-header form.form-inline {
     display: none !important;
   }
@@ -2089,7 +2735,7 @@ html, body {
  *    ширину 64px до прихода CSS. Класс на <html> кидает inline-script
  *    в <head> base_site.html. */
 html.jazzy-preload-collapsed .main-sidebar {
-  width: 64px !important;
+  width: var(--pp-sidebar-width-collapsed) !important;
 }
 html.jazzy-preload-collapsed .main-sidebar .brand-text,
 html.jazzy-preload-collapsed .main-sidebar .nav-link > p,
@@ -2278,6 +2924,35 @@ html.jazzy-preload-collapsed .main-sidebar .sidebar-footer__logout span {
   transition: background var(--pp-motion-fast) var(--pp-easing),
               color var(--pp-motion-fast) var(--pp-easing);
 }
+.sidebar-footer__site {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  border-radius: var(--pp-radius-sm);
+  background: var(--pp-primary-soft);
+  color: var(--pp-primary-strong);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background var(--pp-motion-fast) var(--pp-easing),
+              color var(--pp-motion-fast) var(--pp-easing);
+}
+.sidebar-footer__site:hover,
+.sidebar-footer__site:focus {
+  background: #d8f1ec;
+  color: var(--pp-primary-strong);
+  text-decoration: none;
+}
+.sidebar-footer__site:hover i,
+.sidebar-footer__site:focus i {
+  color: var(--pp-primary-strong);
+}
+.sidebar-footer__site i {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
 .sidebar-footer__logout:hover,
 .sidebar-footer__logout:focus {
   background: rgba(225, 29, 72, 0.08);
@@ -2302,6 +2977,13 @@ html.jazzy-preload-collapsed .main-sidebar .sidebar-footer__logout span {
   justify-content: center;
   padding: 8px;
 }
+.sidebar-mini.sidebar-collapse .sidebar-footer__site {
+  justify-content: center;
+  padding: 8px;
+}
+.sidebar-mini.sidebar-collapse .sidebar-footer__site span {
+  display: none;
+}
 .sidebar-mini.sidebar-collapse .sidebar-footer__logout span {
   display: none;
 }
@@ -2318,8 +3000,8 @@ html.jazzy-preload-collapsed .main-sidebar .sidebar-footer__logout span {
   transition: opacity var(--pp-motion-med) var(--pp-easing);
 }
 body.sidebar-open .sidebar-backdrop {
-  opacity: 1;
-  pointer-events: auto;
+  opacity: 0;
+  pointer-events: none;
 }
 @media (min-width: 992px) {
   /* На десктопе backdrop не нужен, sidebar постоянный. */
@@ -2327,8 +3009,20 @@ body.sidebar-open .sidebar-backdrop {
 }
 
 /* Body-scroll-lock во время открытого drawer'а */
+html.pp-scroll-locked,
 body.pp-scroll-locked {
   overflow: hidden !important;
+  overscroll-behavior: none;
+  height: 100%;
+}
+
+body.pp-scroll-locked {
+  touch-action: none;
+}
+
+body.pp-scroll-locked .main-sidebar,
+body.pp-scroll-locked .main-sidebar * {
+  touch-action: auto;
 }
 
 /* Отключаем старый ::after-оверлей (был до introduction'а backdrop-div'а). */
@@ -2339,7 +3033,23 @@ body.sidebar-open::after {
 /* ── Sidebar hover icon background — заменяем тут, чтобы совпадало с
  *    унифицированным motion-токеном (было 0.15s hardcoded ранее). */
 .main-sidebar .nav-sidebar .nav-item > .nav-link:hover {
-  background: var(--pp-primary-soft) !important;
+  background: #d8f1ec !important;
+  color: var(--pp-primary-strong) !important;
+}
+
+.main-sidebar .nav-sidebar .nav-item > .nav-link:hover i.nav-icon {
+  color: var(--pp-primary-strong) !important;
+}
+
+.main-sidebar .nav-sidebar .nav-item > .nav-link.active:hover,
+.main-sidebar .nav-treeview > .nav-item > .nav-link.active:hover {
+  background: linear-gradient(135deg, var(--pp-primary-strong), var(--pp-primary)) !important;
+  color: #ffffff !important;
+}
+
+.main-sidebar .nav-sidebar .nav-item > .nav-link.active:hover i.nav-icon,
+.main-sidebar .nav-treeview > .nav-item > .nav-link.active:hover i.nav-icon {
+  color: #ffffff !important;
 }
 
 /* ── a11y: nav-header (section-label'ы) становятся видимыми дивайдерами
@@ -2368,5 +3078,1873 @@ body.sidebar-open::after {
   .sidebar-backdrop {
     transition: none !important;
     animation-duration: 0.001s !important;
+  }
+}
+
+/* ═════════ Responsive admin foundation ═════════ */
+.pp-admin-shell {
+  width: 100%;
+}
+
+.pp-admin-toolbar {
+  margin-bottom: 18px;
+}
+
+.pp-admin-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 18px;
+  background: var(--pp-surface);
+  border: 1px solid var(--pp-line);
+  border-radius: var(--pp-radius);
+  box-shadow: var(--pp-shadow-sm);
+}
+
+.pp-admin-toolbar__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.pp-admin-toolbar__meta {
+  grid-column: 1 / -1;
+  color: var(--pp-muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.pp-changelist-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.pp-changelist-layout.has-filters {
+  grid-template-columns: minmax(0, 1fr) 280px;
+  align-items: start;
+}
+
+.pp-changelist-main {
+  min-width: 0;
+}
+
+.pp-filter-panel {
+  position: sticky;
+  top: 84px;
+  background: var(--pp-surface);
+  border: 1px solid var(--pp-line);
+  border-radius: var(--pp-radius);
+  box-shadow: var(--pp-shadow-sm);
+  overflow: hidden;
+}
+
+.pp-filter-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--pp-line);
+}
+
+.pp-filter-panel__header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-family: "Prata", Georgia, serif;
+}
+
+.pp-filter-panel__clear {
+  padding: 0 18px 14px;
+  border-bottom: 1px solid var(--pp-line);
+}
+
+.pp-filter-panel__body {
+  padding: 18px;
+}
+
+.pp-filter-panel details {
+  border: 1px solid var(--pp-line);
+  border-radius: 10px;
+  background: #fbfcfc;
+  padding: 12px 14px;
+}
+
+.pp-filter-panel details + details {
+  margin-top: 10px;
+}
+
+.pp-filter-panel summary {
+  cursor: pointer;
+  color: var(--pp-text);
+  font-weight: 700;
+}
+
+.pp-filter-panel ul {
+  list-style: none;
+  padding: 10px 0 0;
+  margin: 0;
+}
+
+.pp-filter-panel li + li {
+  margin-top: 8px;
+}
+
+.pp-filter-panel a {
+  color: var(--pp-muted);
+  font-weight: 600;
+}
+
+.pp-filter-panel .selected a {
+  color: var(--pp-primary);
+}
+
+.pp-filter-toggle,
+.pp-filter-close {
+  display: none;
+}
+
+.pp-filter-close {
+  border: 0;
+  background: transparent;
+  color: var(--pp-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.pp-changeform-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  align-items: start;
+}
+
+.pp-changeform-main {
+  min-width: 0;
+}
+
+.pp-changeform-card {
+  background: var(--pp-surface);
+  border: 1px solid var(--pp-line);
+  border-radius: var(--pp-radius);
+  box-shadow: var(--pp-shadow-sm);
+  padding: 22px;
+}
+
+.pp-changeform-card .card {
+  min-width: 0;
+}
+
+.pp-changeform-card .card > .p-5 {
+  padding: clamp(18px, 3vw, 32px) !important;
+}
+
+.pp-changeform-card .form-group,
+.pp-changeform-card .form-group > .row,
+.pp-changeform-card .form-row,
+.pp-changeform-card .form-row > div,
+.pp-changeform-card .fieldBox,
+.pp-changeform-card [class*="field-"] {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pp-changeform-card .form-row,
+.pp-changeform-card .form-row > div,
+.pp-changeform-card .fieldBox {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pp-changeform-card .form-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.pp-changeform-card .form-row > div > .flex-container,
+.pp-changeform-card .form-row .flex-container {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pp-changeform-card .form-row > div,
+.pp-changeform-card .fieldBox {
+  display: block !important;
+}
+
+.pp-changeform-card .form-group > .row {
+  align-items: flex-start;
+}
+
+.pp-changeform-card .form-group label {
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  line-height: 1.35;
+}
+
+.pp-changeform-card input,
+.pp-changeform-card textarea,
+.pp-changeform-card select,
+.pp-changeform-card .select2-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+
+.pp-changeform-card .select2-container {
+  width: 100% !important;
+}
+
+.pp-changeform-card input[type="checkbox"],
+.pp-changeform-card input[type="radio"] {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.pp-changeform-card .select2-selection__rendered {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pp-changeform-card .related-widget-wrapper {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(4, auto);
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.pp-changeform-card .related-widget-wrapper .select2,
+.pp-changeform-card .related-widget-wrapper select {
+  grid-column: 1;
+}
+
+.pp-changeform-card .related-widget-wrapper .selector {
+  grid-column: 1 / -1;
+  width: 100% !important;
+}
+
+.pp-changeform-card [class*="field-categories"] .related-widget-wrapper,
+.pp-changeform-card [class*="field-products"] .related-widget-wrapper,
+.pp-changeform-card [class*="field-featured_products"] .related-widget-wrapper,
+.pp-changeform-card [class*="field-applicable_products"] .related-widget-wrapper,
+.pp-changeform-card [class*="field-applicable_categories"] .related-widget-wrapper {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.pp-changeform-card .related-widget-wrapper-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.pp-changeform-aside {
+  position: sticky;
+  top: 84px;
+  align-self: start;
+  min-width: 0;
+  height: fit-content;
+  z-index: 20;
+}
+
+.pp-changeform-actions {
+  display: grid;
+  gap: 12px;
+  position: static !important;
+  top: auto !important;
+}
+
+.pp-inline-shell {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.pp-inline-shell .inline-group {
+  margin-bottom: 0;
+}
+
+  .pp-inline-shell .inline-group .tabular {
+    overflow: hidden;
+}
+
+@media (max-width: 1200px) {
+  .pp-changeform-card .inline-group,
+  .pp-changeform-card .inline-related,
+  .pp-changeform-card .tabular,
+  .pp-changeform-card .tabular .module {
+    min-width: 0;
+    max-width: 100%;
+    overflow: visible !important;
+  }
+
+  .pp-changeform-card .inline-group {
+    padding: 14px !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table,
+  .pp-changeform-card .inline-related table {
+    width: 100%;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .pp-changeform-card .inline-group .tabular table.text-nowrap {
+    white-space: normal !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table thead {
+    display: none;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody,
+  .pp-changeform-card .inline-group .tabular table tr,
+  .pp-changeform-card .inline-group .tabular table td {
+    display: block;
+    width: 100% !important;
+    max-width: 100%;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody tr.form-row {
+    position: relative;
+    margin-bottom: 14px;
+    padding: 14px;
+    border: 1px solid var(--pp-line) !important;
+    border-radius: var(--pp-radius);
+    background: var(--pp-surface);
+    box-shadow: var(--pp-shadow-sm);
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody tr.empty-form {
+    display: none !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody tr.add-row {
+    padding: 0;
+    border: 0 !important;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody tr.add-row td {
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody tr.add-row a {
+    float: none !important;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td {
+    padding: 10px 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--pp-line) !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td.original {
+    display: none !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td::before {
+    content: attr(data-cell-label);
+    display: block;
+    margin-bottom: 6px;
+    color: var(--pp-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td.original::before,
+  .pp-changeform-card .inline-group .tabular table tbody tr.add-row td::before {
+    content: none;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td.delete {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 0 !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td.delete::before {
+    margin-bottom: 0;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td input,
+  .pp-changeform-card .inline-group .tabular table tbody td select,
+  .pp-changeform-card .inline-group .tabular table tbody td textarea,
+  .pp-changeform-card .inline-group .tabular table tbody td .select2,
+  .pp-changeform-card .inline-group .tabular table tbody td .select2-container,
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(4, auto);
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .pp-changelist-layout.has-filters {
+    grid-template-columns: minmax(0, 1fr) 252px;
+  }
+
+  .pp-changeform-layout {
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+
+  .pp-changeform-card .nav-tabs {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .pp-changeform-card .nav-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pp-changeform-card .nav-tabs .nav-link {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .pp-changeform-card .form-group > .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .pp-changeform-card .form-group > .row > label,
+  .pp-changeform-card .form-group > .row > [class*="col-sm-"] {
+    flex: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .pp-changeform-card .form-group > .row > label {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 991px) {
+  .pp-admin-toolbar__actions {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+  }
+
+  .pp-changelist-layout.has-filters,
+  .pp-changeform-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pp-changeform-aside,
+  .pp-filter-panel {
+    position: static;
+    top: auto;
+  }
+
+  .pp-filter-toggle,
+  .pp-filter-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pp-filter-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100vw;
+    max-width: 100vw;
+    min-width: 0;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 1046;
+    border-radius: 0;
+    box-shadow: none;
+    transform: translateX(100%);
+    transition: transform var(--pp-motion-med) var(--pp-easing);
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+
+  .pp-filter-panel__body {
+    height: calc(100vh - 72px);
+    height: calc(100dvh - 72px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+
+  body.pp-filters-open .pp-filter-panel {
+    transform: translateX(0);
+  }
+
+  html.pp-filters-locked,
+  body.pp-filters-locked,
+  body.pp-filters-open {
+    overflow: hidden;
+    overscroll-behavior: none;
+    height: 100%;
+  }
+
+  body.pp-filters-open::before {
+    content: none;
+  }
+
+  .pp-filter-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 65, 61, 0.4);
+    z-index: 1045;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--pp-motion-med) var(--pp-easing);
+  }
+
+  body.pp-filters-open .pp-filter-backdrop {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  body.pp-filters-open .content-wrapper,
+  body.pp-filters-open .main-footer,
+  body.pp-filters-open .main-header,
+  body.pp-filters-open #jazzy-navbar {
+    pointer-events: none !important;
+    user-select: none;
+  }
+
+  body.pp-filters-open .pp-filter-panel {
+    pointer-events: auto !important;
+  }
+
+  body.pp-filters-locked .pp-filter-panel,
+  body.pp-filters-locked .pp-filter-panel * {
+    touch-action: auto;
+  }
+
+  .pp-changeform-card {
+    padding: 18px;
+  }
+}
+
+@media (min-width: 992px) {
+  .pp-filter-backdrop {
+    display: none !important;
+  }
+}
+
+@media (max-width: 991px) and (min-width: 576px) {
+  .pp-admin-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .pp-admin-search .sr-only {
+    grid-column: 1 / -1;
+  }
+
+  .pp-admin-search .form-control {
+    min-width: 0;
+    height: 100%;
+    width: 100%;
+  }
+
+  .pp-admin-toolbar__actions {
+    display: contents;
+  }
+
+  .pp-admin-toolbar__actions .btn {
+    width: auto;
+    min-width: max-content;
+    margin: 0 !important;
+  }
+
+  .pp-admin-toolbar__meta {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 575px) {
+  .pp-admin-search {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pp-admin-toolbar__actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  #changelist-form .results,
+  #content-main .results,
+  .pp-inline-shell .tabular .module {
+    overflow: visible !important;
+    border: 0 !important;
+  }
+
+  #result_list,
+  .inline-group .tabular table {
+    width: 100%;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    border-collapse: separate;
+  }
+
+  #result_list thead,
+  .inline-group .tabular table thead {
+    display: none;
+  }
+
+  #result_list tbody,
+  #result_list tr,
+  #result_list td,
+  .inline-group .tabular table tbody,
+  .inline-group .tabular table tr,
+  .inline-group .tabular table td {
+    display: block;
+    width: 100% !important;
+  }
+
+  #result_list tbody tr,
+  .inline-group .tabular table tbody tr {
+    margin-bottom: 14px;
+    padding: 14px;
+    border: 1px solid var(--pp-line);
+    border-radius: 14px;
+    background: var(--pp-surface);
+    box-shadow: var(--pp-shadow-sm);
+  }
+
+  #result_list tbody td,
+  .inline-group .tabular table tbody td {
+    padding: 10px 0 !important;
+    border-bottom: 1px solid var(--pp-line);
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+
+  #result_list tbody td:last-child,
+  .inline-group .tabular table tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  #result_list tbody td::before,
+  .inline-group .tabular table tbody td::before {
+    content: attr(data-cell-label);
+    display: block;
+    margin-bottom: 6px;
+    color: var(--pp-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .inline-group .tabular table tbody td.original,
+  .inline-group .tabular table tbody td.delete {
+    padding-top: 0 !important;
+  }
+
+  .inline-group .tabular table tbody td input,
+  .inline-group .tabular table tbody td select,
+  .inline-group .tabular table tbody td textarea,
+  .inline-group .tabular table tbody td .select2,
+  .inline-group .tabular table tbody td .related-widget-wrapper,
+  #result_list tbody td select,
+  #result_list tbody td .select2,
+  #result_list tbody td input {
+    width: 100% !important;
+    max-width: 100%;
+    min-width: 0 !important;
+  }
+
+  .inline-group .tabular table tbody td .related-widget-wrapper {
+    display: grid;
+    gap: 8px;
+  }
+
+  .pp-changeform-actions .submit-row,
+  .pp-changeform-actions .object-tools {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .pp-changeform-card {
+    padding: 18px;
+  }
+
+  .pp-changeform-card .card > .p-5 {
+    padding: 18px !important;
+  }
+
+  .pp-changeform-card .tab-content {
+    min-width: 0;
+  }
+
+  .pp-changeform-card .tab-pane > .card {
+    margin-bottom: 0;
+    border-radius: 12px;
+  }
+
+  .pp-changeform-card .nav-tabs {
+    gap: 8px;
+    margin-bottom: 16px !important;
+    padding-bottom: 8px;
+  }
+
+  .pp-changeform-card .nav-tabs .nav-link {
+    padding: 10px 12px;
+  }
+
+  .pp-changeform-card .form-group {
+    margin-bottom: 18px;
+  }
+
+  .pp-changeform-card .form-group > .row {
+    gap: 8px;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .pp-changeform-card .form-group > .row > label {
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+    font-size: 0.88rem;
+  }
+
+  .pp-changeform-card .form-group > .row > [class*="col-sm-"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .pp-changeform-card input:not([type="checkbox"]):not([type="radio"]),
+  .pp-changeform-card textarea,
+  .pp-changeform-card select,
+  .pp-changeform-card .select2-selection {
+    min-height: 42px;
+  }
+
+  .pp-changeform-card input:not([type="checkbox"]):not([type="radio"]),
+  .pp-changeform-card textarea,
+  .pp-changeform-card select {
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .pp-changeform-card .select2-selection__rendered {
+    padding-left: 12px;
+    padding-right: 34px;
+    line-height: 40px;
+  }
+
+  .pp-changeform-card .select2-selection__arrow {
+    height: 40px;
+  }
+
+  .pp-changeform-card .related-widget-wrapper {
+    width: 100%;
+    grid-template-columns: repeat(4, 32px) minmax(0, 1fr);
+    justify-content: start;
+    column-gap: 8px;
+    row-gap: 10px;
+  }
+
+  .pp-changeform-card .related-widget-wrapper .select2,
+  .pp-changeform-card .related-widget-wrapper select {
+    grid-column: 1 / -1;
+    width: 100% !important;
+  }
+
+  .pp-changeform-card .related-widget-wrapper-link {
+    width: 32px;
+    height: 32px;
+  }
+
+  .pp-changeform-card .inline-group {
+    padding: 18px !important;
+    margin-bottom: 0 !important;
+    border: 1px solid var(--pp-line) !important;
+    border-radius: 12px !important;
+    background: var(--pp-surface) !important;
+    box-shadow: none !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular,
+  .pp-changeform-card .inline-group .tabular .module,
+  .pp-changeform-card .inline-group .tabular table,
+  .pp-changeform-card .inline-group .tabular table tbody {
+    width: 100% !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table {
+    margin-left: -12px !important;
+    width: calc(100% + 44px) !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody tr.form-row {
+    display: block !important;
+    box-sizing: border-box;
+    margin-bottom: 22px;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    overflow: visible;
+    border: 0 !important;
+    border-radius: 0;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody tr.empty-form {
+    display: none !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody tr.form-row.has_original + tr.form-row.has_original {
+    padding-top: 18px !important;
+    border-top: 1px solid var(--pp-line) !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td {
+    box-sizing: border-box;
+    padding: 0 0 18px !important;
+    border-bottom: 0 !important;
+    background: transparent !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td:last-child {
+    padding-bottom: 0 !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td::before {
+    margin-bottom: 8px;
+    padding-left: 2px;
+    padding-right: 2px;
+    font-size: 0.88rem;
+    line-height: 1.35;
+    color: var(--pp-text);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td.delete {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    align-items: start;
+    gap: 8px;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td.delete::before {
+    width: auto;
+    max-width: 100%;
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td.delete input[type="checkbox"] {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin-left: 2px;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper {
+    width: calc(100% + 20px) !important;
+    max-width: none !important;
+    grid-template-columns: repeat(4, 32px) minmax(0, 1fr) !important;
+    justify-content: start;
+    column-gap: 8px;
+    row-gap: 10px;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper .select2,
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper .select2-container,
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper select {
+    grid-column: 1 / -1;
+    width: 100% !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td input:not([type="checkbox"]):not([type="radio"]),
+  .pp-changeform-card .inline-group .tabular table tbody td select,
+  .pp-changeform-card .inline-group .tabular table tbody td textarea,
+  .pp-changeform-card .inline-group .tabular table tbody td > .select2,
+  .pp-changeform-card .inline-group .tabular table tbody td > .select2-container {
+    width: calc(100% + 20px) !important;
+    max-width: none !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody tr.add-row a {
+    padding: 10px 12px;
+    white-space: normal;
+  }
+
+  .pp-admin-search {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .pp-admin-search .form-control {
+    min-width: 0;
+  }
+
+  .pp-admin-toolbar__actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    gap: 10px;
+  }
+
+  .pp-admin-toolbar__actions .btn {
+    width: 100%;
+    justify-content: center;
+    margin: 0 !important;
+  }
+}
+
+@media (max-width: 575px) {
+  .pp-changeform-card .inline-group {
+    padding: 18px !important;
+    margin-bottom: 0 !important;
+    border: 1px solid var(--pp-line) !important;
+    border-radius: 12px !important;
+    background: var(--pp-surface) !important;
+    box-shadow: none !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular,
+  .pp-changeform-card .inline-group .tabular .module,
+  .pp-changeform-card .inline-group .tabular table,
+  .pp-changeform-card .inline-group .tabular table tbody {
+    width: 100% !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table {
+    margin-left: -12px !important;
+    width: calc(100% + 44px) !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody tr.form-row {
+    display: block !important;
+    box-sizing: border-box;
+    margin: 0 0 22px !important;
+    padding: 0 !important;
+    width: 100% !important;
+    overflow: visible;
+    border: 0 !important;
+    border-radius: 0;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody tr.empty-form {
+    display: none !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody tr.form-row.has_original + tr.form-row.has_original,
+  .pp-changeform-card .inline-group .tabular table tbody tr.form-row.has_original + tr.form-row.dynamic-images,
+  .pp-changeform-card .inline-group .tabular table tbody tr.form-row.has_original + tr.form-row.dynamic-specifications {
+    padding-top: 18px !important;
+    border-top: 1px solid var(--pp-line) !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td {
+    box-sizing: border-box;
+    padding: 0 0 18px !important;
+    border-bottom: 0 !important;
+    background: transparent !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td::before {
+    margin-bottom: 8px;
+    padding-left: 2px;
+    padding-right: 2px;
+    font-size: 0.88rem;
+    line-height: 1.35;
+    color: var(--pp-text);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper {
+    width: calc(100% + 20px) !important;
+    max-width: none !important;
+    grid-template-columns: repeat(4, 32px) minmax(0, 1fr) !important;
+    justify-content: start;
+    column-gap: 8px;
+    row-gap: 10px;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper .select2,
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper .select2-container,
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper select {
+    grid-column: 1 / -1;
+    width: 100% !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td input:not([type="checkbox"]):not([type="radio"]),
+  .pp-changeform-card .inline-group .tabular table tbody td select,
+  .pp-changeform-card .inline-group .tabular table tbody td textarea,
+  .pp-changeform-card .inline-group .tabular table tbody td > .select2,
+  .pp-changeform-card .inline-group .tabular table tbody td > .select2-container {
+    width: calc(100% + 20px) !important;
+    max-width: none !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td.delete {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    align-items: start;
+    gap: 8px;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td.delete::before {
+    width: auto;
+    max-width: 100%;
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td.delete input[type="checkbox"] {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin-left: 2px;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody tr.add-row a {
+    padding: 10px 12px;
+    white-space: normal;
+  }
+}
+
+/* Responsive change forms: final normalizing layer for every admin entity.
+   This intentionally comes after the earlier component-specific rules so all
+   add/change screens share one predictable editing layout. */
+.pp-admin-shell--changeform,
+.pp-admin-shell--changeform form,
+.pp-changeform-layout,
+.pp-changeform-main,
+.pp-changeform-card,
+.pp-changeform-card .tab-content,
+.pp-changeform-card .tab-pane,
+.pp-changeform-card fieldset.module,
+.pp-inline-shell,
+.pp-inline-shell .inline-group,
+.pp-inline-shell .inline-related,
+.pp-inline-shell .tabular,
+.pp-inline-shell .module {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.pp-changeform-card {
+  width: 100%;
+  overflow: hidden;
+}
+
+.pp-changeform-card .tab-content {
+  overflow: visible;
+}
+
+.pp-changeform-card .card,
+.pp-changeform-card .tab-pane > .card {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.pp-changeform-card .form-group > .row,
+.pp-changeform-card .form-row {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pp-changeform-card .form-group > .row > label,
+.pp-changeform-card .form-group > .row > [class*="col-"],
+.pp-changeform-card .form-row > label,
+.pp-changeform-card .form-row > div,
+.pp-changeform-card .form-row .flex-container,
+.pp-changeform-card .fieldBox,
+.pp-changeform-card .aligned label + p,
+.pp-changeform-card .readonly {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pp-changeform-card .form-row .flex-container > label,
+.pp-changeform-card .form-row .flex-container > .related-widget-wrapper,
+.pp-changeform-card .form-row .flex-container > .selector,
+.pp-changeform-card .form-row .flex-container > input,
+.pp-changeform-card .form-row .flex-container > select,
+.pp-changeform-card .form-row .flex-container > textarea {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+
+.pp-changeform-card input:not([type="checkbox"]):not([type="radio"]),
+.pp-changeform-card textarea,
+.pp-changeform-card select,
+.pp-changeform-card .select2,
+.pp-changeform-card .select2-container,
+.pp-changeform-card .select2-selection {
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.pp-changeform-card textarea,
+.pp-changeform-card .vLargeTextField {
+  width: 100% !important;
+}
+
+.pp-changeform-card input[type="file"] {
+  width: 100% !important;
+  overflow: hidden;
+}
+
+.pp-changeform-card .help,
+.pp-changeform-card .help-block,
+.pp-changeform-card .form-text,
+.pp-changeform-card .readonly,
+.pp-changeform-card .card-title,
+.pp-changeform-card .description {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.pp-changeform-card .nav-tabs {
+  display: flex;
+  flex-wrap: nowrap !important;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+
+.pp-changeform-card .nav-tabs .nav-item {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.pp-changeform-card .nav-tabs .nav-link {
+  scroll-snap-align: start;
+  white-space: nowrap;
+}
+
+/* Django filter_horizontal / FilteredSelectMultiple. */
+.pp-changeform-card .selector {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+  box-sizing: border-box;
+}
+
+.pp-changeform-card .selector h2 {
+  font: inherit !important;
+  font-size: 0.84rem !important;
+  font-weight: 800 !important;
+  color: var(--pp-muted) !important;
+  background: var(--pp-primary-tint) !important;
+  border: 1px solid var(--pp-line) !important;
+  border-radius: 10px 10px 0 0 !important;
+  padding: 9px 12px !important;
+  margin: 0 !important;
+  text-align: left;
+}
+
+.pp-changeform-card .selector .selector-available,
+.pp-changeform-card .selector .selector-chosen {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  border: 1px solid var(--pp-line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--pp-surface);
+}
+
+.pp-changeform-card .selector .selector-filter {
+  display: block;
+  margin: 0;
+  padding: 10px;
+  border: 0;
+  border-bottom: 1px solid var(--pp-line);
+  background: var(--pp-surface);
+}
+
+.pp-changeform-card .selector .selector-filter label {
+  display: none;
+}
+
+.pp-changeform-card .selector .selector-filter input {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.pp-changeform-card .selector select {
+  width: 100% !important;
+  min-height: 220px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-image: none !important;
+  padding: 10px 12px !important;
+}
+
+.pp-changeform-card .selector .selector-chooser {
+  width: 44px !important;
+  min-width: 44px;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: center;
+  justify-self: center;
+}
+
+.pp-changeform-card .selector .selector-chooser li {
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none;
+}
+
+.pp-changeform-card .selector .selector-chooser a {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--pp-line);
+  background-color: var(--pp-surface) !important;
+  box-shadow: var(--pp-shadow-sm);
+}
+
+.pp-changeform-card .selector .selector-chooser a:hover,
+.pp-changeform-card .selector .selector-chooser a:focus {
+  background-color: var(--pp-primary-soft) !important;
+  border-color: rgba(14, 118, 110, 0.32);
+}
+
+.pp-changeform-card .selector .selector-chosen select {
+  border-top: 1px solid var(--pp-line) !important;
+}
+
+/* Inline formsets become cards before they have a chance to overflow. */
+@media (max-width: 1199px) {
+  .pp-changeform-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pp-changeform-aside {
+    position: static !important;
+    top: auto !important;
+  }
+
+  .pp-changeform-actions .submit-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .pp-changeform-actions .submit-row input,
+  .pp-changeform-actions .submit-row button,
+  .pp-changeform-actions .submit-row a.button,
+  .pp-changeform-actions .object-tools a {
+    width: 100% !important;
+    max-width: 100%;
+    margin: 0 !important;
+  }
+
+  .pp-inline-shell .inline-group,
+  .pp-inline-shell .inline-related,
+  .pp-inline-shell .tabular,
+  .pp-inline-shell .tabular .module,
+  .pp-inline-shell .tabular table,
+  .pp-inline-shell .tabular tbody {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .pp-inline-shell .tabular table {
+    margin-left: 0 !important;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .pp-inline-shell .tabular table.text-nowrap {
+    white-space: normal !important;
+  }
+
+  .pp-inline-shell .tabular thead {
+    display: none !important;
+  }
+
+  .pp-inline-shell .tabular tbody,
+  .pp-inline-shell .tabular tr,
+  .pp-inline-shell .tabular td {
+    display: block;
+    width: 100% !important;
+    max-width: 100%;
+  }
+
+  .pp-inline-shell .tabular tbody tr.form-row {
+    margin: 0 0 14px !important;
+    padding: 14px !important;
+    border: 1px solid var(--pp-line) !important;
+    border-radius: 12px !important;
+    background: var(--pp-surface) !important;
+    box-shadow: var(--pp-shadow-sm) !important;
+  }
+
+  .pp-inline-shell .tabular tbody tr.empty-form {
+    display: none !important;
+  }
+
+  .pp-inline-shell .tabular tbody tr.add-row {
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .pp-inline-shell .tabular tbody tr.add-row td {
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  .pp-inline-shell .tabular tbody tr.add-row a {
+    float: none !important;
+    width: 100% !important;
+    white-space: normal;
+  }
+
+  .pp-inline-shell .tabular tbody td {
+    padding: 10px 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--pp-line) !important;
+    background: transparent !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+
+  .pp-inline-shell .tabular tbody td:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .pp-inline-shell .tabular tbody td.original {
+    display: none !important;
+  }
+
+  .pp-inline-shell .tabular tbody td::before {
+    content: attr(data-cell-label);
+    display: block;
+    margin-bottom: 8px;
+    color: var(--pp-text);
+    font-size: 0.88rem;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  .pp-inline-shell .tabular tbody td.original::before,
+  .pp-inline-shell .tabular tbody tr.add-row td::before {
+    content: none !important;
+  }
+
+  .pp-inline-shell .tabular tbody td.delete {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    gap: 8px;
+  }
+
+  .pp-inline-shell .tabular tbody td.delete::before {
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: keep-all;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td.delete {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td.delete::before {
+    flex: 0 0 auto;
+    width: auto !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+    overflow-wrap: normal !important;
+    word-break: keep-all !important;
+  }
+
+  .pp-inline-shell .tabular tbody td input:not([type="checkbox"]):not([type="radio"]),
+  .pp-inline-shell .tabular tbody td select,
+  .pp-inline-shell .tabular tbody td textarea,
+  .pp-inline-shell .tabular tbody td > .select2,
+  .pp-inline-shell .tabular tbody td > .select2-container,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(4, 32px);
+    gap: 8px;
+    align-items: center;
+  }
+
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper .select2,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper .select2-container,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper select {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .pp-changeform-card .selector {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .pp-changeform-card .selector .selector-chooser {
+    width: 100% !important;
+    min-width: 0;
+    flex-direction: row;
+    justify-content: center;
+    order: 2;
+  }
+
+  .pp-changeform-card .selector .selector-available {
+    order: 1;
+  }
+
+  .pp-changeform-card .selector .selector-chosen {
+    order: 3;
+  }
+
+  .pp-changeform-card .selector select {
+    min-height: 180px;
+  }
+}
+
+@media (max-width: 575px) {
+  .pp-admin-shell--changeform {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .pp-changeform-card {
+    padding: 16px !important;
+    border-radius: 12px;
+  }
+
+  .pp-changeform-card .card > .p-5,
+  .pp-changeform-card .card-body {
+    padding: 16px !important;
+  }
+
+  .pp-changeform-card .nav-tabs {
+    margin-left: -4px;
+    margin-right: -4px;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .pp-changeform-card .nav-tabs .nav-link {
+    padding: 9px 11px !important;
+    font-size: 0.84rem;
+  }
+
+  .pp-changeform-card .form-group {
+    margin-bottom: 16px;
+  }
+
+  .pp-changeform-card .related-widget-wrapper,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper {
+    grid-template-columns: repeat(4, 32px) minmax(0, 1fr) !important;
+    justify-content: start;
+  }
+
+  .pp-changeform-card .related-widget-wrapper .select2,
+  .pp-changeform-card .related-widget-wrapper .select2-container,
+  .pp-changeform-card .related-widget-wrapper select,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper .select2,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper .select2-container,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper select {
+    grid-column: 1 / -1 !important;
+  }
+
+  .pp-changeform-actions .submit-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pp-changeform-card .selector select {
+    min-height: 160px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-filter-panel,
+  body.pp-filters-open::before {
+    transition: none !important;
+  }
+}
+
+/* Final inline polish: Django keeps a hidden empty-form template in tabular inlines.
+   It must never look like an editable row; only the add-row is user-facing. */
+.pp-changeform-card .inline-group .tabular tbody tr.empty-form,
+.pp-inline-shell .tabular tbody tr.empty-form {
+  display: none !important;
+}
+
+.pp-changeform-card .inline-group .tabular tbody tr.empty-form[hidden],
+.pp-inline-shell .tabular tbody tr.empty-form[hidden] {
+  display: none !important;
+}
+
+.pp-changeform-card .inline-group .tabular,
+.pp-changeform-card .inline-group .tabular .module {
+  overflow: visible !important;
+}
+
+.pp-changeform-card .inline-group .tabular tbody tr.add-row,
+.pp-inline-shell .tabular tbody tr.add-row {
+  display: block !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 12px 0 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.pp-changeform-card .inline-group .tabular tbody tr.add-row td,
+.pp-inline-shell .tabular tbody tr.add-row td {
+  display: block !important;
+  width: 100% !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.pp-changeform-card .inline-group .tabular tbody tr.add-row td::before,
+.pp-inline-shell .tabular tbody tr.add-row td::before {
+  content: none !important;
+}
+
+.pp-changeform-card .inline-group .tabular tbody tr.add-row a,
+.pp-inline-shell .tabular tbody tr.add-row a {
+  float: none !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100% !important;
+  min-height: 44px;
+  padding: 11px 14px !important;
+  border: 1px dashed rgba(14, 118, 110, 0.4) !important;
+  border-radius: var(--pp-radius-sm) !important;
+  background: var(--pp-primary-soft) !important;
+  color: var(--pp-primary-strong) !important;
+  font-weight: 800;
+  white-space: normal;
+  text-align: center;
+  box-shadow: none !important;
+}
+
+.pp-changeform-card .inline-group .tabular tbody tr.add-row a:hover,
+.pp-changeform-card .inline-group .tabular tbody tr.add-row a:focus,
+.pp-inline-shell .tabular tbody tr.add-row a:hover,
+.pp-inline-shell .tabular tbody tr.add-row a:focus {
+  background: var(--pp-primary) !important;
+  color: #ffffff !important;
+  text-decoration: none;
+}
+
+@media (max-width: 1200px) {
+  .pp-changeform-card .inline-group .tabular table,
+  .pp-inline-shell .tabular table {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular tbody tr.form-row:not(.empty-form):not(.add-row),
+  .pp-inline-shell .tabular tbody tr.form-row:not(.empty-form):not(.add-row) {
+    display: block !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards:not(.empty-form),
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards:not(.empty-form) {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 16px;
+    padding: 16px !important;
+    border: 1px solid var(--pp-line) !important;
+    border-radius: var(--pp-radius) !important;
+    background: var(--pp-surface) !important;
+    box-shadow: var(--pp-shadow-sm) !important;
+  }
+
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td {
+    display: block !important;
+    width: 100% !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.original,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.original {
+    display: none !important;
+  }
+
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.field-description,
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.field-url,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.field-description,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.field-url {
+    grid-column: 1 / -1;
+  }
+
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td::before,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td::before {
+    content: attr(data-cell-label);
+    display: block;
+    margin: 0 0 7px;
+    color: var(--pp-muted);
+    font-size: 0.76rem;
+    font-weight: 800;
+    line-height: 1.3;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards input:not([type="checkbox"]):not([type="radio"]),
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards select,
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards textarea,
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards .select2,
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards .select2-container,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards input:not([type="checkbox"]):not([type="radio"]),
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards select,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards textarea,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards .select2,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards .select2-container {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.field-is_active,
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.delete,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.field-is_active,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.delete {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 42px;
+    padding: 8px 10px !important;
+    border: 1px solid var(--pp-line) !important;
+    border-radius: var(--pp-radius-sm) !important;
+    background: #fbfcfc !important;
+  }
+
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.field-is_active::before,
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.delete::before,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.field-is_active::before,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.delete::before {
+    margin: 0;
+  }
+
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards .inline-deletelink,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards .inline-deletelink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 7px 12px;
+    border-radius: var(--pp-radius-sm);
+    background: rgba(225, 29, 72, 0.08);
+    color: var(--pp-danger);
+    font-weight: 800;
+    text-decoration: none;
+  }
+}
+
+@media (max-width: 575px) {
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards:not(.empty-form),
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards:not(.empty-form) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.field-description,
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.field-url,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.field-description,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.field-url {
+    grid-column: 1;
+  }
+}
+
+/* Final inline consistency: homepage cards, category cards and similar tabular
+   inlines should share the same label rhythm and destructive action styling. */
+@media (max-width: 1200px) {
+  .pp-changeform-card .inline-group .tabular tbody tr.form-row:not(.empty-form):not(.add-row),
+  .pp-inline-shell .tabular tbody tr.form-row:not(.empty-form):not(.add-row) {
+    border: 1px solid var(--pp-line) !important;
+    border-radius: var(--pp-radius) !important;
+    background: var(--pp-surface) !important;
+    box-shadow: var(--pp-shadow-sm) !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular tbody td::before,
+  .pp-inline-shell .tabular tbody td::before,
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td::before,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td::before {
+    color: var(--pp-text) !important;
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    line-height: 1.35 !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    margin: 0 0 8px !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular tbody td.delete,
+  .pp-inline-shell .tabular tbody td.delete,
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.delete,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.delete {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    min-height: 44px !important;
+    padding: 9px 10px !important;
+    border: 1px solid var(--pp-line) !important;
+    border-radius: var(--pp-radius-sm) !important;
+    background: #fbfcfc !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular tbody td.delete::before,
+  .pp-inline-shell .tabular tbody td.delete::before,
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.delete::before,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards > td.delete::before {
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular tbody td.delete > div,
+  .pp-inline-shell .tabular tbody td.delete > div {
+    margin: 0 !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular tbody .inline-deletelink,
+  .pp-inline-shell .tabular tbody .inline-deletelink,
+  .pp-inline-shell #hero_cards-group .tabular tbody tr.dynamic-hero_cards .inline-deletelink,
+  .pp-changeform-card #hero_cards-group .tabular tbody tr.dynamic-hero_cards .inline-deletelink {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 34px !important;
+    padding: 7px 12px !important;
+    border: 1px solid rgba(225, 29, 72, 0.26) !important;
+    border-radius: var(--pp-radius-sm) !important;
+    background: rgba(225, 29, 72, 0.08) !important;
+    color: var(--pp-danger) !important;
+    font-size: 0.84rem !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    text-decoration: none !important;
+    opacity: 1 !important;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .pp-changeform-card .inline-group .tabular tbody .inline-deletelink:hover,
+  .pp-changeform-card .inline-group .tabular tbody .inline-deletelink:focus,
+  .pp-inline-shell .tabular tbody .inline-deletelink:hover,
+  .pp-inline-shell .tabular tbody .inline-deletelink:focus {
+    border-color: var(--pp-danger) !important;
+    background: var(--pp-danger) !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
   }
 }

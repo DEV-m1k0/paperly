@@ -4,6 +4,7 @@ from django.db import models
 from django.utils import timezone
 from rest_framework import permissions, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -16,6 +17,39 @@ from .serializers import (
     ProductReviewSerializer,
     ProductSerializer,
 )
+
+
+class IsAdminOrReadOnly(permissions.BasePermission):
+    """Read for anyone; write only for staff users."""
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return bool(request.user and request.user.is_authenticated and request.user.is_staff)
+
+
+class IsReviewOwnerOrReadOnly(permissions.BasePermission):
+    """Anyone can read reviews; only the author (or staff) can edit/delete theirs."""
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        # Authenticated users can create new reviews; per-object check below
+        # restricts updates/deletes to the owner.
+        return bool(request.user and request.user.is_authenticated)
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        if request.user.is_staff:
+            return True
+        return obj.user_id == request.user.id
+
+
+class ProductPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = "page_size"
+    max_page_size = 200
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -239,7 +273,10 @@ def apply_product_filters(queryset, params, exclude=None, now=None):
 
 class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = ProductPagination
+    # Write operations (POST/PUT/PATCH/DELETE) are admin-only. Catalog content
+    # is managed via Django admin, never through the public API.
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["title", "sku", "description", "short_description"]
     ordering_fields = ["price", "title", "created_at", "sold_recent", "avg_rating", "reviews_count"]
@@ -271,7 +308,9 @@ class ProductViewSet(viewsets.ModelViewSet):
 class ProductReviewViewSet(viewsets.ModelViewSet):
     queryset = ProductReview.objects.filter(is_published=True).select_related("product", "user")
     serializer_class = ProductReviewSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    # Anonymous read; auth required for write; only the author (or staff) can
+    # update/delete their own review.
+    permission_classes = [IsReviewOwnerOrReadOnly]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -281,10 +320,7 @@ class ProductReviewViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        if self.request.user.is_authenticated:
-            user = self.request.user
-            author_name = user.get_full_name() or user.get_username() or "Покупатель"
-            serializer.save(user=user, author_name=author_name)
-            return
-        author_name = serializer.validated_data.get('author_name') or "Покупатель"
-        serializer.save(author_name=author_name)
+        # IsReviewOwnerOrReadOnly already gated this on is_authenticated.
+        user = self.request.user
+        author_name = user.get_full_name() or user.get_username() or "Покупатель"
+        serializer.save(user=user, author_name=author_name)

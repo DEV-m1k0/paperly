@@ -5,6 +5,7 @@ import shutil
 from datetime import date, timedelta
 from io import BytesIO
 from pathlib import Path
+from urllib.parse import quote_plus
 
 from django.conf import settings
 from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
@@ -100,7 +101,7 @@ REVIEW_TEXTS = [
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Пользователи: 10 покупателей + 3 менеджера + 2 админа.
+# Пользователи: 20 покупателей + 3 менеджера + 2 админа.
 # Пароли одинаковы внутри роли (customer12345 / manager12345 / admin12345),
 # чтобы демо-доступ из README был лаконичным.
 # ─────────────────────────────────────────────────────────────────────────────
@@ -117,6 +118,16 @@ CUSTOMER_SEEDS = [
     ("customer8",  "Наталья",  "Фёдорова", "+7 (925) 666-77-88", date(1987, 4, 19),  "Курск",             "ул. Энтузиастов, 4",     "305044"),
     ("customer9",  "Михаил",   "Волков",   "+7 (902) 888-99-00", date(1993, 9, 6),   "Воронеж",           "пр-т Революции, 15",     "394018"),
     ("customer10", "Татьяна",  "Морозова", "+7 (936) 111-00-99", date(1989, 12, 25), "Курск",             "ул. Магистральная, 21",  "305029"),
+    ("customer11", "Кирилл",   "Беляев",   "+7 (920) 314-15-92", date(1997, 1, 10),  "Курск",             "ул. Радищева, 22",       "305004"),
+    ("customer12", "Софья",    "Орлова",   "+7 (904) 271-82-81", date(2001, 6, 2),   "Курск",             "ул. Дзержинского, 41",   "305035"),
+    ("customer13", "Виктор",   "Громов",   "+7 (915) 742-20-10", date(1984, 3, 27),  "Белгород",          "ул. Победы, 84",         "308015"),
+    ("customer14", "Алина",    "Егорова",  "+7 (906) 580-44-12", date(1994, 9, 14),  "Курск",             "ул. Союзная, 9",         "305023"),
+    ("customer15", "Роман",    "Титов",    "+7 (910) 611-72-30", date(1986, 12, 5),  "Орел",              "ул. Комсомольская, 88",  "302001"),
+    ("customer16", "Вера",     "Лебедева", "+7 (926) 490-17-55", date(1999, 4, 18),  "Курск",             "пр-т Дружбы, 31",        "305040"),
+    ("customer17", "Георгий",  "Семенов",  "+7 (903) 218-64-70", date(1982, 7, 23),  "Москва",            "ул. Тверская, 17",       "125009"),
+    ("customer18", "Полина",   "Зайцева",  "+7 (925) 883-49-20", date(1998, 10, 8),  "Курск",             "ул. Бойцов 9-й дивизии, 6", "305018"),
+    ("customer19", "Илья",     "Фомин",    "+7 (999) 430-91-12", date(1991, 2, 11),  "Липецк",            "ул. Советская, 55",      "398001"),
+    ("customer20", "Дарья",    "Крылова",  "+7 (936) 902-13-44", date(1996, 5, 29),  "Курск",             "ул. Хрущева, 18",        "305048"),
 ]
 
 # (username, first_name, last_name)
@@ -131,6 +142,108 @@ ADMIN_SEEDS = [
     ("admin2", "Сергей", "Николаев"),
 ]
 
+BRAND_ASSETS = {
+    "erich-krause": ("https://erichkrause.com/", "erichkrause.com"),
+    "kores": ("https://www.kores.com/", "kores.com"),
+    "brauberg": ("https://www.brauberg.com/", "brauberg.com"),
+    "maped": ("https://www.maped.com/", "maped.com"),
+    "pilot": ("https://www.pilotpen.eu/", "pilotpen.eu"),
+    "faber-castell": ("https://www.faber-castell.com/", "faber-castell.com"),
+    "hatber": ("https://hatber.ru/", "hatber.ru"),
+    "bg": ("https://bg-corp.ru/", "bg-corp.ru"),
+    "berlingo": ("https://berlingo.ru/", "berlingo.ru"),
+    "pentel": ("https://www.pentel.com/", "pentel.com"),
+}
+
+PRODUCT_IMAGE_QUERIES = {
+    "NB": "notebook stationery",
+    "PP": "office paper stationery",
+    "WR": "pens pencils stationery",
+    "AR": "art supplies watercolor brushes",
+    "OF": "office supplies desk stationery",
+    "KD": "school supplies kids backpack",
+}
+
+EXTRA_PRODUCT_SEEDS = [
+    ("NB-007", "Тетрадь A5 48 листов линейка Pastel", 135, "paper", "bg", "A5", 48, "school", "Тетрадь в линейку с мягкой пастельной обложкой для ежедневных школьных записей."),
+    ("NB-008", "Тетрадь предметная по математике 48 листов", 145, "paper", "hatber", "A5", 48, "school", "Предметная тетрадь с тематической обложкой и справочным блоком по математике."),
+    ("NB-009", "Тетрадь предметная по английскому 48 листов", 145, "paper", "hatber", "A5", 48, "school", "Тетрадь для занятий английским языком с плотной белой бумагой."),
+    ("NB-010", "Блокнот A6 на резинке 96 листов", 210, "paper", "berlingo", "other", 96, "office", "Компактный блокнот для быстрых заметок, списков задач и планирования дня."),
+    ("NB-011", "Ежедневник недатированный A5 Soft Touch", 690, "paper", "brauberg", "A5", 160, "office", "Недатированный ежедневник с мягкой обложкой, ляссе и удобной разметкой."),
+    ("NB-012", "Планер настольный недельный 60 листов", 360, "paper", "brauberg", "other", 60, "office", "Настольный планер для недельного расписания, задач и рабочих заметок."),
+    ("PP-006", "Бумага офисная A4 пастельная 100 листов", 330, "paper", "kores", "A4", 100, "creative", "Набор пастельной бумаги для объявлений, презентаций и творческих работ."),
+    ("PP-007", "Бумага для акварели A4 20 листов", 420, "paper", "faber-castell", "A4", 20, "creative", "Плотная фактурная бумага для акварели, гуаши и смешанных техник."),
+    ("PP-008", "Бумага для черчения A3 20 листов", 510, "paper", "hatber", "A3", 20, "school", "Белая бумага повышенной плотности для чертежей, схем и технических работ."),
+    ("PP-009", "Калька рулонная 297 мм × 20 м", 640, "paper", "brauberg", "other", None, "creative", "Прозрачная калька в рулоне для копирования, макетов и черчения."),
+    ("PP-010", "Блок самоклеящийся 51×76 мм 12 цветов", 250, "paper", "berlingo", "other", 1200, "office", "Набор узких закладок и стикеров для учебников, документов и каталогов."),
+    ("PP-011", "Папка для черчения A4 24 листа", 290, "paper", "hatber", "A4", 24, "school", "Папка с листами для черчения и графических работ."),
+    ("PP-012", "Конверты C5 белые 50 штук", 310, "paper", "brauberg", "other", 50, "office", "Белые почтовые конверты для документов, писем и деловой корреспонденции."),
+    ("WR-013", "Ручка гелевая черная 0.5 мм", 70, "writing", "pilot", "other", None, "office", "Гелевая ручка с насыщенными черными чернилами и плавным письмом."),
+    ("WR-014", "Ручка гелевая синяя стираемая", 155, "writing", "pilot", "other", None, "school", "Стираемая гелевая ручка для аккуратных конспектов без помарок."),
+    ("WR-015", "Ручка шариковая масляная красная", 45, "writing", "erich-krause", "other", None, "office", "Красная ручка для проверки работ, пометок и выделения важных правок."),
+    ("WR-016", "Набор линеров 0.1–0.8 мм 6 штук", 620, "writing", "pentel", "other", None, "creative", "Линеры разной толщины для скетчинга, черчения и иллюстраций."),
+    ("WR-017", "Карандаш механический 0.5 мм", 230, "writing", "pentel", "other", None, "school", "Механический карандаш с металлическим клипом и мягким грипом."),
+    ("WR-018", "Грифели HB 0.5 мм 12 штук", 95, "writing", "pentel", "other", None, "school", "Запасные грифели для механических карандашей."),
+    ("WR-019", "Ластик белый мягкий", 55, "writing", "faber-castell", "other", None, "school", "Мягкий ластик для графитных карандашей, не повреждает бумагу."),
+    ("WR-020", "Точилка с контейнером двойная", 140, "writing", "maped", "other", None, "school", "Двойная точилка для стандартных и толстых карандашей."),
+    ("WR-021", "Набор маркеров для доски 4 цвета", 390, "writing", "kores", "other", None, "office", "Маркеры для белых досок с яркими стираемыми чернилами."),
+    ("WR-022", "Текстовыделитель желтый классический", 80, "writing", "erich-krause", "other", None, "office", "Классический желтый текстовыделитель со скошенным наконечником."),
+    ("WR-023", "Набор акварельных карандашей 24 цвета", 790, "writing", "faber-castell", "other", None, "creative", "Акварельные карандаши с мягким водорастворимым грифелем."),
+    ("WR-024", "Маркеры спиртовые для скетчинга 12 цветов", 1290, "writing", "berlingo", "other", None, "creative", "Двусторонние спиртовые маркеры для скетчей, иллюстраций и дизайна."),
+    ("AR-011", "Палитра пластиковая овальная", 120, "art", "maped", "other", None, "creative", "Легкая палитра с ячейками для смешивания красок."),
+    ("AR-012", "Стакан-непроливайка для кистей", 110, "art", "erich-krause", "other", None, "school", "Безопасный стакан для воды с крышкой-непроливайкой."),
+    ("AR-013", "Мольберт настольный деревянный", 1490, "art", "faber-castell", "other", None, "creative", "Компактный настольный мольберт для рисования и демонстрации работ."),
+    ("AR-014", "Холст на подрамнике 30×40 см", 430, "art", "brauberg", "other", None, "creative", "Грунтованный холст для акрила, масла и смешанных техник."),
+    ("AR-015", "Акриловые краски 12 цветов", 760, "art", "faber-castell", "other", None, "creative", "Набор акриловых красок с плотным укрывистым цветом."),
+    ("AR-016", "Пальчиковые краски 6 цветов", 390, "art", "erich-krause", "other", None, "creative", "Безопасные пальчиковые краски для малышей и первых творческих опытов."),
+    ("AR-017", "Набор кистей щетина 5 штук", 340, "art", "maped", "other", None, "creative", "Плоские кисти из щетины для гуаши, акрила и декоративных работ."),
+    ("AR-018", "Папка для акварели A3 10 листов", 580, "art", "hatber", "A3", 10, "creative", "Акварельная бумага большого формата для учебных и художественных работ."),
+    ("AR-019", "Набор угля художественного 10 штук", 260, "art", "faber-castell", "other", None, "creative", "Художественный уголь для набросков, штриховки и тональных работ."),
+    ("AR-020", "Линейка металлическая 30 см", 160, "art", "brauberg", "other", None, "school", "Прочная металлическая линейка для черчения и резки макетов."),
+    ("AR-021", "Набор геометрический 4 предмета", 240, "art", "maped", "other", None, "school", "Линейка, транспортир и угольники для школы и черчения."),
+    ("OF-009", "Скрепки 28 мм оцинкованные 100 штук", 75, "office", "brauberg", "other", None, "office", "Оцинкованные скрепки для аккуратного крепления документов."),
+    ("OF-010", "Зажимы для бумаг 25 мм 12 штук", 160, "office", "berlingo", "other", None, "office", "Черные металлические зажимы для документов и папок."),
+    ("OF-011", "Лоток горизонтальный для бумаг", 390, "office", "brauberg", "A4", None, "office", "Настольный лоток формата A4 для входящих и рабочих документов."),
+    ("OF-012", "Папка-уголок A4 прозрачная 10 штук", 210, "office", "berlingo", "A4", None, "office", "Набор прозрачных папок-уголков для документов и презентаций."),
+    ("OF-013", "Файл-вкладыш A4 100 мкм 100 штук", 520, "office", "brauberg", "A4", None, "office", "Плотные файлы-вкладыши для архивов, договоров и учебных материалов."),
+    ("OF-014", "Маркер перманентный черный толстый", 120, "office", "erich-krause", "other", None, "office", "Толстый перманентный маркер для коробок, папок и упаковки."),
+    ("OF-015", "Клейкая лента упаковочная 48 мм × 66 м", 190, "office", "kores", "other", None, "office", "Прочная упаковочная лента для посылок и коробок."),
+    ("OF-016", "Диспенсер для скотча настольный", 480, "office", "berlingo", "other", None, "office", "Тяжелый настольный диспенсер для удобной работы со скотчем."),
+    ("OF-017", "Бейдж горизонтальный с клипом 10 штук", 260, "office", "brauberg", "other", None, "office", "Прозрачные бейджи для мероприятий, офиса и конференций."),
+    ("OF-018", "Штемпельная подушка синяя", 170, "office", "kores", "other", None, "office", "Синяя штемпельная подушка для печатей и штампов."),
+    ("KD-007", "Набор обложек для тетрадей 10 штук", 150, "kids", "bg", "A5", None, "school", "Прозрачные обложки для защиты школьных тетрадей."),
+    ("KD-008", "Набор обложек для учебников универсальный", 260, "kids", "hatber", "other", None, "school", "Регулируемые обложки для учебников разных форматов."),
+    ("KD-009", "Пенал-тубус пластиковый", 240, "kids", "maped", "other", None, "school", "Легкий пенал-тубус для ручек, карандашей и фломастеров."),
+    ("KD-010", "Набор закладок магнитных 8 штук", 180, "kids", "berlingo", "other", None, "school", "Яркие магнитные закладки для учебников и ежедневников."),
+    ("KD-011", "Папка для труда A4 на молнии", 360, "kids", "bg", "A4", None, "school", "Папка на молнии для цветной бумаги, картона и творческих принадлежностей."),
+    ("KD-012", "Набор наклеек школьных 12 листов", 220, "kids", "hatber", "other", 12, "creative", "Набор декоративных наклеек для дневников, тетрадей и поделок."),
+    ("KD-013", "Сумка для сменной обуви", 390, "kids", "erich-krause", "other", None, "school", "Легкая школьная сумка для сменной обуви с прочными шнурами."),
+]
+
+
+def _remote_product_image_url(item, index):
+    sku_prefix = item["sku"].split("-")[0]
+    query = f"{item['title']} {PRODUCT_IMAGE_QUERIES.get(sku_prefix, 'stationery')}"
+    return f"https://source.unsplash.com/900x900/?{quote_plus(query)}&sig=paperly-{index:03d}"
+
+
+def _brand_logo_url(domain):
+    return f"https://www.google.com/s2/favicons?domain={domain}&sz=256"
+
+
+def _set_timestamps(obj, created_at, updated_at=None):
+    fields = {"created_at": created_at, "updated_at": updated_at or created_at}
+    obj.__class__.objects.filter(pk=obj.pk).update(**fields)
+
+
+def _safe_console_text(value):
+    return str(value).encode("cp1251", errors="replace").decode("cp1251")
+
+
+def _safe_stdout_write(stdout, message):
+    if stdout:
+        stdout.write(_safe_console_text(message))
+
 
 def _hex_to_rgb(hex_color):
     hex_color = hex_color.lstrip("#")
@@ -138,10 +251,11 @@ def _hex_to_rgb(hex_color):
 
 
 def _generate_placeholder_jpg(dest_path: Path, label: str, subtitle: str = "", palette_key: str = "_default"):
-    """Draw a 600×600 JPG placeholder: градиент + центрированный текст.
+    """Draw a product-aware JPG fallback.
 
-    Запускается только если реального файла нет (когда конкретная картинка
-    не была подготовлена вручную, либо её удалили из media/).
+    Это не абстрактная заглушка: картинка подбирает композицию по названию
+    товара, поэтому даже без внешних CDN каталог выглядит предметно и
+    стабильно на локальной машине/Render.
     """
     from PIL import Image, ImageDraw, ImageFont
 
@@ -149,20 +263,17 @@ def _generate_placeholder_jpg(dest_path: Path, label: str, subtitle: str = "", p
     start = _hex_to_rgb(start_hex)
     end = _hex_to_rgb(end_hex)
 
-    size = 600
-    img = Image.new("RGB", (size, size), start)
+    size = 900
+    img = Image.new("RGB", (size, size), "#f7fbfa")
     draw = ImageDraw.Draw(img)
 
-    # Диагональный градиент
+    # Мягкий студийный фон вместо однотонного прямоугольника.
     for y in range(size):
         ratio = y / size
-        r = int(start[0] * (1 - ratio) + end[0] * ratio)
-        g = int(start[1] * (1 - ratio) + end[1] * ratio)
-        b = int(start[2] * (1 - ratio) + end[2] * ratio)
+        r = int(248 * (1 - ratio) + min(end[0] + 42, 255) * ratio)
+        g = int(252 * (1 - ratio) + min(end[1] + 42, 255) * ratio)
+        b = int(250 * (1 - ratio) + min(end[2] + 42, 255) * ratio)
         draw.line([(0, y), (size, y)], fill=(r, g, b))
-
-    # Декоративный круг в углу — добавляет визуального интереса
-    draw.ellipse([size - 180, -60, size + 120, 240], fill=(255, 255, 255, 40), outline=None)
 
     # Шрифты — ищем кириллический TTF. Порядок важен: сначала Linux
     # (Render = Ubuntu, DejaVu всегда есть), потом macOS, потом Windows.
@@ -195,20 +306,167 @@ def _generate_placeholder_jpg(dest_path: Path, label: str, subtitle: str = "", p
                 continue
         return None
 
-    font_title = _load_font(_font_candidates_bold, 42)
-    font_sub = _load_font(_font_candidates_regular, 24)
+    font_title = _load_font(_font_candidates_bold, 38)
+    font_sub = _load_font(_font_candidates_regular, 22)
+    font_sku = _load_font(_font_candidates_bold, 18)
     cyrillic_ok = font_title is not None
     if font_title is None:
         font_title = ImageFont.load_default()
     if font_sub is None:
         font_sub = ImageFont.load_default()
+    if font_sku is None:
+        font_sku = ImageFont.load_default()
 
-    # Если кириллического шрифта не нашли — заменяем заголовок на SKU,
-    # чтобы не рисовать "квадраты" вместо текста
-    if not cyrillic_ok and subtitle:
-        label, subtitle = subtitle, ""
+    accent = start
+    accent_2 = end
+    dark = "#183f43"
+    label_l = label.lower()
+
+    def shadow(box, radius=26):
+        x1, y1, x2, y2 = box
+        draw.rounded_rectangle([x1 + 14, y1 + 18, x2 + 14, y2 + 18], radius=radius, fill="#cad9db")
+
+    def rr(box, fill, outline=None, width=1, radius=26):
+        draw.rounded_rectangle(box, radius=radius, fill=fill, outline=outline, width=width)
+
+    def line(points, fill=dark, width=8):
+        draw.line(points, fill=fill, width=width, joint="curve")
+
+    def draw_paper_stack():
+        for offset, color in [(34, "#dce7ea"), (18, "#edf4f5"), (0, "#ffffff")]:
+            rr([220 + offset, 210 - offset, 680 + offset, 690 - offset], "#fff" if not offset else color, "#d8e3e6", 3, 24)
+        for y in range(300, 620, 58):
+            line([(280, y), (620, y)], "#d6e3e6", 4)
+        draw.rectangle([266, 210, 300, 690], fill=accent)
+
+    def draw_notebook():
+        shadow([240, 180, 660, 705])
+        rr([240, 180, 660, 705], "#ffffff", "#d7e3e6", 3, 30)
+        rr([278, 218, 622, 668], "#fefefe", "#e1ebed", 2, 22)
+        draw.rectangle([240, 180, 325, 705], fill=accent)
+        for y in range(255, 642, 48):
+            line([(365, y), (590, y)], "#d8e6e8", 3)
+        for y in range(225, 665, 70):
+            draw.ellipse([275, y, 295, y + 20], fill="#ffffff")
+
+    def draw_pens(count=5, marker=False):
+        colors = ["#0e766e", "#f59e0b", "#e85d75", "#2563eb", "#7c3aed", "#111827"]
+        x0 = 245
+        for i in range(count):
+            x = x0 + i * 72
+            color = colors[i % len(colors)]
+            rr([x, 215, x + 44, 675], color, None, 1, 22)
+            rr([x + 7, 220, x + 37, 310], "#ffffff", None, 1, 14)
+            if marker:
+                draw.polygon([(x, 675), (x + 44, 675), (x + 31, 735), (x + 13, 735)], fill=dark)
+            else:
+                draw.polygon([(x, 675), (x + 44, 675), (x + 22, 740)], fill=dark)
+
+    def draw_pencils():
+        colors = ["#fbbf24", "#ef4444", "#22c55e", "#3b82f6", "#a855f7", "#fb7185"]
+        for i, color in enumerate(colors):
+            x = 210 + i * 76
+            draw.polygon([(x, 660), (x + 28, 185), (x + 74, 185), (x + 102, 660)], fill=color)
+            draw.polygon([(x, 660), (x + 102, 660), (x + 51, 750)], fill="#d8a15d")
+            draw.polygon([(x + 39, 728), (x + 63, 728), (x + 51, 750)], fill=dark)
+            rr([x + 30, 190, x + 72, 245], "#f8fafc", None, 1, 12)
+
+    def draw_paint():
+        rr([190, 250, 710, 610], "#ffffff", "#d8e5e8", 3, 80)
+        draw.ellipse([350, 355, 550, 555], fill="#f7fbfa", outline="#d8e5e8", width=3)
+        for i, color in enumerate(["#ef4444", "#f59e0b", "#22c55e", "#2563eb", "#7c3aed", "#ec4899"]):
+            x = 250 + (i % 3) * 170
+            y = 315 + (i // 3) * 170
+            draw.ellipse([x, y, x + 86, y + 86], fill=color)
+        line([(645, 170), (405, 710)], "#8b5e34", 18)
+        line([(665, 150), (685, 190)], "#d4d4d8", 26)
+
+    def draw_brushes():
+        for i, color in enumerate(["#0e766e", "#f59e0b", "#e85d75", "#2563eb"]):
+            x = 270 + i * 90
+            line([(x, 680), (x + 70, 250)], "#8b5e34", 20)
+            rr([x + 50, 215, x + 105, 300], "#d9e1e4", None, 1, 18)
+            draw.polygon([(x + 56, 215), (x + 100, 215), (x + 78, 130)], fill=color)
+        rr([210, 650, 690, 735], "#ffffff", "#d8e5e8", 3, 24)
+
+    def draw_easel():
+        line([(330, 720), (450, 175), (570, 720)], "#8b5e34", 18)
+        line([(450, 250), (450, 740)], "#8b5e34", 14)
+        rr([285, 230, 615, 540], "#ffffff", "#d8e5e8", 4, 18)
+        draw.line([(335, 465), (410, 390), (480, 440), (560, 320)], fill=accent, width=9)
+        draw.ellipse([520, 280, 555, 315], fill="#f59e0b")
+        line([(250, 565), (650, 565)], "#8b5e34", 16)
+
+    def draw_office():
+        if any(word in label_l for word in ("ножниц",)):
+            line([(320, 640), (570, 280)], "#94a3b8", 18)
+            line([(580, 640), (330, 280)], "#94a3b8", 18)
+            draw.ellipse([260, 590, 370, 700], outline=accent, width=18)
+            draw.ellipse([530, 590, 640, 700], outline=accent, width=18)
+        elif any(word in label_l for word in ("степлер", "дырокол")):
+            rr([250, 365, 665, 560], accent, None, 1, 44)
+            rr([285, 300, 620, 420], "#ffffff", "#d8e5e8", 3, 36)
+            rr([310, 555, 640, 620], "#475569", None, 1, 22)
+        elif any(word in label_l for word in ("скреп", "зажим")):
+            for i in range(5):
+                x = 260 + i * 75
+                draw.arc([x, 285, x + 135, 605], 90, 450, fill=accent if i % 2 else "#475569", width=16)
+        elif any(word in label_l for word in ("лента", "скотч", "диспенсер")):
+            draw.ellipse([250, 260, 610, 620], fill="#ffffff", outline=accent, width=28)
+            draw.ellipse([360, 370, 500, 510], fill="#f7fbfa", outline="#d8e5e8", width=10)
+            rr([520, 500, 700, 620], "#475569", None, 1, 24)
+        else:
+            rr([230, 250, 660, 650], "#ffffff", "#d8e5e8", 3, 24)
+            draw.rectangle([230, 250, 660, 340], fill=accent)
+            for y in range(390, 610, 52):
+                line([(280, y), (610, y)], "#d8e5e8", 4)
+
+    def draw_school():
+        if any(word in label_l for word in ("ранец", "сумка")):
+            rr([300, 220, 600, 700], accent, None, 1, 58)
+            rr([342, 285, 558, 455], "#ffffff", None, 1, 32)
+            rr([345, 515, 555, 660], accent_2, None, 1, 30)
+            line([(290, 335), (210, 575)], dark, 14)
+            line([(610, 335), (690, 575)], dark, 14)
+        elif any(word in label_l for word in ("пенал",)):
+            rr([210, 355, 690, 560], accent, None, 1, 90)
+            line([(270, 455), (630, 455)], "#ffffff", 10)
+            draw.ellipse([600, 425, 645, 470], fill="#ffffff")
+        elif any(word in label_l for word in ("накле", "заклад")):
+            for i, color in enumerate(["#f59e0b", "#e85d75", "#0e766e", "#7c3aed", "#2563eb"]):
+                x = 230 + i * 90
+                rr([x, 270, x + 74, 610], color, None, 1, 14)
+                draw.polygon([(x, 610), (x + 37, 570), (x + 74, 610)], fill="#f7fbfa")
+        else:
+            draw_notebook()
+            draw_pens(3)
+
+    if any(word in label_l for word in ("мольберт",)):
+        draw_easel()
+    elif any(word in label_l for word in ("кист",)):
+        draw_brushes()
+    elif any(word in label_l for word in ("краск", "акварель", "гуаш", "акрил", "пальчиков", "палитр", "пастель", "пластилин", "уголь")):
+        draw_paint()
+    elif any(word in label_l for word in ("ручк", "линер")):
+        draw_pens(5)
+    elif any(word in label_l for word in ("маркер", "фломастер", "текстовыдел")):
+        draw_pens(6, marker=True)
+    elif any(word in label_l for word in ("карандаш", "грифел", "ластик", "точил")):
+        draw_pencils()
+    elif any(word in label_l for word in ("бумага", "картон", "калька", "конверт", "файл", "папка")):
+        draw_paper_stack()
+    elif any(word in label_l for word in ("тетрад", "блокнот", "ежедневник", "планер", "дневник", "альбом", "скетчбук")):
+        draw_notebook()
+    elif palette_key == "OF":
+        draw_office()
+    elif palette_key == "KD":
+        draw_school()
+    else:
+        draw_notebook()
 
     # Вписываем заголовок в 3 строки максимум
+    if not cyrillic_ok and subtitle:
+        label = subtitle
     words = label.split()
     lines, line = [], ""
     for w in words:
@@ -222,23 +480,25 @@ def _generate_placeholder_jpg(dest_path: Path, label: str, subtitle: str = "", p
         lines.append(line)
     lines = lines[:3]
 
-    total_h = len(lines) * 52
-    y0 = (size - total_h) // 2 - 20
+    rr([78, 690, 822, 830], "#ffffff", "#dbe7ea", 2, 24)
+    total_h = len(lines) * 38
+    y0 = 713
     for i, ln in enumerate(lines):
         bbox = draw.textbbox((0, 0), ln, font=font_title)
         w = bbox[2] - bbox[0]
-        draw.text(((size - w) // 2, y0 + i * 52), ln, fill="white", font=font_title)
+        draw.text(((size - w) // 2, y0 + i * 38), ln, fill=dark, font=font_title)
 
     if subtitle:
-        bbox = draw.textbbox((0, 0), subtitle, font=font_sub)
+        bbox = draw.textbbox((0, 0), subtitle, font=font_sku)
         w = bbox[2] - bbox[0]
-        draw.text(((size - w) // 2, y0 + total_h + 20), subtitle, fill=(255, 255, 255, 200), font=font_sub)
+        rr([size - w - 120, 76, size - 70, 120], "#ffffff", "#dbe7ea", 2, 999)
+        draw.text((size - w - 95, 87), subtitle, fill=accent, font=font_sku)
 
     dest_path.parent.mkdir(parents=True, exist_ok=True)
-    img.save(dest_path, format="JPEG", quality=82, optimize=True)
+    img.save(dest_path, format="JPEG", quality=88, optimize=True)
 
 
-def _attach_image(instance, field_name, src_path, *, label=None, subtitle=None, palette_key="_default", stdout=None):
+def _attach_image(instance, field_name, src_path, *, label=None, subtitle=None, palette_key="_default", stdout=None, force=False):
     """Set model's ImageField to point at a file in MEDIA_ROOT.
 
     Если файл уже есть (например, закоммичен в git и доехал на сервер) —
@@ -247,19 +507,16 @@ def _attach_image(instance, field_name, src_path, *, label=None, subtitle=None, 
     карточки товаров никогда не были пустыми.
     """
     full_path = MEDIA_SRC / src_path
-    if not full_path.exists():
+    if force or not full_path.exists():
         if label is None:
             # Нет данных для плейсхолдера — нечем заполнить, пропускаем
-            if stdout:
-                stdout.write(f"  [skip] Нет картинки {src_path}, нет label для fallback")
+            _safe_stdout_write(stdout, f"  [skip] Нет картинки {src_path}, нет label для fallback")
             return
-        if stdout:
-            stdout.write(f"  [gen]  Генерим плейсхолдер {src_path} для '{label}'")
+        _safe_stdout_write(stdout, f"  [gen]  Генерим товарную картинку {src_path} для '{label}'")
         try:
             _generate_placeholder_jpg(full_path, label, subtitle or "", palette_key)
         except Exception as e:
-            if stdout:
-                stdout.write(f"  [err]  Не удалось сгенерить {src_path}: {e}")
+            _safe_stdout_write(stdout, f"  [err]  Не удалось сгенерить {src_path}: {e}")
             return
 
     setattr(instance, field_name, src_path)
@@ -275,8 +532,15 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--reset", action="store_true", help="Delete old demo entities before seeding")
+        parser.add_argument(
+            "--remote-images",
+            action="store_true",
+            help="Use remote Unsplash image URLs for products instead of local generated media files",
+        )
 
     def handle(self, *args, **options):
+        random.seed(20260430)
+        self.use_remote_images = options["remote_images"]
         # Каждая секция — в своей транзакции + try/except. Так если одна
         # упадёт (например, валидация новой модели), остальные — в т.ч.
         # привязка картинок к товарам/блогу — сохранятся.
@@ -288,12 +552,12 @@ class Command(BaseCommand):
         categories_map, brands, products = None, None, None
 
         def _section(label, fn, *args, **kwargs):
-            self.stdout.write(f"Seeding {label}...")
+            _safe_stdout_write(self.stdout, f"Seeding {label}...")
             try:
                 with transaction.atomic():
                     return fn(*args, **kwargs)
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"  ✗ {label} failed: {e}"))
+                _safe_stdout_write(self.stdout, self.style.ERROR(f"  [x] {label} failed: {e}"))
                 return None
 
         categories_map = _section("categories", self._seed_categories)
@@ -323,7 +587,7 @@ class Command(BaseCommand):
         _section("site settings", self._seed_site_settings)
 
         count = len(products) if products else 0
-        self.stdout.write(self.style.SUCCESS(
+        _safe_stdout_write(self.stdout, self.style.SUCCESS(
             f"Done! {count} products · {len(customers)} customers · "
             f"{len(managers)} managers · {len(admins)} admins."
         ))
@@ -437,16 +701,24 @@ class Command(BaseCommand):
 
         by_slug = {}
         for slug, name, desc in brands_seed:
+            website, logo_domain = BRAND_ASSETS.get(slug, ("", ""))
             brand, _ = Brand.objects.get_or_create(
                 slug=slug,
-                defaults={"name": name, "description": desc},
+                defaults={
+                    "name": name,
+                    "description": desc,
+                    "website": website,
+                    "logo_url": _brand_logo_url(logo_domain) if logo_domain else "",
+                },
             )
-            if not brand.logo:
-                _attach_image(
-                    brand, "logo", f"brands/{slug}.jpg",
-                    label=name, subtitle="BRAND",
-                    palette_key="_default", stdout=self.stdout,
-                )
+            brand.name = name
+            brand.description = desc
+            brand.website = website
+            brand.logo_url = _brand_logo_url(logo_domain) if logo_domain else brand.logo_url
+            # Для брендов важнее показывать настоящий логотип/фавикон бренда,
+            # а не старые демо-фото из media/brands.
+            brand.logo = ""
+            brand.save(update_fields=["name", "description", "website", "logo_url", "logo", "updated_at"])
             by_slug[slug] = brand
         return by_slug
 
@@ -510,6 +782,22 @@ class Command(BaseCommand):
             {"title": "Набор для опытов Юный химик", "sku": "KD-005", "price": 1290, "group": "kids", "brand": "erich-krause", "format": "other", "sheets": None, "purpose": "creative", "desc": "Безопасные химические опыты для детей от 8 лет. 15 экспериментов."},
             {"title": "Набор для квиллинга", "sku": "KD-006", "price": 450, "group": "kids", "brand": "hatber", "format": "other", "sheets": None, "purpose": "creative", "desc": "Полоски бумаги, инструменты и шаблоны для бумагокручения."},
         ]
+        catalog.extend(
+            {
+                "sku": sku,
+                "title": title,
+                "price": price,
+                "group": group,
+                "brand": brand,
+                "format": product_format,
+                "sheets": sheets,
+                "purpose": purpose,
+                "desc": desc,
+            }
+            for sku, title, price, group, brand, product_format, sheets, purpose, desc in EXTRA_PRODUCT_SEEDS
+        )
+        if len(catalog) != 100:
+            raise ValueError(f"Expected 100 demo products, got {len(catalog)}")
 
         products = []
         for idx, item in enumerate(catalog, start=1):
@@ -536,29 +824,65 @@ class Command(BaseCommand):
                     "height_mm": 5 + idx,
                 },
             )
+            if not created:
+                product.title = item["title"]
+                product.slug = slugify(item["sku"])
+                product.brand = brands[item["brand"]]
+                product.price = item["price"]
+                product.old_price = int(item["price"] * 1.15) if idx % 3 != 0 else None
+                product.stock = 10 + idx * 2
+                product.format = item["format"]
+                product.sheets_count = item["sheets"]
+                product.purpose = item["purpose"]
+                product.short_description = item["desc"][:200]
+                product.description = item["desc"]
+                product.is_new = idx % 4 == 0
+                product.is_hit = idx % 5 == 0
+                product.is_featured = idx % 7 == 0
+                product.weight_grams = 50 + idx * 8
+                product.length_mm = 100 + idx * 3
+                product.width_mm = 50 + idx * 2
+                product.height_mm = 5 + idx
+                product.status = Product.ProductStatus.ACTIVE
+                product.save()
 
             # Привязываем уникальную картинку по SKU. Цвет плейсхолдера —
             # по префиксу SKU (NB/PP/WR/AR/OF/KD).
             img_file = f"products/{item['sku']}.jpg"
             sku_prefix = item["sku"].split("-")[0]
+            remote_image_url = _remote_product_image_url(item, idx)
             pi1, pi_created1 = ProductImage.objects.get_or_create(
                 product=product,
                 sort_order=1,
-                defaults={"is_primary": True, "alt_text": item["title"]},
+                defaults={
+                    "is_primary": True,
+                    "alt_text": item["title"],
+                    "image_url": remote_image_url,
+                },
             )
+            pi1.is_primary = True
+            pi1.alt_text = item["title"]
+            pi1.image_url = remote_image_url
+            if self.use_remote_images:
+                pi1.image = ""
+                pi1.save(update_fields=["is_primary", "alt_text", "image_url", "image", "updated_at"])
+            else:
+                pi1.save(update_fields=["is_primary", "alt_text", "image_url", "updated_at"])
             # Идемпотентно: если у записи нет реального файла — всё равно
             # вызываем attach, он либо найдёт существующий файл, либо
             # сгенерит плейсхолдер.
-            if not pi1.image:
+            if not self.use_remote_images:
                 _attach_image(
                     pi1, "image", img_file,
                     label=item["title"],
                     subtitle=item["sku"],
                     palette_key=sku_prefix,
+                    force=True,
                     stdout=self.stdout,
                 )
 
             # Categories
+            product.categories.clear()
             for cat in categories_map[item["group"]][:2]:
                 product.categories.add(cat)
 
@@ -611,7 +935,7 @@ class Command(BaseCommand):
                 if link_to_customer:
                     user = random.choice(customer_users)
                     author_name = f"{user.first_name} {user.last_name[:1]}."
-                    ProductReview.objects.get_or_create(
+                    review, created = ProductReview.objects.get_or_create(
                         product=product,
                         user=user,
                         defaults={
@@ -623,7 +947,7 @@ class Command(BaseCommand):
                     )
                 else:
                     name = random.choice(REVIEW_NAMES)
-                    ProductReview.objects.get_or_create(
+                    review, created = ProductReview.objects.get_or_create(
                         product=product,
                         author_name=name,
                         user=None,
@@ -633,6 +957,8 @@ class Command(BaseCommand):
                             "is_published": True,
                         },
                     )
+                if created:
+                    _set_timestamps(review, timezone.now() - timedelta(days=random.randint(1, 180)))
 
     # ─── Logistics ───────────────────────────────
     def _seed_logistics(self):
@@ -1061,23 +1387,27 @@ class Command(BaseCommand):
             # Избранное: 5–15 товаров на покупателя.
             fav_count = random.randint(5, min(15, len(products)))
             for product in random.sample(products, fav_count):
-                Favorite.objects.get_or_create(user=user, product=product)
+                favorite, created = Favorite.objects.get_or_create(user=user, product=product)
+                if created:
+                    _set_timestamps(favorite, timezone.now() - timedelta(days=random.randint(1, 180)))
 
             # Корзина: у части покупателей (70%) в ней что-то лежит.
             cart, _ = Cart.objects.get_or_create(user=user)
             if random.random() < 0.7:
                 cart_items = random.sample(products, random.randint(1, 5))
                 for product in cart_items:
-                    CartItem.objects.get_or_create(
+                    cart_item, created = CartItem.objects.get_or_create(
                         cart=cart, product=product,
                         defaults={
                             "quantity": random.randint(1, 3),
                             "price_snapshot": product.price,
                         },
                     )
+                    if created:
+                        _set_timestamps(cart_item, timezone.now() - timedelta(days=random.randint(0, 45)))
 
-            # Заказы: 2-6 штук на покупателя с разными статусами.
-            num_orders = random.randint(2, 6)
+            # Заказы: 3-8 штук на покупателя с разными статусами за последние 6+ месяцев.
+            num_orders = random.randint(3, 8)
             for _ in range(num_orders):
                 status = random.choice(statuses_pool)
                 delivery = random.choice([Order.DeliveryType.COURIER, Order.DeliveryType.PICKUP])
@@ -1093,7 +1423,7 @@ class Command(BaseCommand):
 
                 number = f"ORD-{order_seq:06d}"
                 order_seq += 1
-                created_at = timezone.now() - timedelta(days=random.randint(1, 180))
+                created_at = timezone.now() - timedelta(days=random.randint(1, 210))
                 order, created = Order.objects.get_or_create(
                     number=number,
                     defaults={
@@ -1126,10 +1456,15 @@ class Command(BaseCommand):
                     # История статусов: цепочка переходов
                     chain = STATUS_CHAINS.get(status, [status])
                     for step_idx, step_status in enumerate(chain):
-                        OrderStatusHistory.objects.create(
+                        history_item = OrderStatusHistory.objects.create(
                             order=order, status=step_status,
                             comment=f"Статус: {Order.OrderStatus(step_status).label}",
                         )
+                        history_at = min(
+                            created_at + timedelta(hours=4 + step_idx * 18),
+                            timezone.now() - timedelta(minutes=5 + step_idx),
+                        )
+                        _set_timestamps(history_item, history_at)
 
     # ─── Admin activity (LogEntry) ───────────────
     def _seed_admin_activity(self, managers, admins):

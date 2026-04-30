@@ -122,9 +122,13 @@
         <h3>Ответим в течение рабочего дня</h3>
         <p>Для срочных заявок — в течение 1 часа в рабочее время.</p>
         <ul>
-          <li><i class="bi bi-clock" aria-hidden="true"></i> Пн–Пт, 9:00–18:00</li>
-          {% if site.phone %}<li><i class="bi bi-telephone" aria-hidden="true"></i> {{ site.phone }}</li>{% endif %}
-          {% if site.email %}<li><i class="bi bi-envelope" aria-hidden="true"></i> {{ site.email }}</li>{% endif %}
+          {% if site.work_hours %}<li><i class="bi bi-clock" aria-hidden="true"></i> {{ site.work_hours }}</li>{% else %}<li><i class="bi bi-clock" aria-hidden="true"></i> Пн–Пт, 9:00–18:00</li>{% endif %}
+          {% if site.phone %}<li><i class="bi bi-telephone" aria-hidden="true"></i> <a href="tel:{{ site.phone }}">{{ site.phone }}</a></li>{% endif %}
+          {% if site.secondary_phone %}<li><i class="bi bi-headset" aria-hidden="true"></i> <a href="tel:{{ site.secondary_phone }}">{{ site.secondary_phone }}</a></li>{% endif %}
+          {# Для опта приоритетно показываем wholesale_email — иначе sales_email — иначе общий email. #}
+          {% with wholesale_contact=site.wholesale_email|default:site.sales_email|default:site.email %}
+            {% if wholesale_contact %}<li><i class="bi bi-envelope" aria-hidden="true"></i> <a href="mailto:{{ wholesale_contact }}">{{ wholesale_contact }}</a></li>{% endif %}
+          {% endwith %}
         </ul>
       </div>
       <form id="requestForm" class="request-form" novalidate>

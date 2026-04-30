@@ -32,6 +32,145 @@
     } catch (e) { /* non-fatal */ }
   })();
 </script>
+
+{% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+{# ── Navbar notification dropdown — замена стокового jazzy-usermenu ── #}
+{# Запускается в extrajs (низ body), когда jQuery и Bootstrap уже загружены. #}
+<script>
+(function () {
+  var menu = document.getElementById('jazzy-usermenu');
+  if (!menu) return;
+
+  /* ── Данные из context processor (рендерятся сервером) ── */
+  var n = {
+    orders:    {{ pp_notifications.new_orders|default:"0" }},
+    returns:   {{ pp_notifications.pending_returns|default:"0" }},
+    wholesale: {{ pp_notifications.new_wholesale|default:"0" }},
+    reviews:   {{ pp_notifications.unpublished_reviews|default:"0" }},
+    total:     {{ pp_notifications.total|default:"0" }}
+  };
+
+  /* ── Собираем HTML дропдауна ── */
+  var html = '';
+
+  /* — Секция: Требует внимания — */
+  html += '<span class="dropdown-header pp-dropdown-header">';
+  html += '<i class="fas fa-bell mr-1"></i> {% trans "Требует внимания" %}';
+  if (n.total > 0) html += ' <span class="badge badge-pill pp-badge-total">' + n.total + '</span>';
+  html += '</span>';
+  html += '<div class="dropdown-divider"></div>';
+
+  var items = [
+    {
+      url:   '{% url "admin:shop_order_changelist" %}?status=new',
+      icon:  'fas fa-file-invoice-dollar',
+      color: 'pp-notif-primary',
+      label: '{% trans "Новые заказы" %}',
+      count: n.orders
+    },
+    {
+      url:   '{% url "admin:shop_returnrequest_changelist" %}?status=new',
+      icon:  'fas fa-rotate-left',
+      color: 'pp-notif-warning',
+      label: '{% trans "Возвраты" %}',
+      count: n.returns
+    },
+    {
+      url:   '{% url "admin:shop_wholesalerequest_changelist" %}?status=new',
+      icon:  'fas fa-handshake',
+      color: 'pp-notif-info',
+      label: '{% trans "Оптовые заявки" %}',
+      count: n.wholesale
+    },
+    {
+      url:   '{% url "admin:shop_productreview_changelist" %}?is_published__exact=0',
+      icon:  'fas fa-star',
+      color: 'pp-notif-secondary',
+      label: '{% trans "Скрытые отзывы" %}',
+      count: n.reviews
+    }
+  ];
+
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
+    var dimClass = it.count === 0 ? ' pp-notif-zero' : '';
+    html += '<a href="' + it.url + '" class="dropdown-item pp-notif-item ' + it.color + dimClass + '">';
+    html += '<i class="' + it.icon + ' pp-notif-icon"></i>';
+    html += '<span class="pp-notif-label">' + it.label + '</span>';
+    if (it.count > 0) {
+      html += '<span class="badge pp-notif-badge">' + it.count + '</span>';
+    }
+    html += '</a>';
+  }
+
+  /* — Секция: Быстрые действия — */
+  html += '<div class="dropdown-divider"></div>';
+  html += '<span class="dropdown-header pp-dropdown-header">';
+  html += '<i class="fas fa-bolt mr-1"></i> {% trans "Быстрые действия" %}';
+  html += '</span>';
+  html += '<div class="dropdown-divider"></div>';
+
+  var actions = [
+    { url: '{% url "admin:shop_product_add" %}',    icon: 'fas fa-box-open',            label: '{% trans "Новый товар" %}' },
+    { url: '{% url "admin:shop_order_add" %}',      icon: 'fas fa-file-invoice-dollar',  label: '{% trans "Новый заказ" %}' },
+    { url: '{% url "admin:shop_promotion_add" %}',  icon: 'fas fa-tags',                label: '{% trans "Новая акция" %}' },
+    { url: '{% url "admin:shop_promocode_add" %}',  icon: 'fas fa-ticket',              label: '{% trans "Новый промокод" %}' }
+  ];
+
+  for (var j = 0; j < actions.length; j++) {
+    var a = actions[j];
+    html += '<a href="' + a.url + '" class="dropdown-item pp-action-item">';
+    html += '<i class="' + a.icon + ' pp-action-icon"></i>';
+    html += '<span>' + a.label + '</span>';
+    html += '</a>';
+  }
+
+  /* — Секция: Аккаунт — */
+  html += '<div class="dropdown-divider"></div>';
+  html += '<span class="dropdown-header pp-dropdown-header">';
+  html += '<i class="fas fa-user mr-1"></i> {{ request.user.get_full_name|default:request.user.username }}';
+  html += '</span>';
+  html += '<div class="dropdown-divider"></div>';
+
+  html += '<a href="{% url "admin:password_change" %}" class="dropdown-item pp-account-item">';
+  html += '<i class="fas fa-key pp-account-icon"></i>';
+  html += '<span>{% trans "Сменить пароль" %}</span>';
+  html += '</a>';
+
+  html += '<form method="post" action="{% url "admin:logout" %}" class="pp-logout-form">';
+  html += '<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">';
+  html += '<button type="submit" class="dropdown-item pp-account-item">';
+  html += '<i class="fas fa-right-from-bracket pp-account-icon"></i>';
+  html += '<span>{% trans "Выйти" %}</span>';
+  html += '</button>';
+  html += '</form>';
+
+  /* ── Заменяем контент и исправляем выравнивание ── */
+  /* dropdown-menu-left { left:0; right:auto } → уходит вправо за экран.
+     Меняем на dropdown-menu-right { right:0; left:auto } — прижимается к
+     правому краю триггера. CSS-правило #jazzy-usermenu дополнительно
+     закрепляет это через !important против Bootstrap inline-стилей. */
+  menu.classList.remove('dropdown-menu-left');
+  menu.classList.add('dropdown-menu-right');
+  menu.innerHTML = html;
+
+  /* ── Бейдж на nav-item (<li>), не на <a> ── */
+  if (n.total > 0) {
+    var trigger = menu.previousElementSibling; /* <a data-toggle="dropdown"> */
+    var li = trigger ? trigger.parentElement : null; /* <li class="nav-item dropdown"> */
+    if (li) {
+      li.style.position = 'relative'; /* якорь для badge */
+      var badge = document.createElement('span');
+      badge.className = 'pp-navbar-badge';
+      badge.textContent = n.total > 99 ? '99+' : String(n.total);
+      li.appendChild(badge);
+    }
+  }
+})();
+</script>
 {% endblock %}
 
 
@@ -49,6 +188,12 @@
              style="opacity: .8">
         <span class="brand-text font-weight-light">{{ jazzmin_settings.site_brand }}</span>
       </a>
+      <button type="button"
+              class="pp-sidebar-close"
+              data-widget="pushmenu"
+              aria-label="{% trans 'Закрыть боковое меню' %}">
+        <span aria-hidden="true">&times;</span>
+      </button>
 
       <div class="sidebar">
         <nav class="mt-2" aria-label="{% trans 'Разделы админки' %}">
@@ -144,6 +289,12 @@
               {% endif %}
             </div>
           </div>
+          <a href="{% url 'home' %}" class="sidebar-footer__site"
+             title="{% trans 'Перейти на сайт' %}"
+             aria-label="{% trans 'Перейти на сайт' %}">
+            <i class="fas fa-globe" aria-hidden="true"></i>
+            <span>{% trans 'На сайт' %}</span>
+          </a>
           <a href="{% url 'admin:logout' %}" class="sidebar-footer__logout"
              title="{% trans 'Выйти из админки' %}"
              aria-label="{% trans 'Выйти из админки' %}">
