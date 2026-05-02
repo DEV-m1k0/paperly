@@ -1565,34 +1565,38 @@ a.site-footer__contact:hover i {
 
 @media (max-width: 900px) {
   .site-header__row {
-    display: flex !important;
-    flex-wrap: wrap;
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
+    gap: 10px 12px;
     position: relative;
-    padding-right: 136px;
+    padding-right: 0;
   }
 
   .site-header__row > .site-logo {
-    flex: 0 0 auto;
+    grid-column: 1;
+    grid-row: 1;
     order: 1;
   }
 
   .site-header__row > .site-header__actions {
-    position: absolute;
-    top: 10px;
-    right: 0;
-    flex: 0 0 auto;
+    position: static;
+    grid-column: 3;
+    grid-row: 1;
     order: 2;
     margin-left: auto !important;
     justify-content: flex-end !important;
     width: auto !important;
-    max-width: 132px;
+    max-width: none;
   }
 
   .site-header__row > .site-search-wrap {
-    flex: 0 0 100%;
+    grid-column: 1 / -1;
+    grid-row: 2;
     order: 3;
     width: 100%;
+    max-width: none;
+    margin-right: 0;
   }
 }
 

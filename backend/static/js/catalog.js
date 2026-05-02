@@ -537,17 +537,28 @@ document.addEventListener("DOMContentLoaded", () => {
     filtersPanel.classList.add("is-open");
     document.body.classList.add("filters-locked");
   });
-  closeFilters?.addEventListener("click", () => {
+
+  function closeFilterPanel() {
     filtersPanel.classList.remove("is-open");
     document.body.classList.remove("filters-locked");
+  }
+
+  closeFilters?.addEventListener("click", closeFilterPanel);
+  document.addEventListener("click", (event) => {
+    if (event.target.closest("#closeFilters")) closeFilterPanel();
+    if (document.body.classList.contains("filters-locked") && !event.target.closest("#filtersPanel") && !event.target.closest("#openFilters")) {
+      closeFilterPanel();
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && document.body.classList.contains("filters-locked")) closeFilterPanel();
   });
 
   applyFilters?.addEventListener("click", () => {
     clearTimeout(applyTimer);
     loadProducts();
     if (window.innerWidth <= 1040) {
-      filtersPanel.classList.remove("is-open");
-      document.body.classList.remove("filters-locked");
+      closeFilterPanel();
     }
   });
 
