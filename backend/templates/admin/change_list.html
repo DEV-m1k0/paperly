@@ -50,40 +50,44 @@
     {% block date_hierarchy %}{% if cl.date_hierarchy %}{% date_hierarchy cl %}{% endif %}{% endblock %}
 
     <div class="col-12 pp-admin-shell pp-admin-shell--changelist">
-        <div class="pp-admin-toolbar">
-            <form id="changelist-search" class="pp-admin-search" method="get">
-                {% if cl.search_fields %}
-                    <label class="sr-only" for="searchbar">{% trans "Search" %}</label>
-                    <input class="form-control" type="text" name="q" value="{{ cl.query }}" id="searchbar" placeholder="{% trans 'Search in list' %}">
-                {% endif %}
-                {% admin_extra_filters cl as extra_filters %}
-                {% for pair in extra_filters.items %}
-                    {% if pair.0 != 'q' %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}">{% endif %}
-                {% endfor %}
-                <div class="pp-admin-toolbar__actions">
+        {% if cl.search_fields or cl.has_filters or show_result_count %}
+            <div class="pp-admin-toolbar">
+                <form id="changelist-search" class="pp-admin-search" method="get">
                     {% if cl.search_fields %}
-                        <button type="submit" class="btn {{ jazzmin_ui.button_classes.primary }}">{% trans 'Search' %}</button>
+                        <label class="sr-only" for="searchbar">{% trans "Search" %}</label>
+                        <input class="form-control" type="text" name="q" value="{{ cl.query }}" id="searchbar" placeholder="{% trans 'Search in list' %}">
                     {% endif %}
-                    {% if cl.has_filters %}
-                        <button type="button" class="btn {{ jazzmin_ui.button_classes.secondary }} pp-filter-toggle" data-pp-filter-toggle aria-controls="pp-filter-panel" aria-expanded="false">
-                            {% trans "Filters" %}
-                        </button>
-                    {% endif %}
-                </div>
-                {% if show_result_count %}
-                    <div class="pp-admin-toolbar__meta">
-                        {% blocktrans count counter=cl.result_count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktrans %}
-                        (<a href="?{% if cl.is_popup %}_popup=1{% endif %}">
-                            {% if cl.show_full_result_count %}
-                                {% blocktrans with full_result_count=cl.full_result_count %}{{ full_result_count }} total{% endblocktrans %}
-                            {% else %}
-                                {% trans "Show all" %}
+                    {% admin_extra_filters cl as extra_filters %}
+                    {% for pair in extra_filters.items %}
+                        {% if pair.0 != 'q' %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}">{% endif %}
+                    {% endfor %}
+                    {% if cl.search_fields or cl.has_filters %}
+                        <div class="pp-admin-toolbar__actions">
+                            {% if cl.search_fields %}
+                                <button type="submit" class="btn {{ jazzmin_ui.button_classes.primary }}">{% trans 'Search' %}</button>
                             {% endif %}
-                        </a>)
-                    </div>
-                {% endif %}
-            </form>
-        </div>
+                            {% if cl.has_filters %}
+                                <button type="button" class="btn {{ jazzmin_ui.button_classes.secondary }} pp-filter-toggle" data-pp-filter-toggle aria-controls="pp-filter-panel" aria-expanded="false">
+                                    {% trans "Filters" %}
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    {% if show_result_count %}
+                        <div class="pp-admin-toolbar__meta">
+                            {% blocktrans count counter=cl.result_count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktrans %}
+                            (<a href="?{% if cl.is_popup %}_popup=1{% endif %}">
+                                {% if cl.show_full_result_count %}
+                                    {% blocktrans with full_result_count=cl.full_result_count %}{{ full_result_count }} total{% endblocktrans %}
+                                {% else %}
+                                    {% trans "Show all" %}
+                                {% endif %}
+                            </a>)
+                        </div>
+                    {% endif %}
+                </form>
+            </div>
+        {% endif %}
 
         <form id="changelist-form" method="post"{% if cl.formset and cl.formset.is_multipart %} enctype="multipart/form-data"{% endif %} novalidate>
             {% csrf_token %}

@@ -73,6 +73,7 @@
 }
 
 .request-form input,
+.request-form select,
 .request-form textarea {
   width: 100%;
   border: 1px solid var(--line);
@@ -86,6 +87,7 @@
 }
 
 .request-form input:focus,
+.request-form select:focus,
 .request-form textarea:focus {
   outline: none;
   border-color: var(--primary);

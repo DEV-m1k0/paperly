@@ -54,6 +54,24 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scrollbar-gutter: stable;
+  min-height: 100%;
+}
+
+body:not(.login-page):not(.register-page) .wrapper {
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+body:not(.login-page):not(.register-page) .content-wrapper {
+  flex: 1 0 auto !important;
+  min-height: 0 !important;
+}
+
+body:not(.login-page):not(.register-page) .main-footer {
+  flex-shrink: 0 !important;
+  margin-top: auto !important;
 }
 
 h1, h2, h3, h4, h5,
@@ -676,6 +694,7 @@ a:hover { color: var(--pp-primary-strong); }
 /* ═════════ CONTENT / layout ═════════ */
 .content-wrapper {
   background: var(--pp-bg);
+  min-height: auto !important;
   padding-top: 0 !important;
 }
 
@@ -4745,7 +4764,7 @@ body.sidebar-open::after {
     width: 100% !important;
   }
 
-  .pp-changeform-card .inline-group .tabular tbody tr.form-row:not(.empty-form):not(.add-row),
+  .pp-changeform-card .inline-group .tabular table tbody tr.form-row:not(.empty-form):not(.add-row),
   .pp-inline-shell .tabular tbody tr.form-row:not(.empty-form):not(.add-row) {
     display: block !important;
     width: 100% !important;
@@ -4946,5 +4965,135 @@ body.sidebar-open::after {
     background: var(--pp-danger) !important;
     color: #ffffff !important;
     text-decoration: none !important;
+  }
+}
+
+@media (max-width: 575px) {
+  .pp-changeform-card .inline-group {
+    padding: 16px !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular,
+  .pp-changeform-card .inline-group .tabular .module,
+  .pp-changeform-card .inline-group .tabular table,
+  .pp-changeform-card .inline-group .tabular tbody,
+  .pp-inline-shell .tabular,
+  .pp-inline-shell .tabular .module,
+  .pp-inline-shell .tabular table,
+  .pp-inline-shell .tabular tbody {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular tbody tr.form-row:not(.empty-form):not(.add-row),
+  .pp-inline-shell .tabular tbody tr.form-row:not(.empty-form):not(.add-row) {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 0 16px !important;
+    padding: 16px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td,
+  .pp-inline-shell .tabular tbody td {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 0 16px !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td:last-child,
+  .pp-inline-shell .tabular tbody td:last-child {
+    padding-bottom: 0 !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td::before,
+  .pp-inline-shell .tabular tbody td::before {
+    margin: 0 0 8px !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper {
+    display: grid !important;
+    grid-template-columns: repeat(4, 32px) minmax(0, 1fr) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    column-gap: 8px !important;
+    row-gap: 8px !important;
+    justify-content: start !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper > select,
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper > .select2,
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper > .select2-container,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper > select,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper > .select2,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper > .select2-container {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    justify-self: stretch !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper .selection,
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper .select2-selection,
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper .select2-selection__rendered,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper .selection,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper .select2-selection,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper .select2-selection__rendered {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td .related-widget-wrapper .select2-selection__rendered,
+  .pp-inline-shell .tabular tbody td .related-widget-wrapper .select2-selection__rendered {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td input:not([type="checkbox"]):not([type="radio"]),
+  .pp-changeform-card .inline-group .tabular table tbody td select,
+  .pp-changeform-card .inline-group .tabular table tbody td textarea,
+  .pp-changeform-card .inline-group .tabular table tbody td > .select2,
+  .pp-changeform-card .inline-group .tabular table tbody td > .select2-container,
+  .pp-inline-shell .tabular tbody td input:not([type="checkbox"]):not([type="radio"]),
+  .pp-inline-shell .tabular tbody td select,
+  .pp-inline-shell .tabular tbody td textarea,
+  .pp-inline-shell .tabular tbody td > .select2,
+  .pp-inline-shell .tabular tbody td > .select2-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody td.delete,
+  .pp-inline-shell .tabular tbody td.delete {
+    padding: 10px 12px !important;
+  }
+
+  .pp-changeform-card .inline-group .tabular table tbody tr.add-row,
+  .pp-inline-shell .tabular tbody tr.add-row {
+    margin-top: 6px !important;
   }
 }

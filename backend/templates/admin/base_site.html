@@ -171,6 +171,41 @@
   }
 })();
 </script>
+<script>
+(function () {
+  function normalizeContentWrapperHeight() {
+    var wrapper = document.querySelector('.content-wrapper');
+    if (!wrapper) return;
+    if (wrapper.style.minHeight) wrapper.style.minHeight = '';
+  }
+
+  normalizeContentWrapperHeight();
+  window.addEventListener('load', normalizeContentWrapperHeight);
+  window.addEventListener('resize', normalizeContentWrapperHeight);
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var wrapper = document.querySelector('.content-wrapper');
+    if (!wrapper) return;
+    normalizeContentWrapperHeight();
+    new MutationObserver(normalizeContentWrapperHeight)
+      .observe(wrapper, { attributes: true, attributeFilter: ['style'] });
+  });
+})();
+</script>
+{% endblock %}
+
+{% block footer %}
+  {% if not is_popup %}
+    <footer class="main-footer {{ jazzmin_ui.footer_classes }}" role="contentinfo">
+      {% autoescape off %}
+        <strong>{% trans 'Copyright' %} &copy; {% now 'Y' %} {{ jazzmin_settings.copyright }}.</strong>
+        {% trans 'All rights reserved.' %}
+      {% endautoescape %}
+    </footer>
+    {% if jazzmin_settings.show_ui_builder %}
+      {% include 'jazzmin/includes/ui_builder_panel.html' %}
+    {% endif %}
+  {% endif %}
 {% endblock %}
 
 

@@ -133,11 +133,17 @@
       </div>
       <form id="requestForm" class="request-form" novalidate>
         {% csrf_token %}
-        <label>Название организации<input type="text" required placeholder="ООО / Школа / Университет"></label>
-        <label>Контактное лицо<input type="text" required placeholder="ФИО"></label>
-        <label>Телефон<input type="tel" required placeholder="+7 (...) ...-..-.."></label>
-        <label>Email<input type="email" required placeholder="mail@company.ru"></label>
-        <label class="request-form__full">Комментарий<textarea rows="4" placeholder="Категории товаров, примерный объём, адрес доставки"></textarea></label>
+        <label>Название организации<input type="text" name="organization_name" required placeholder="ООО / Школа / Университет"></label>
+        <label>Тип организации<select name="organization_type" required>
+          <option value="llc">Юридическое лицо</option>
+          <option value="school">Школа</option>
+          <option value="university">Университет</option>
+          <option value="other">Другое</option>
+        </select></label>
+        <label>Контактное лицо<input type="text" name="contact_person" required placeholder="ФИО"></label>
+        <label>Телефон<input type="tel" name="phone" required placeholder="+7 (...) ...-..-.."></label>
+        <label>Email<input type="email" name="email" required placeholder="mail@company.ru"></label>
+        <label class="request-form__full">Комментарий<textarea name="comment" rows="4" placeholder="Категории товаров, примерный объём, адрес доставки"></textarea></label>
         <button class="btn btn--primary request-form__submit" type="submit">
           <i class="bi bi-send" aria-hidden="true"></i>
           <span>Отправить заявку</span>

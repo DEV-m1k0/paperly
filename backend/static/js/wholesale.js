@@ -15,18 +15,24 @@ document.addEventListener("DOMContentLoaded", () => {
   if (requestForm) {
     requestForm.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (!requestForm.checkValidity()) {
+        requestForm.reportValidity();
+        return;
+      }
 
       const button = requestForm.querySelector("button[type='submit']");
       const initialText = button.textContent;
       button.textContent = "Отправка...";
       button.disabled = true;
 
+      const formData = new FormData(requestForm);
       const payload = {
-        organization_name: requestForm.querySelector("input[type='text']")?.value.trim() || "",
-        contact_person: requestForm.querySelectorAll("input[type='text']")[1]?.value.trim() || "",
-        phone: requestForm.querySelector("input[type='tel']")?.value.trim() || "",
-        email: requestForm.querySelector("input[type='email']")?.value.trim() || "",
-        comment: requestForm.querySelector("textarea")?.value.trim() || "",
+        organization_name: formData.get("organization_name")?.trim() || "",
+        organization_type: formData.get("organization_type") || "other",
+        contact_person: formData.get("contact_person")?.trim() || "",
+        phone: formData.get("phone")?.trim() || "",
+        email: formData.get("email")?.trim() || "",
+        comment: formData.get("comment")?.trim() || "",
       };
 
       try {

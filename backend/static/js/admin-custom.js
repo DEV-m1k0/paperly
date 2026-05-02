@@ -9,6 +9,7 @@
     localizeSearchPlaceholder();
     enhanceBreadcrumb();
     markPageContext();
+    normalizeContentWrapperHeight();
     wireStickySubmitRow();
     annotateResponsiveTables();
     hideInlineTemplates();
@@ -48,6 +49,22 @@
     if (path.endsWith("/add/")) body.classList.add("pp-addform");
     if (body.classList.contains("login") || path.includes("/login/")) body.classList.add("pp-login");
     if (body.classList.contains("dashboard") || path.endsWith("/admin/")) body.classList.add("pp-dashboard");
+  }
+
+  function normalizeContentWrapperHeight() {
+    const wrapper = document.querySelector(".content-wrapper");
+    if (!wrapper) return;
+
+    const clearMinHeight = () => {
+      if (wrapper.style.minHeight) wrapper.style.minHeight = "";
+    };
+
+    clearMinHeight();
+    window.addEventListener("load", clearMinHeight);
+    window.addEventListener("resize", clearMinHeight);
+
+    const observer = new MutationObserver(clearMinHeight);
+    observer.observe(wrapper, { attributes: true, attributeFilter: ["style"] });
   }
 
   function wireStickySubmitRow() {

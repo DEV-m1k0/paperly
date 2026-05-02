@@ -43,6 +43,12 @@ class WholesalePriceListSerializer(serializers.ModelSerializer):
 
 
 class WholesaleRequestSerializer(serializers.ModelSerializer):
+    organization_type = serializers.ChoiceField(
+        choices=WholesaleRequest.OrganizationType.choices,
+        default=WholesaleRequest.OrganizationType.OTHER,
+        required=False,
+    )
+
     class Meta:
         model = WholesaleRequest
         fields = [
