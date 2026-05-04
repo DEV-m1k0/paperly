@@ -7,7 +7,15 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-DEBUG = os.environ.get("DEBUG", "False") == "True"
+
+def env_bool(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+DEBUG = env_bool("DEBUG", False)
 if DEBUG:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
 else:
@@ -117,8 +125,9 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# WhiteNoise — сжатие и cache-busting для static'ов в production
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# WhiteNoise — сжатие и cache-busting для static'ов в production.
+# Django 4.2 использует STORAGES["staticfiles"]; старый STATICFILES_STORAGE
+# нельзя задавать одновременно со STORAGES.
 WHITENOISE_MAX_AGE = 60 * 60 * 24 * 30   # 30 дней кеша в браузере
 # Не падать, если минифицированный JS/CSS ссылается на .map-файл,
 # которого нет в бандле (типично для bootstrap.bundle.min.js → *.map).
@@ -126,6 +135,36 @@ WHITENOISE_MANIFEST_STRICT = False
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+USE_S3_MEDIA = env_bool("USE_S3_MEDIA", False) or bool(os.environ.get("AWS_STORAGE_BUCKET_NAME"))
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+if USE_S3_MEDIA:
+    AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
+    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+    AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "auto")
+    AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL") or None
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get("AWS_S3_CUSTOM_DOMAIN") or None
+    AWS_QUERYSTRING_AUTH = env_bool("AWS_QUERYSTRING_AUTH", False)
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None
+    AWS_S3_OBJECT_PARAMETERS = {
+        "CacheControl": "max-age=31536000, public",
+    }
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    }
+    if AWS_S3_CUSTOM_DOMAIN:
+        MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN.rstrip('/')}/"
 
 # CSRF: домены, которым доверяем для POST-запросов (нужно для production)
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.environ.get(

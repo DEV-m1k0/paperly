@@ -1,11 +1,14 @@
 from django.conf import settings
-from django.conf.urls.static import static
+from django.conf.urls.static import static as media_static
 from django.contrib import admin
 from django.urls import include, path
+from django.templatetags.static import static
+from django.views.generic import RedirectView
 from pages.views import admin_login_redirect
 from shop.admin_views import upload_image as admin_md_upload, preview as admin_md_preview
 
 urlpatterns = [
+    path("favicon.ico", RedirectView.as_view(url=static("img/favicon.ico"), permanent=True)),
     path("admin/login/", admin_login_redirect, name="admin-login-redirect"),
     # Endpoints для markdown-редактора в админке. Должны идти ДО
     # `admin.site.urls`, иначе Jazzmin/Django их не достанет.
@@ -21,4 +24,4 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += media_static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

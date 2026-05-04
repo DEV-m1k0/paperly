@@ -24,6 +24,6 @@ class MediaWhiteNoiseMiddleware(WhiteNoiseMiddleware):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if settings.MEDIA_ROOT and settings.MEDIA_URL:
+        if settings.MEDIA_ROOT and settings.MEDIA_URL and not getattr(settings, "USE_S3_MEDIA", False):
             # add_files принимает путь+префикс, сканирует файлы синхронно
             self.add_files(str(settings.MEDIA_ROOT), prefix=settings.MEDIA_URL)

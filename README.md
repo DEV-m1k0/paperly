@@ -29,7 +29,7 @@ Paperly — полнофункциональный интернет-магази
 | Admin | django-jazzmin 3.0 + кастомные templates/static |
 | DB | SQLite локально, PostgreSQL через `DATABASE_URL` |
 | Frontend | Django templates, HTML, CSS, Vanilla JS, Bootstrap Icons, Choices.js |
-| Media | Django `ImageField`, Pillow, локальная генерация demo-изображений |
+| Media | Django `ImageField`, Pillow, локальные demo-файлы, S3-compatible storage через `django-storages` |
 | Async | Celery + Redis опционально |
 | Email | SMTP |
 
@@ -75,6 +75,15 @@ EMAIL_HOST_USER=your-email@yandex.ru
 EMAIL_HOST_PASSWORD=your-app-password
 DEFAULT_FROM_EMAIL=your-email@yandex.ru
 
+# Media storage for Render/production
+USE_S3_MEDIA=False
+AWS_STORAGE_BUCKET_NAME=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_S3_REGION_NAME=auto
+AWS_S3_ENDPOINT_URL=
+AWS_S3_CUSTOM_DOMAIN=
+
 # Redis/Celery, опционально
 CELERY_BROKER_URL=redis://localhost:6379/0
 CELERY_RESULT_BACKEND=redis://localhost:6379/1
@@ -89,6 +98,7 @@ REDIS_URL=redis://localhost:6379/2
 
 ```bash
 python manage.py seed_demo_data
+python manage.py sync_demo_media
 ```
 
 Полная очистка demo-данных и повторная заливка:
@@ -101,6 +111,12 @@ python manage.py seed_demo_data --reset
 
 ```bash
 python manage.py seed_demo_data --remote-images
+```
+
+Если в production включён S3-compatible storage, синхронизируйте bundled media-файлы в bucket:
+
+```bash
+python manage.py sync_demo_media
 ```
 
 Что создаёт `seed_demo_data`:
@@ -276,6 +292,7 @@ python manage.py makemigrations
 python manage.py seed_demo_data
 python manage.py seed_demo_data --reset
 python manage.py seed_demo_data --remote-images
+python manage.py sync_demo_media
 python manage.py createsuperuser
 python manage.py make_manager <username-or-email>
 python manage.py make_manager <username-or-email> --revoke
@@ -324,7 +341,9 @@ window.paperly.chat.reset();
 - Задайте сильный `SECRET_KEY`.
 - Настройте `ALLOWED_HOSTS` и `CSRF_TRUSTED_ORIGINS`.
 - Подключите PostgreSQL через `DATABASE_URL`, если SQLite недостаточно.
+- Для Render настройте media через S3-compatible bucket: `USE_S3_MEDIA=True`, `AWS_STORAGE_BUCKET_NAME`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_S3_ENDPOINT_URL`, `AWS_S3_REGION_NAME`; для публичного домена bucket задайте `AWS_S3_CUSTOM_DOMAIN`.
 - Выполните `python manage.py collectstatic`.
+- Выполните `python manage.py sync_demo_media`, чтобы загрузить `backend/media` в configured storage.
 - Смените или удалите demo-пользователей.
 - Настройте SMTP и Redis/Celery при необходимости.
 
@@ -337,6 +356,9 @@ window.paperly.chat.reset();
 
 ### В каталоге старые картинки
 Браузер может держать кэш media-файлов. Serializer добавляет версию к URL изображения, но после ручной замены файлов можно жёстко обновить страницу или снова выполнить `seed_demo_data`.
+
+### На Render нет картинок
+Render free использует ephemeral filesystem: загруженные во время работы файлы пропадают после redeploy/restart. В проекте demo-картинки закоммичены в `backend/media`, а для надежного production-сценария подключается внешний bucket через `USE_S3_MEDIA=True`. После настройки env vars запустите deploy: `build.sh` выполнит `seed_demo_data` и `sync_demo_media`, загрузив bundled media в bucket.
 
 ### Не работает вход в админку
 Убедитесь, что выполнены миграции и seed:

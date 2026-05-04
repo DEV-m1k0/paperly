@@ -43,6 +43,22 @@ services:
       - key: CSRF_TRUSTED_ORIGINS
         value: "https://paperly.onrender.com"
 
+      # Media storage. For reliable images on Render, use an S3-compatible bucket.
+      - key: USE_S3_MEDIA
+        value: "False"
+      - key: AWS_STORAGE_BUCKET_NAME
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_S3_REGION_NAME
+        value: "auto"
+      - key: AWS_S3_ENDPOINT_URL
+        sync: false
+      - key: AWS_S3_CUSTOM_DOMAIN
+        sync: false
+
       # Email — пропишите свои SMTP-креды в dashboard (sync: false → не в git)
       - key: EMAIL_HOST
         value: "smtp.yandex.ru"

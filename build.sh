@@ -17,5 +17,6 @@ python manage.py migrate --noinput
 # 4. Наполняем демо-данными ТОЛЬКО если БД пустая.
 #    В проде эта команда идемпотентна — повторный запуск ничего не сломает.
 python manage.py seed_demo_data || echo "seed_demo_data skipped (already seeded)"
+python manage.py sync_demo_media || echo "sync_demo_media skipped"
 
 echo "✅ Build complete"
