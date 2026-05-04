@@ -23,6 +23,62 @@ document.addEventListener("DOMContentLoaded", () => {
   let previewCount = 0;          // count for "Показать (N)"
   const LABEL_MAP = new Map();   // `${queryParam}:${value}` -> label
   let applyTimer = null;
+  let filterBackdrop = null;
+  let filtersScrollY = 0;
+  let filtersPlaceholder = null;
+
+  function ensureFilterBackdrop() {
+    if (filterBackdrop) return filterBackdrop;
+    filterBackdrop = document.querySelector(".catalog-filter-backdrop");
+    if (!filterBackdrop) {
+      filterBackdrop = document.createElement("div");
+      filterBackdrop.className = "catalog-filter-backdrop";
+      filterBackdrop.setAttribute("aria-hidden", "true");
+      document.body.appendChild(filterBackdrop);
+    }
+    filterBackdrop.addEventListener("click", closeFilterPanel);
+    return filterBackdrop;
+  }
+
+  function lockPageScroll() {
+    filtersScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.documentElement.classList.add("filters-locked");
+    document.body.classList.add("filters-locked");
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${filtersScrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+  }
+
+  function unlockPageScroll() {
+    document.documentElement.classList.remove("filters-locked");
+    document.body.classList.remove("filters-locked");
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.width = "";
+    window.scrollTo(0, filtersScrollY);
+  }
+
+  function shouldUseFiltersDrawer() {
+    return window.matchMedia("(max-width: 1100px)").matches;
+  }
+
+  function mountFiltersDrawer() {
+    if (!filtersPanel || !shouldUseFiltersDrawer() || filtersPanel.parentNode === document.body) return;
+    filtersPlaceholder = document.createComment("catalog filters original position");
+    filtersPanel.parentNode.insertBefore(filtersPlaceholder, filtersPanel);
+    document.body.appendChild(filtersPanel);
+  }
+
+  function restoreFiltersDrawer() {
+    if (!filtersPanel || !filtersPlaceholder?.parentNode || filtersPanel.parentNode !== document.body) return;
+    filtersPlaceholder.parentNode.insertBefore(filtersPanel, filtersPlaceholder);
+    filtersPlaceholder.remove();
+    filtersPlaceholder = null;
+  }
   const CATALOG_PAGE_SIZE = 100;
 
   P.renderCartCount();
@@ -534,22 +590,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Wiring top-level controls ---
   openFilters?.addEventListener("click", () => {
+    mountFiltersDrawer();
+    ensureFilterBackdrop().classList.add("is-active");
     filtersPanel.classList.add("is-open");
-    document.body.classList.add("filters-locked");
+    lockPageScroll();
   });
 
   function closeFilterPanel() {
+    filterBackdrop?.classList.remove("is-active");
     filtersPanel.classList.remove("is-open");
-    document.body.classList.remove("filters-locked");
+    unlockPageScroll();
+    restoreFiltersDrawer();
   }
 
   closeFilters?.addEventListener("click", closeFilterPanel);
-  document.addEventListener("click", (event) => {
-    if (event.target.closest("#closeFilters")) closeFilterPanel();
-    if (document.body.classList.contains("filters-locked") && !event.target.closest("#filtersPanel") && !event.target.closest("#openFilters")) {
+  document.addEventListener(
+    "click",
+    (event) => {
+      if (event.target.closest("#closeFilters")) {
+        closeFilterPanel();
+        return;
+      }
+
+      if (!document.body.classList.contains("filters-locked")) return;
+      if (event.target.closest("#filtersPanel") || event.target.closest("#openFilters")) return;
+
+      event.preventDefault();
+      event.stopPropagation();
       closeFilterPanel();
-    }
-  });
+    },
+    true,
+  );
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && document.body.classList.contains("filters-locked")) closeFilterPanel();
   });

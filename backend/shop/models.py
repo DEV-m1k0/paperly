@@ -415,6 +415,18 @@ class BlogPost(TimeStampedModel):
         if self.cover:
             return self.cover.url
         return self.cover_url
+
+    @property
+    def content_html(self):
+        """Markdown → безопасный HTML.
+
+        Импорт внутри метода — markdown_utils тащит markdown/bleach/pygments,
+        не хочется грузить их при импорте моделей в worker'ах celery
+        и management-командах, где блог не нужен.
+        """
+        from .markdown_utils import render_markdown
+        return render_markdown(self.content or "")
+
     published_at = models.DateTimeField("Дата публикации", null=True, blank=True)
 
     class Meta:

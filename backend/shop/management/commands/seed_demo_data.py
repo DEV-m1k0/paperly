@@ -231,6 +231,82 @@ def _brand_logo_url(domain):
     return f"https://www.google.com/s2/favicons?domain={domain}&sz=256"
 
 
+def _category_child_name_for_product(item):
+    title = item["title"].lower()
+    group = item["group"]
+
+    def has_any(*needles):
+        return any(needle in title for needle in needles)
+
+    if group == "paper":
+        if has_any("тетрад"):
+            return "Тетради"
+        if has_any("блокнот", "ежедневник", "планер"):
+            return "Блокноты и ежедневники"
+        if has_any("альбом", "папка для черчения", "бумага для черчения"):
+            return "Альбомы и папки для черчения"
+        if has_any("бумага офисная", "бумага a3 500", "бумага a4 500"):
+            return "Бумага для офисной техники"
+        if has_any("цветн", "пастельная"):
+            return "Цветная бумага и картон"
+        if has_any("стикер", "самоклеящ"):
+            return "Бумага для заметок"
+
+    if group == "writing":
+        if has_any("шариков"):
+            return "Ручки шариковые"
+        if has_any("гелев"):
+            return "Ручки гелевые"
+        if has_any("цветные", "акварельных карандаш"):
+            return "Карандаши цветные"
+        if has_any("карандаш", "грифел", "ластик", "точилка"):
+            return "Карандаши простые"
+        if has_any("маркер", "текстовыдел", "линер"):
+            return "Маркеры и текстовыделители"
+        if has_any("фломастер"):
+            return "Фломастеры"
+
+    if group == "art":
+        if has_any("краск", "акрил"):
+            return "Краски"
+        if has_any("кист", "стакан-непроливайка"):
+            return "Кисти"
+        if has_any("пастель", "угл"):
+            return "Пастель и уголь"
+        if has_any("пластилин", "лепк"):
+            return "Пластилин и лепка"
+        if has_any("циркуль", "линейка", "геометрическ"):
+            return "Чертёжные инструменты"
+        if has_any("скетчбук", "альбом", "бумага для акварели", "папка для акварели"):
+            return "Скетчбуки"
+        if has_any("мольберт", "холст", "палитр"):
+            return "Холсты, мольберты и палитры"
+
+    if group == "office":
+        if has_any("папка", "файл-вкладыш"):
+            return "Папки и архивация"
+        if has_any("органайзер", "лоток"):
+            return "Органайзеры"
+        if has_any("скрепк", "зажим", "бейдж", "штемпель"):
+            return "Канцелярские мелочи"
+        if has_any("клей", "скотч", "лента", "диспенсер"):
+            return "Клей и скотч"
+        if has_any("корректор"):
+            return "Корректоры"
+
+    if group == "kids":
+        if has_any("первоклассника"):
+            return "Наборы первоклассника"
+        if has_any("пенал", "ранец", "сумка"):
+            return "Пеналы и ранцы"
+        if has_any("опыт", "квиллинг", "наклей", "папка для труда"):
+            return "Наборы для творчества"
+        if has_any("дневник", "облож", "заклад"):
+            return "Дневники"
+
+    return None
+
+
 def _set_timestamps(obj, created_at, updated_at=None):
     fields = {"created_at": created_at, "updated_at": updated_at or created_at}
     obj.__class__.objects.filter(pk=obj.pk).update(**fields)
@@ -501,10 +577,12 @@ def _generate_placeholder_jpg(dest_path: Path, label: str, subtitle: str = "", p
 def _attach_image(instance, field_name, src_path, *, label=None, subtitle=None, palette_key="_default", stdout=None, force=False):
     """Set model's ImageField to point at a file in MEDIA_ROOT.
 
-    Если файл уже есть (например, закоммичен в git и доехал на сервер) —
-    просто присваиваем относительный путь полю. Если нет — генерим
-    plausible-placeholder через Pillow и кладём в MEDIA_ROOT, чтобы
-    карточки товаров никогда не были пустыми.
+    Если файл уже лежит в media (закоммичен в git или загружен вручную) —
+    просто присваиваем относительный путь, без перезаписи.
+    Если файла нет и передан label — генерим Pillow-плейсхолдер, чтобы
+    карточки товаров не были пустыми на свежем окружении.
+    force=True полезен только в тестах: принудительно перерисовывает
+    placeholder даже поверх существующего файла.
     """
     full_path = MEDIA_SRC / src_path
     if force or not full_path.exists():
@@ -638,6 +716,7 @@ class Command(BaseCommand):
                     "Краски", "Кисти",
                     "Пастель и уголь", "Пластилин и лепка",
                     "Чертёжные инструменты", "Скетчбуки",
+                    "Холсты, мольберты и палитры",
                 ],
             },
             "office": {
@@ -666,6 +745,11 @@ class Command(BaseCommand):
                 slug=key,
                 defaults={"name": payload["title"], "sort_order": idx},
             )
+            if parent.name != payload["title"] or parent.sort_order != idx or parent.parent_id is not None:
+                parent.name = payload["title"]
+                parent.sort_order = idx
+                parent.parent = None
+                parent.save(update_fields=["name", "sort_order", "parent", "updated_at"])
             img_path = CATEGORY_IMAGES.get(key)
             if img_path and not parent.image:
                 _attach_image(
@@ -681,6 +765,11 @@ class Command(BaseCommand):
                     slug=f"{parent.slug}-{child_idx}",
                     defaults={"name": child, "parent": parent, "sort_order": child_idx},
                 )
+                if child_obj.name != child or child_obj.parent_id != parent.id or child_obj.sort_order != child_idx:
+                    child_obj.name = child
+                    child_obj.parent = parent
+                    child_obj.sort_order = child_idx
+                    child_obj.save(update_fields=["name", "parent", "sort_order", "updated_at"])
                 categories_map[key].append(child_obj)
         return categories_map
 
@@ -846,45 +935,83 @@ class Command(BaseCommand):
                 product.status = Product.ProductStatus.ACTIVE
                 product.save()
 
-            # Привязываем уникальную картинку по SKU. Цвет плейсхолдера —
-            # по префиксу SKU (NB/PP/WR/AR/OF/KD).
-            img_file = f"products/{item['sku']}.jpg"
-            sku_prefix = item["sku"].split("-")[0]
+            # Фото берём только из media — генерация не используется.
+            # Ищем products/{SKU}-1.jpg … products/{SKU}-5.jpg (реальные фото),
+            # а также products/{SKU}.jpg как резервный вариант.
             remote_image_url = _remote_product_image_url(item, idx)
-            pi1, pi_created1 = ProductImage.objects.get_or_create(
-                product=product,
-                sort_order=1,
-                defaults={
-                    "is_primary": True,
-                    "alt_text": item["title"],
-                    "image_url": remote_image_url,
-                },
-            )
-            pi1.is_primary = True
-            pi1.alt_text = item["title"]
-            pi1.image_url = remote_image_url
-            if self.use_remote_images:
-                pi1.image = ""
-                pi1.save(update_fields=["is_primary", "alt_text", "image_url", "image", "updated_at"])
-            else:
-                pi1.save(update_fields=["is_primary", "alt_text", "image_url", "updated_at"])
-            # Идемпотентно: если у записи нет реального файла — всё равно
-            # вызываем attach, он либо найдёт существующий файл, либо
-            # сгенерит плейсхолдер.
-            if not self.use_remote_images:
-                _attach_image(
-                    pi1, "image", img_file,
-                    label=item["title"],
-                    subtitle=item["sku"],
-                    palette_key=sku_prefix,
-                    force=True,
-                    stdout=self.stdout,
+
+            # Собираем список существующих файлов по порядку: сначала -1…-5, потом основной
+            media_files = []
+            for n in range(1, 6):
+                rel = f"products/{item['sku']}-{n}.jpg"
+                if (MEDIA_SRC / rel).exists():
+                    media_files.append(rel)
+            primary_rel = f"products/{item['sku']}.jpg"
+            if not media_files and (MEDIA_SRC / primary_rel).exists():
+                media_files.append(primary_rel)
+
+            if media_files:
+                # Первый найденный файл — основное фото
+                pi1, _ = ProductImage.objects.get_or_create(
+                    product=product,
+                    sort_order=1,
+                    defaults={
+                        "is_primary": True,
+                        "alt_text": item["title"],
+                        "image": media_files[0],
+                        "image_url": remote_image_url,
+                    },
                 )
+                pi1.is_primary = True
+                pi1.alt_text = item["title"]
+                pi1.image_url = remote_image_url
+                if pi1.image != media_files[0]:
+                    pi1.image = media_files[0]
+                pi1.save(update_fields=["is_primary", "alt_text", "image_url", "image", "updated_at"])
+
+                # Остальные файлы — дополнительные ракурсы
+                for sort_n, rel in enumerate(media_files[1:], start=2):
+                    pi_extra, _ = ProductImage.objects.get_or_create(
+                        product=product,
+                        sort_order=sort_n,
+                        defaults={
+                            "is_primary": False,
+                            "alt_text": f"{item['title']} — фото {sort_n - 1}",
+                            "image": rel,
+                        },
+                    )
+                    if pi_extra.image != rel:
+                        pi_extra.image = rel
+                        pi_extra.alt_text = f"{item['title']} — фото {sort_n - 1}"
+                        pi_extra.save(update_fields=["image", "alt_text", "updated_at"])
+            else:
+                # Файлов нет — создаём запись только с remote URL, без локального файла
+                pi1, _ = ProductImage.objects.get_or_create(
+                    product=product,
+                    sort_order=1,
+                    defaults={
+                        "is_primary": True,
+                        "alt_text": item["title"],
+                        "image_url": remote_image_url,
+                    },
+                )
+                pi1.is_primary = True
+                pi1.alt_text = item["title"]
+                pi1.image_url = remote_image_url
+                pi1.save(update_fields=["is_primary", "alt_text", "image_url", "updated_at"])
 
             # Categories
             product.categories.clear()
-            for cat in categories_map[item["group"]][:2]:
-                product.categories.add(cat)
+            parent_category = categories_map[item["group"]][0]
+            product.categories.add(parent_category)
+            child_name = _category_child_name_for_product(item)
+            if child_name:
+                child_category = next(
+                    (cat for cat in categories_map[item["group"]][1:] if cat.name == child_name),
+                    None,
+                )
+                if child_category:
+                    product.categories.add(child_category)
 
             # Specs
             ProductSpecification.objects.get_or_create(product=product, name="Формат", defaults={"value": item["format"]})
@@ -1010,7 +1137,16 @@ class Command(BaseCommand):
             bc, _ = BlogCategory.objects.get_or_create(slug=slug, defaults={"title": title})
             blog_cats[slug] = bc
 
+        # Расширенные посты с markdown-разметкой берём из общего модуля,
+        # чтобы один и тот же контент использовался и в seed, и в data-миграции.
+        from shop.blog_seed import RICH_BLOG_POSTS
         posts = [
+            (p["title"], p["category"], p["excerpt"], p["content"])
+            for p in RICH_BLOG_POSTS
+        ]
+        # ↓↓↓ Старый список (короткие plain-text статьи) оставлен закомментированным
+        # как референс на случай отката.
+        _legacy_posts = [
             ("Как выбрать тетрадь для школьника", "tips",
              "Разбираемся в форматах, линовках и плотности бумаги.",
              "Выбор тетради — не такая простая задача, как кажется. Формат A5 или A4? Клетка или линейка? "
@@ -1113,6 +1249,7 @@ class Command(BaseCommand):
              "Тюбики гуаши после вскрытия закрывайте плотно — гуашь быстро засыхает.\n\n"
              "Маркеры и фломастеры храните горизонтально, чтобы чернила распределялись равномерно."),
         ]
+        del _legacy_posts  # подавляем «unused variable» — список нужен только как референс
         # Палитра обложек блога — варьируем, чтобы посты не были однотонные
         blog_palettes = ["NB", "WR", "AR", "OF", "KD", "PP"]
         for idx, (title, cat_key, excerpt, content) in enumerate(posts):

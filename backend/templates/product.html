@@ -4,7 +4,7 @@
 {% block title %}{{ site.site_name|default:"Paperly" }} — Товар{% endblock %}
 
 {% block page_css %}
-<link rel="stylesheet" href="{% static 'css/product.css' %}">
+<link rel="stylesheet" href="{% static 'css/product.css' %}?v=20260503-product-detail-responsive">
 {% endblock %}
 
 {% block content %}
@@ -20,7 +20,7 @@
   <section class="product-hero reveal">
     <div class="gallery">
       <div class="gallery__main">
-        <img id="mainImage" src="" alt="">
+        <img id="mainImage" src="" alt="" loading="eager" decoding="async">
         <span class="gallery__badge" id="productBadge" hidden></span>
       </div>
       <div class="gallery__thumbs"></div>
@@ -182,5 +182,5 @@
 {% endblock %}
 
 {% block page_js %}
-<script src="{% static 'js/product.js' %}"></script>
+<script src="{% static 'js/product.js' %}?v=20260503-product-detail-responsive"></script>
 {% endblock %}

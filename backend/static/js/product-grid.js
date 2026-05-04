@@ -56,6 +56,17 @@
     const oldPriceMarkup = hasDiscount ? `<span class="product__old">${P.formatMoney(oldPrice, moneySuffix)}</span>` : "";
     const title = P.escapeHtml(product.title);
     const desc = P.escapeHtml(product.short_description || "Товар из каталога");
+    const brandName = P.escapeHtml(product.brand_name || "");
+    const formatValue = String(product.format || "");
+    const formatLabel = formatValue && formatValue !== "other" ? P.escapeHtml(formatValue) : "";
+    const sheets = product.sheets_count ? `${Number(product.sheets_count)} л.` : "";
+    const purpose = product.purpose && product.purpose !== "universal" ? P.escapeHtml(P.formatPurpose(product.purpose)) : "";
+    const details = [
+      brandName ? `<span><i class="bi bi-patch-check" aria-hidden="true"></i>${brandName}</span>` : "",
+      formatLabel ? `<span><i class="bi bi-aspect-ratio" aria-hidden="true"></i>${formatLabel}</span>` : "",
+      sheets ? `<span><i class="bi bi-file-earmark-text" aria-hidden="true"></i>${sheets}</span>` : "",
+      purpose ? `<span><i class="bi bi-tags" aria-hidden="true"></i>${purpose}</span>` : "",
+    ].filter(Boolean).join("");
 
     const maxOrderQty = Math.max(0, Number(product.max_order_quantity || 0));
 
@@ -81,7 +92,7 @@
         <span class="${chip.className}">${chip.text}</span>
         <button class="fav-btn" aria-label="Добавить в избранное" type="button"><i class="bi bi-heart"></i></button>
         <a class="product__image" href="${targetUrl}">
-          <img src="${image}" alt="${title}">
+          <img src="${image}" alt="${title}" loading="lazy" decoding="async">
         </a>
         <div class="product__meta">
           <span class="rating-stars" aria-label="Рейтинг ${rating} из 5">${P.renderStars(rating)}</span>
@@ -90,6 +101,7 @@
         </div>
         <h3><a href="${targetUrl}">${title}</a></h3>
         <p>${desc}</p>
+        ${details ? `<div class="product__details">${details}</div>` : ""}
         <div class="product__bottom">
           <div class="price-stack${hasDiscount ? " has-discount" : ""}">
             <strong>${P.formatMoney(price, moneySuffix)}</strong>

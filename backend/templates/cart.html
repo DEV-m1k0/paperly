@@ -4,7 +4,7 @@
 {% block title %}{{ site.site_name|default:"Paperly" }} — Корзина и оформление заказа{% endblock %}
 
 {% block page_css %}
-<link rel="stylesheet" href="{% static 'css/cart.css' %}">
+<link rel="stylesheet" href="{% static 'css/cart.css' %}?v=20260504-sbp-qr-flow">
 {% endblock %}
 
 {% block content %}
@@ -165,7 +165,7 @@
         </div>
         {% endif %}
 
-        <div class="checkout-section">
+        <div class="checkout-section checkout-section--payment">
           <div class="checkout-section__head">
             <span class="checkout-section__step">{% if request.user.is_authenticated %}3{% else %}4{% endif %}</span>
             <div>
@@ -287,17 +287,18 @@
       </div>
     </div>
 
-    <div class="payment-step" id="paymentStepSbp" role="region" hidden>
+      <div class="payment-step" id="paymentStepSbp" role="region" hidden>
       <i class="bi bi-qr-code payment-step__icon" aria-hidden="true"></i>
       <h2>Оплата через СБП</h2>
       <p class="payment-amount" id="paymentSbpAmount"></p>
       <div class="payment-qr" id="paymentQr" aria-hidden="true"></div>
       <p class="payment-hint">Отсканируйте QR-код в мобильном приложении вашего банка</p>
+      <a class="payment-link" id="paymentSbpLink" href="#" target="_blank" rel="noopener" hidden>Открыть ссылку оплаты</a>
       <div class="payment-timer" aria-live="polite">
         <i class="bi bi-clock-history" aria-hidden="true"></i>
         <span>Ожидание оплаты: <strong id="sbpTimer">02:00</strong></span>
       </div>
-      <button class="btn btn--primary btn--block" id="sbpSimulateBtn" type="button">Подтвердить оплату (тест)</button>
+      <button class="btn btn--primary btn--block" id="sbpSimulateBtn" type="button">Подтвердить оплату</button>
     </div>
 
     <div class="payment-step" id="paymentStepCash" role="region" hidden>
@@ -333,5 +334,5 @@
 {% endblock %}
 
 {% block page_js %}
-<script src="{% static 'js/cart.js' %}"></script>
+<script src="{% static 'js/cart.js' %}?v=20260504-sbp-qr-flow"></script>
 {% endblock %}

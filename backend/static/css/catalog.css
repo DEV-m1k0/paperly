@@ -5,6 +5,8 @@
 
 :root {
   --filters-offset: 112px;
+  --catalog-filter-backdrop-z: 2147483000;
+  --catalog-filter-panel-z: 2147483010;
 }
 
 .catalog-page .breadcrumbs {
@@ -651,6 +653,36 @@
     overflow: hidden;
   }
 
+  body.filters-locked::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  .catalog-filter-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--catalog-filter-backdrop-z);
+    display: none !important;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  .catalog-filter-backdrop.is-active {
+    display: none !important;
+  }
+
+  body.filters-locked .site-header,
+  body.filters-locked .catalog-page > .breadcrumbs,
+  body.filters-locked .catalog-page > .catalog-hero,
+  body.filters-locked .catalog-main,
+  body.filters-locked .site-footer,
+  body.filters-locked .chat-widget {
+    filter: brightness(0.68) saturate(0.88);
+    pointer-events: none;
+    user-select: none;
+    transition: filter 0.18s ease;
+  }
+
   .filters {
     position: fixed;
     top: 0;
@@ -659,7 +691,7 @@
     width: 100vw;
     height: 100dvh;
     max-height: 100dvh;
-    z-index: 40;
+    z-index: var(--catalog-filter-panel-z) !important;
     border-radius: 0;
     transform: translateX(110%);
     transition: transform 0.28s ease;
@@ -669,6 +701,12 @@
 
   .filters.is-open {
     transform: translateX(0);
+    background: #fff !important;
+    opacity: 1 !important;
+    filter: none !important;
+    mix-blend-mode: normal !important;
+    isolation: isolate;
+    pointer-events: auto;
   }
 
   .filters__close,
@@ -1038,11 +1076,8 @@
 
 @media (max-width: 1100px) {
   body.filters-locked::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 30;
-    background: rgba(19, 35, 39, 0.36);
+    content: none !important;
+    display: none !important;
   }
 
   .filters {
@@ -1053,7 +1088,7 @@
     width: min(430px, calc(100vw - 24px));
     height: auto;
     max-height: calc(100dvh - var(--filters-offset) - 20px);
-    z-index: 140;
+    z-index: var(--catalog-filter-panel-z) !important;
     border-radius: 18px;
     transform: translateX(calc(-100% - 28px));
     box-shadow: 0 24px 52px -18px rgba(11, 65, 61, 0.42);
@@ -1125,12 +1160,13 @@
   }
 
   .filters {
-    top: calc(var(--filters-offset) + 6px);
-    left: 8px;
-    bottom: 8px;
-    width: calc(100vw - 16px);
-    max-height: calc(100dvh - var(--filters-offset) - 14px);
-    border-radius: 14px;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
   }
 
   .filters__head {
@@ -1322,4 +1358,149 @@
   .product__image {
     aspect-ratio: 1 / 0.74;
   }
+}
+
+/* Final off-canvas contract: whenever filters are hidden behind the button,
+   the drawer starts exactly from body top-left and page scroll is locked. */
+@media (max-width: 1100px) {
+  html.filters-locked,
+  body.filters-locked {
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    touch-action: none;
+  }
+
+  body.filters-locked::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  .filters {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    bottom: 0 !important;
+    width: min(430px, 100vw) !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 22px 22px 0 !important;
+    transform: translateX(-100%) !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: var(--catalog-filter-panel-z) !important;
+    transition: transform 0.28s ease, opacity 0.18s ease, visibility 0s linear 0.28s !important;
+    box-shadow: 24px 0 52px -18px rgba(11, 65, 61, 0.42) !important;
+  }
+
+  .filters.is-open {
+    transform: translateX(0) !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transition: transform 0.28s ease, opacity 0.18s ease !important;
+  }
+
+  .filters__scrollable {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  .filters {
+    width: 100vw !important;
+    border-radius: 0 !important;
+  }
+}
+
+/* The filters drawer lives inside .catalog-main, so the page lock must not dim
+   or disable that parent; outside clicks are blocked by catalog.js instead. */
+@media (max-width: 1100px) {
+  body.filters-locked .site-header,
+  body.filters-locked .catalog-page > .breadcrumbs,
+  body.filters-locked .catalog-page > .catalog-hero,
+  body.filters-locked .catalog-main,
+  body.filters-locked .site-footer,
+  body.filters-locked .chat-widget {
+    filter: none !important;
+    pointer-events: auto !important;
+    user-select: auto !important;
+  }
+
+  body.filters-locked .filters,
+  body.filters-locked .filters * {
+    pointer-events: auto !important;
+  }
+
+  .filters__close {
+    display: inline-flex !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .sort-select__label {
+    display: none !important;
+  }
+
+  .sort-select,
+  .sort-select .choices {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .sort-select .choices__inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  .sort-select .choices__list--single {
+    width: 100%;
+    padding: 0;
+  }
+
+  .sort-select .choices__list--single .choices__item {
+    overflow: visible;
+    max-width: 100%;
+    white-space: nowrap;
+    text-align: center;
+    text-overflow: clip;
+  }
+}
+
+@media (max-width: 420px) {
+  .catalog-toolbar__controls {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Final catalog card grid: images are 900×1200, so cards keep portrait media.
+   Use width-aware auto-fit instead of fixed 4 columns: with the desktop filter
+   sidebar visible, forced 4 columns make cards too narrow and text overlaps. */
+.catalog-page .products {
+  gap: clamp(0.9rem, 1.6vw, 1.45rem) !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr)) !important;
+}
+
+@media (min-width: 421px) and (max-width: 760px) {
+  .catalog-page .products {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .catalog-page .products {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+.catalog-page .product__image {
+  aspect-ratio: 3 / 4 !important;
 }

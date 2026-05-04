@@ -69,7 +69,7 @@
       {% if blog_post.excerpt %}
       <p class="blog-detail__lead" itemprop="description">{{ blog_post.excerpt }}</p>
       {% endif %}
-      <div class="blog-detail__content" itemprop="articleBody">{{ blog_post.content|linebreaks }}</div>
+      <div class="blog-detail__content blog-prose" itemprop="articleBody">{{ blog_post.content_html|safe }}</div>
 
       <footer class="blog-detail__footer">
         <div class="blog-share">

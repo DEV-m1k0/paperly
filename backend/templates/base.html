@@ -5,6 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  {# ── Favicons ── #}
+  <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+  <link rel="icon" href="{% static 'img/favicon-32.png' %}" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}" sizes="180x180">
+
   {# ── SEO meta. `meta` приходит из view'ов; на нестрогих страницах его нет — все блоки внизу безопасны через |default. #}
   {% with default_title=site.site_name|default:"Paperly" %}
     <title>{% if meta.title %}{{ meta.title }}{% else %}{% block title %}{{ default_title }}{% endblock %}{% endif %}</title>
@@ -64,7 +69,7 @@
   <script src="{% static 'vendor/flatpickr/ru.js' %}"></script>
   <script src="{% static 'vendor/choices/choices.min.js' %}"></script>
   <script src="{% static 'js/utils.js' %}"></script>
-  <script src="{% static 'js/product-grid.js' %}"></script>
+  <script src="{% static 'js/product-grid.js' %}?v=20260503-product-card-balance"></script>
   <script src="{% static 'js/base.js' %}"></script>
   <script src="{% static 'js/header-search.js' %}" defer></script>
   <script src="{% static 'js/chat.js' %}" defer></script>

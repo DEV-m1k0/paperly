@@ -16,6 +16,7 @@
   const reviewsList = document.getElementById("reviewsList");
   const mainImage = document.getElementById("mainImage");
   const thumbsBox = document.querySelector(".gallery__thumbs");
+  const gallery = document.querySelector(".gallery");
   const productTitle = document.getElementById("productTitle");
   const productSku = document.getElementById("productSku");
   const productPrice = document.getElementById("productPrice");
@@ -27,6 +28,7 @@
   const ratingValue = document.getElementById("ratingValue");
   const ratingCount = document.getElementById("ratingCount");
   const productFacts = document.getElementById("productFacts");
+  const fallbackImage = "/static/img/placeholder-product.svg";
 
   let currentProductId = null;
   let currentProductData = null; // для хранения данных товара
@@ -207,39 +209,40 @@
   function renderFacts(product) {
     if (!productFacts) return;
     const items = [];
+    const fact = (label, value) => `<span><small>${escapeHtml(label)}</small><strong>${value}</strong></span>`;
 
     if (product.brand_name) {
-      items.push(`<span>Бренд: <strong>${escapeHtml(product.brand_name)}</strong></span>`);
+      items.push(fact("Бренд", escapeHtml(product.brand_name)));
     }
     if (Array.isArray(product.category_names) && product.category_names.length) {
-      items.push(`<span>Категории: <strong>${escapeHtml(product.category_names.join(", "))}</strong></span>`);
+      items.push(fact("Категории", escapeHtml(product.category_names.join(", "))));
     }
-    if (product.format) {
-      items.push(`<span>Формат: <strong>${escapeHtml(product.format)}</strong></span>`);
+    if (product.format && product.format !== "other") {
+      items.push(fact("Формат", escapeHtml(product.format)));
     }
     if (product.purpose) {
-      items.push(`<span>Назначение: <strong>${escapeHtml(product.purpose)}</strong></span>`);
+      items.push(fact("Назначение", escapeHtml(product.purpose)));
     }
     if (product.sheets_count) {
-      items.push(`<span>Листов: <strong>${product.sheets_count}</strong></span>`);
+      items.push(fact("Листов", String(product.sheets_count)));
     }
-    items.push(`<span>Наличие: <strong>${product.stock > 0 ? "В наличии" : "Под заказ"}</strong></span>`);
+    items.push(fact("Наличие", product.stock > 0 ? "В наличии" : "Под заказ"));
 
     if (product.weight_grams) {
-      items.push(`<span>Вес: <strong>${product.weight_grams} г</strong></span>`);
+      items.push(fact("Вес", `${product.weight_grams} г`));
     }
     if (product.length_mm || product.width_mm || product.height_mm) {
       const dims = [product.length_mm, product.width_mm, product.height_mm]
         .filter((v) => Number(v) > 0)
         .join(" × ");
       if (dims) {
-        items.push(`<span>Размеры: <strong>${dims} мм</strong></span>`);
+        items.push(fact("Размеры", `${dims} мм`));
       }
     }
 
     if (product.has_active_promotion && product.active_promotion_title) {
       const discount = product.active_promotion_discount ? `-${product.active_promotion_discount}%` : "";
-      items.push(`<span>Акция: <strong>${escapeHtml(product.active_promotion_title)} ${discount}</strong></span>`);
+      items.push(fact("Акция", `${escapeHtml(product.active_promotion_title)} ${discount}`));
     }
 
     productFacts.innerHTML = items.join("");
@@ -325,7 +328,7 @@
         id: String(product.id),
         title: product.title,
         price: Number(product.price),
-        img: product.images?.[0]?.image_url || "",
+        img: product.images?.[0]?.image_url || fallbackImage,
         desc: product.short_description || "",
         // 0 = без ограничения (парно с Product.max_order_quantity на бекенде)
         maxQty: Math.max(0, Number(product.max_order_quantity) || 0),
@@ -375,16 +378,24 @@
 
       // Изображения
       if (Array.isArray(product.images) && product.images.length) {
+        gallery?.classList.toggle("gallery--single", product.images.length <= 1);
         mainImage.src = product.images[0].image_url;
         mainImage.alt = product.title;
 
-        thumbsBox.innerHTML = product.images
-          .map(
-            (image, index) =>
-              `<button class="thumb ${index === 0 ? "is-active" : ""}" data-image="${image.image_url}"><img src="${image.image_url}" alt="${escapeHtml(image.alt_text || product.title)}"></button>`
-          )
-          .join("");
+        thumbsBox.innerHTML = product.images.length > 1
+          ? product.images
+            .map(
+              (image, index) =>
+                `<button class="thumb ${index === 0 ? "is-active" : ""}" type="button" data-image="${image.image_url}" aria-label="Показать изображение ${index + 1}"><img src="${image.image_url}" alt="${escapeHtml(image.alt_text || product.title)}" loading="lazy" decoding="async"></button>`
+            )
+            .join("")
+          : "";
         bindThumbs();
+      } else {
+        gallery?.classList.add("gallery--single");
+        mainImage.src = fallbackImage;
+        mainImage.alt = product.title;
+        thumbsBox.innerHTML = "";
       }
 
       // Отзывы

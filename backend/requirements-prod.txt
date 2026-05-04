@@ -6,10 +6,22 @@ django-jazzmin==3.0.1
 djangorestframework==3.15.2
 pillow==12.2.0
 python-dotenv==1.0.1
+qrcode==7.4.2
 whitenoise==6.8.2
 sqlparse==0.5.5
 asgiref==3.11.1
 tzdata==2026.1
+
+# ── Markdown-блог ── (используется shop.markdown_utils)
+markdown==3.7
+bleach==6.2.0
+Pygments==2.19.1
+
+# ── S3-совместимое хранилище медиа ──
+# Работает с AWS S3, Backblaze B2, Cloudflare R2, DO Spaces, Yandex
+# Object Storage — выбор провайдера через env-vars (см. settings.py).
+django-storages==1.14.4
+boto3==1.35.45
 
 # ── Render / production-only ──
 gunicorn==23.0.0

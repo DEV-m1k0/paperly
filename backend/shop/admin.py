@@ -174,6 +174,38 @@ class BlogPostAdmin(BaseAdmin):
     date_hierarchy = "published_at"
     list_select_related = ("category",)
 
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        # Подменяем виджет только для `content` — остальные textfield'ы
+        # (description у других моделей и т.п.) трогать не надо.
+        if db_field.name == "content":
+            from .admin_widgets import MarkdownEditorWidget
+            kwargs["widget"] = MarkdownEditorWidget()
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+    fieldsets = (
+        ("Основное", {
+            "fields": ("title", "slug", "category", "status", "published_at"),
+        }),
+        ("Анонс и обложка", {
+            "fields": ("excerpt", "cover", "cover_url"),
+        }),
+        ("Содержание (Markdown)", {
+            "classes": ("blog-content-fieldset",),
+            "fields": ("content",),
+            "description": (
+                "Поддерживается Markdown: <code>**жирный**</code>, "
+                "<code># Заголовок</code>, списки, таблицы, "
+                "<code>```python</code> блоки кода, цитаты. "
+                "Картинки можно перетаскивать прямо в редактор. "
+                "<br>Callout-блоки: <code>&gt; [!INFO] заголовок</code> → "
+                "далее каждая строка <code>&gt; ...</code>. "
+                "Типы: <code>INFO, TIP, NOTE, WARNING, DANGER, SUCCESS</code>. "
+                "<br>Видео: <code>@[youtube](VIDEO_ID)</code>, "
+                "<code>@[vk](OWNER_ID_VIDEO_ID)</code>."
+            ),
+        }),
+    )
+
 
 @admin.register(models.PickupPoint)
 class PickupPointAdmin(BaseAdmin):

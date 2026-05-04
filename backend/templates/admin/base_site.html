@@ -19,6 +19,9 @@
 
 {% block extrahead %}
 {{ block.super }}
+<link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+<link rel="icon" href="{% static 'img/favicon-32.png' %}" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}" sizes="180x180">
 <script>
   // FOUC-protection: читаем cookie `sidebar-collapsed` и сразу ставим
   // класс на <html>, чтобы первый paint уже был в нужном состоянии.

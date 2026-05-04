@@ -600,10 +600,14 @@
 }
 
 /* Payment options (radio cards) — each option stretches the full width */
+.checkout-section--payment .checkout-section__body {
+  grid-template-columns: 1fr;
+}
+
 .payment-options {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
 }
 
 .payment-option {
@@ -621,9 +625,10 @@
 
 .payment-option__body {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.7rem;
-  padding: 0.75rem 0.85rem;
+  min-height: 100%;
+  padding: 0.9rem 0.95rem;
   border: 1.5px solid var(--line);
   border-radius: 12px;
   background: #fafcfc;
@@ -661,6 +666,27 @@
   font-size: 0.78rem;
   color: var(--muted);
   line-height: 1.3;
+}
+
+.payment-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 1rem;
+  border-radius: 999px;
+  background: rgba(14, 118, 110, 0.08);
+  border: 1px solid rgba(14, 118, 110, 0.18);
+  color: var(--primary-strong);
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.payment-link:hover {
+  background: rgba(14, 118, 110, 0.12);
+  border-color: rgba(14, 118, 110, 0.3);
+  transform: translateY(-1px);
 }
 
 .payment-option:hover .payment-option__body {
@@ -1094,9 +1120,12 @@
   padding: 10px;
 }
 
+.payment-qr img,
 .payment-qr svg {
   width: 100%;
   height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .payment-timer {
@@ -1230,6 +1259,9 @@
   .checkout-summary {
     padding: 1.1rem 1.2rem 1.2rem;
   }
+  .payment-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* ── Mobile landscape (до 720) ── */
@@ -1332,6 +1364,9 @@
   }
   .payment-option__body small {
     font-size: 0.76rem;
+  }
+  .payment-options {
+    grid-template-columns: 1fr;
   }
 
   /* ── Account toggle ── */

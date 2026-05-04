@@ -1,0 +1,186 @@
+/**
+ * Кастомизация EasyMDE под админку Paperly.
+ * Делаем редактор крупнее, тулбар плотнее, добавляем стили для preview
+ * (он использует те же классы, что фронт-страница блога — .blog-prose,
+ * .callout, .codehilite, .video-embed — и подключает оттуда CSS).
+ */
+
+.markdown-editor-wrap .CodeMirror,
+.markdown-editor-wrap .editor-preview-side,
+.markdown-editor-wrap .editor-preview {
+  min-height: 480px;
+  font-size: 14px;
+}
+
+.markdown-editor-wrap .EasyMDEContainer {
+  margin-top: 0.4rem;
+}
+
+.markdown-editor-wrap .editor-toolbar {
+  border-radius: 8px 8px 0 0;
+  border-color: #d8e3e6;
+  background: #f4f8f9;
+}
+
+.markdown-editor-wrap .editor-toolbar button {
+  color: #324548 !important;
+  border-radius: 4px;
+}
+
+.markdown-editor-wrap .editor-toolbar button:hover,
+.markdown-editor-wrap .editor-toolbar button.active {
+  background: #e0eeec !important;
+  border-color: #b8dcd6 !important;
+}
+
+.markdown-editor-wrap .CodeMirror,
+.markdown-editor-wrap .editor-preview-side {
+  border-color: #d8e3e6;
+}
+
+.markdown-editor-wrap .CodeMirror {
+  border-radius: 0 0 8px 8px;
+}
+
+.markdown-editor-wrap .editor-statusbar {
+  background: #f4f8f9;
+  color: #6b7e83;
+  border-radius: 0 0 8px 8px;
+  padding: 0.4rem 0.8rem;
+}
+
+/* Preview-pane должен выглядеть так же, как страница блога. Тащим
+   переменные базового CSS-токена primary, чтобы цвета совпадали. */
+.markdown-editor-wrap .editor-preview,
+.markdown-editor-wrap .editor-preview-side {
+  background: #fff;
+  padding: 1.5rem 1.8rem;
+  --primary: #0e766e;
+  --primary-strong: #0a5f58;
+  --text: #1f2d2f;
+  --text-muted: #6b7e83;
+  --line: #d8e3e6;
+}
+
+/* Подключаем blog.css правила для preview через дублирование классов,
+   чтобы не загружать весь файл — повторяем только то, что нужно. */
+.markdown-editor-wrap .editor-preview .callout,
+.markdown-editor-wrap .editor-preview-side .callout {
+  display: flex;
+  gap: 0.85rem;
+  margin: 1.2rem 0;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+.markdown-editor-wrap .editor-preview .callout--info,
+.markdown-editor-wrap .editor-preview-side .callout--info {
+  background: #e6f5f3; border-color: #cae8e3; color: #0e766e;
+}
+.markdown-editor-wrap .editor-preview .callout--tip,
+.markdown-editor-wrap .editor-preview-side .callout--tip {
+  background: #e7f7ee; border-color: #c5ebd2; color: #047857;
+}
+.markdown-editor-wrap .editor-preview .callout--note,
+.markdown-editor-wrap .editor-preview-side .callout--note {
+  background: #f1f5f9; border-color: #d8e1eb; color: #475569;
+}
+.markdown-editor-wrap .editor-preview .callout--success,
+.markdown-editor-wrap .editor-preview-side .callout--success {
+  background: #dcfce7; border-color: #b9eccd; color: #15803d;
+}
+.markdown-editor-wrap .editor-preview .callout--warning,
+.markdown-editor-wrap .editor-preview-side .callout--warning {
+  background: #fff7ed; border-color: #fbe2c1; color: #b45309;
+}
+.markdown-editor-wrap .editor-preview .callout--danger,
+.markdown-editor-wrap .editor-preview-side .callout--danger {
+  background: #fef2f2; border-color: #fecaca; color: #b91c1c;
+}
+.markdown-editor-wrap .editor-preview .callout__title,
+.markdown-editor-wrap .editor-preview-side .callout__title {
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+.markdown-editor-wrap .editor-preview .callout__icon,
+.markdown-editor-wrap .editor-preview-side .callout__icon {
+  flex: 0 0 22px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-top: 3px;
+}
+
+.markdown-editor-wrap .editor-preview table,
+.markdown-editor-wrap .editor-preview-side table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2rem 0;
+  border: 1px solid #d8e3e6;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.markdown-editor-wrap .editor-preview thead,
+.markdown-editor-wrap .editor-preview-side thead { background: #f4f8f9; }
+.markdown-editor-wrap .editor-preview th,
+.markdown-editor-wrap .editor-preview td,
+.markdown-editor-wrap .editor-preview-side th,
+.markdown-editor-wrap .editor-preview-side td {
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid #d8e3e6;
+  text-align: left;
+}
+
+.markdown-editor-wrap .editor-preview .codehilite,
+.markdown-editor-wrap .editor-preview-side .codehilite {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+.markdown-editor-wrap .editor-preview .codehilite pre,
+.markdown-editor-wrap .editor-preview-side .codehilite pre {
+  margin: 0;
+  background: transparent;
+  color: inherit;
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.markdown-editor-wrap .editor-preview .video-embed,
+.markdown-editor-wrap .editor-preview-side .video-embed {
+  position: relative;
+  padding-bottom: 56.25%;
+  margin: 1.2rem 0;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.markdown-editor-wrap .editor-preview .video-embed iframe,
+.markdown-editor-wrap .editor-preview-side .video-embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Подсказка про drag-n-drop под textarea */
+.blog-content-fieldset .help {
+  background: #f4f8f9;
+  border: 1px solid #d8e3e6;
+  border-radius: 8px;
+  padding: 0.7rem 0.95rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.blog-content-fieldset .help code {
+  background: #fff;
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+  border: 1px solid #d8e3e6;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.88em;
+}

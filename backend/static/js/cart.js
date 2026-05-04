@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const checkoutBlock = document.getElementById("checkoutBlock");
   const summaryNode = document.getElementById("summary");
   const checkoutForm = document.getElementById("checkoutForm");
+  const phoneInput = document.getElementById("phone");
   const deliveryTypeSelect = document.getElementById("deliveryType");
   const pickupPointSelect = document.getElementById("pickupPoint");
 
@@ -19,6 +20,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let pickupPoints = [];
   let serverCart = null; // { id, items: [{id, product, quantity, price_snapshot}] }
   let appliedPromo = null; // { code, discount, free_shipping, message, discount_type }
+  let pendingSbpToken = null;
+  let pendingSbpConfirmUrl = "";
+  let sbpFinalizing = false;
 
   // ---------- Helpers ----------
   function totalQty() {
@@ -31,6 +35,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function selectedDeliveryType() {
     return deliveryTypeSelect?.value || "courier";
+  }
+
+  function formatRussianPhone(value) {
+    const digits = String(value || "").replace(/\D/g, "");
+    if (!digits) return "";
+
+    let normalized = digits;
+    if (normalized.startsWith("8")) normalized = `7${normalized.slice(1)}`;
+    if (!normalized.startsWith("7")) normalized = `7${normalized}`;
+    normalized = normalized.slice(0, 11);
+
+    const country = normalized.slice(0, 1);
+    const code = normalized.slice(1, 4);
+    const first = normalized.slice(4, 7);
+    const second = normalized.slice(7, 9);
+    const third = normalized.slice(9, 11);
+
+    let result = `+${country}`;
+    if (code) result += ` (${code}`;
+    if (code.length === 3) result += ")";
+    if (first) result += ` ${first}`;
+    if (second) result += `-${second}`;
+    if (third) result += `-${third}`;
+    return result;
+  }
+
+  function bindPhoneMask() {
+    if (!phoneInput) return;
+
+    const applyMask = () => {
+      phoneInput.value = formatRussianPhone(phoneInput.value);
+    };
+
+    phoneInput.addEventListener("input", applyMask);
+    phoneInput.addEventListener("focus", () => {
+      if (!phoneInput.value.trim()) phoneInput.value = "+7";
+    });
+    phoneInput.addEventListener("blur", () => {
+      if (phoneInput.value === "+7") phoneInput.value = "";
+    });
+
+    applyMask();
   }
 
   function getDeliveryPrice() {
@@ -581,39 +627,40 @@ document.addEventListener("DOMContentLoaded", () => {
   function closeModal() {
     overlay.hidden = true;
     hideAllSteps();
-    if (window._sbpTimerInterval) clearInterval(window._sbpTimerInterval);
+    resetSbpSessionUi();
   }
 
   document.getElementById("paymentClose")?.addEventListener("click", closeModal);
   overlay?.addEventListener("click", (event) => { if (event.target === overlay) closeModal(); });
 
-  function generateQrSvg(text) {
-    const size = 21;
-    const cells = [];
-    let hash = 0;
-    for (let i = 0; i < text.length; i++) hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
-    const rng = () => { hash = (hash * 16807 + 0) % 2147483647; return hash / 2147483647; };
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        const inFinder = (cx, cy) => x >= cx && x < cx + 7 && y >= cy && y < cy + 7;
-        const isFinderBlack = (cx, cy) => {
-          const rx = x - cx, ry = y - cy;
-          if (rx === 0 || rx === 6 || ry === 0 || ry === 6) return true;
-          if (rx >= 2 && rx <= 4 && ry >= 2 && ry <= 4) return true;
-          return false;
-        };
-        let black = false;
-        if (inFinder(0, 0)) black = isFinderBlack(0, 0);
-        else if (inFinder(size - 7, 0)) black = isFinderBlack(size - 7, 0);
-        else if (inFinder(0, size - 7)) black = isFinderBlack(0, size - 7);
-        else black = rng() > 0.55;
-        if (black) {
-          const s = 160 / size;
-          cells.push(`<rect x="${x * s}" y="${y * s}" width="${s}" height="${s}" rx="1" fill="#0e766e"/>`);
-        }
-      }
+  function clearSbpWatchers() {
+    if (window._sbpTimerInterval) clearInterval(window._sbpTimerInterval);
+    if (window._sbpPollInterval) clearInterval(window._sbpPollInterval);
+    window._sbpTimerInterval = null;
+    window._sbpPollInterval = null;
+  }
+
+  function resetSbpSessionUi() {
+    clearSbpWatchers();
+    pendingSbpToken = null;
+    pendingSbpConfirmUrl = "";
+    sbpFinalizing = false;
+
+    const qrContainer = document.getElementById("paymentQr");
+    const sbpLink = document.getElementById("paymentSbpLink");
+    const sbpBtn = document.getElementById("sbpSimulateBtn");
+    const timerEl = document.getElementById("sbpTimer");
+
+    if (qrContainer) qrContainer.innerHTML = "";
+    if (sbpLink) {
+      sbpLink.hidden = true;
+      sbpLink.removeAttribute("href");
     }
-    return `<svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">${cells.join("")}</svg>`;
+    if (sbpBtn) {
+      sbpBtn.disabled = false;
+      sbpBtn.textContent = "Подтвердить оплату";
+    }
+    if (timerEl) timerEl.textContent = "02:00";
   }
 
   function startSbpTimer(onExpire) {
@@ -625,10 +672,58 @@ document.addEventListener("DOMContentLoaded", () => {
       const s = String(seconds % 60).padStart(2, "0");
       if (timerEl) timerEl.textContent = `${m}:${s}`;
       if (seconds <= 0) {
-        clearInterval(window._sbpTimerInterval);
+        clearSbpWatchers();
         onExpire();
       }
     }, 1000);
+  }
+
+  async function pollSbpStatus() {
+    if (!pendingSbpToken || sbpFinalizing) return;
+    try {
+      const statusData = await apiJson(`/api/sbp-payments/${pendingSbpToken}/`);
+      if (statusData.status === "paid") {
+        sbpFinalizing = true;
+        clearSbpWatchers();
+        const sbpBtn = document.getElementById("sbpSimulateBtn");
+        if (sbpBtn) {
+          sbpBtn.disabled = true;
+          sbpBtn.textContent = "Оплата получена";
+        }
+        processPayment(sbpBtn || document.getElementById("checkoutSubmit"), 600);
+      }
+    } catch (error) {
+      if (error?.status === 404 || error?.data?.status === "expired") {
+        closeModal();
+        showError(checkoutForm, "Сессия СБП истекла. Создайте новый QR-код.");
+      }
+    }
+  }
+
+  async function startSbpSession(amount) {
+    const qrContainer = document.getElementById("paymentQr");
+    const sbpLink = document.getElementById("paymentSbpLink");
+    const response = await apiJson("/api/sbp-payments/start/", {
+      method: "POST",
+      body: { amount },
+    });
+
+    pendingSbpToken = response.token;
+    pendingSbpConfirmUrl = response.confirm_url;
+    sbpFinalizing = false;
+
+    if (qrContainer) {
+      qrContainer.innerHTML = `<img src="${response.qr_image}" alt="QR-код для оплаты через СБП" loading="eager" decoding="async">`;
+    }
+    if (sbpLink) {
+      sbpLink.hidden = false;
+      sbpLink.href = pendingSbpConfirmUrl;
+    }
+
+    clearSbpWatchers();
+    window._sbpPollInterval = setInterval(() => {
+      pollSbpStatus();
+    }, 2000);
   }
 
   // Format card number with spaces
@@ -721,7 +816,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("sbpSimulateBtn")?.addEventListener("click", () => {
     const btn = document.getElementById("sbpSimulateBtn");
-    if (window._sbpTimerInterval) clearInterval(window._sbpTimerInterval);
+    sbpFinalizing = true;
+    clearSbpWatchers();
     processPayment(btn, 1200);
   });
 
@@ -735,7 +831,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = pendingDoneRedirect || "/catalog/";
   });
 
-  checkoutForm.addEventListener("submit", (event) => {
+  checkoutForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     checkoutForm.querySelectorAll(".form-error").forEach((node) => node.remove());
 
@@ -828,13 +924,17 @@ document.addEventListener("DOMContentLoaded", () => {
       showModal(stepCard);
     } else if (paymentType === "sbp") {
       document.getElementById("paymentSbpAmount").textContent = amountText;
-      const qrContainer = document.getElementById("paymentQr");
-      qrContainer.innerHTML = generateQrSvg(`sbp:paperly:${total}:${Date.now()}`);
-      showModal(stepSbp);
-      startSbpTimer(() => {
+      try {
+        await startSbpSession(total);
+        showModal(stepSbp);
+        startSbpTimer(() => {
+          closeModal();
+          showError(checkoutForm, "Время ожидания оплаты истекло. Попробуйте ещё раз.");
+        });
+      } catch (error) {
         closeModal();
-        showError(checkoutForm, "Время ожидания оплаты истекло. Попробуйте ещё раз.");
-      });
+        showError(checkoutForm, "Не удалось создать QR-код для СБП. Попробуйте ещё раз.");
+      }
     } else {
       document.getElementById("paymentCashAmount").textContent = amountText;
       showModal(stepCash);
@@ -849,6 +949,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ---------- Init ----------
   (async () => {
+    bindPhoneMask();
     await Promise.all([loadDeliveryTariffs(), loadPickupPoints()]);
     applyDeliveryTypeVisibility();
     renderItems();
