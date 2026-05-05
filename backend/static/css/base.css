@@ -1637,6 +1637,7 @@ body {
 
 .site-main {
     flex: 1 0 auto;           /* растягивается, занимая остаток высоты */
+    padding-top: clamp(0.85rem, 1.8vw, 1.35rem);
     padding-bottom: clamp(2.5rem, 5vw, 4rem);   /* гарантированный отступ перед footer */
 }
 

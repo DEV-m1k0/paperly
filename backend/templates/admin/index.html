@@ -19,6 +19,107 @@
         {% widthratio dashboard_list|length 2 1 as middle %}
     {% endif %}
 
+    {% if not request.user.is_superuser and perms.shop.view_order %}
+    <div class="col-12 pp-manager-dashboard">
+        <section class="pp-manager-hero">
+            <div>
+                <p class="pp-manager-eyebrow">Рабочее место менеджера</p>
+                <h2>Сегодня в обработке</h2>
+                <p>Быстрый доступ к заказам, возвратам, оптовым заявкам и отзывам без лишних административных разделов.</p>
+            </div>
+            <a href="{% url 'admin:shop_order_changelist' %}" class="btn btn-primary">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>Открыть заказы</span>
+            </a>
+        </section>
+
+        <div class="pp-manager-kpis">
+            {% if perms.shop.view_order %}
+            <a href="{% url 'admin:shop_order_changelist' %}?status=new" class="pp-manager-kpi">
+                <span class="pp-manager-kpi__icon"><i class="fas fa-file-invoice-dollar"></i></span>
+                <span class="pp-manager-kpi__body">
+                    <strong>{{ pp_notifications.new_orders|default:"0" }}</strong>
+                    <span>Новые заказы</span>
+                </span>
+            </a>
+            {% endif %}
+            {% if perms.shop.view_returnrequest %}
+            <a href="{% url 'admin:shop_returnrequest_changelist' %}?status=new" class="pp-manager-kpi">
+                <span class="pp-manager-kpi__icon pp-manager-kpi__icon--warn"><i class="fas fa-rotate-left"></i></span>
+                <span class="pp-manager-kpi__body">
+                    <strong>{{ pp_notifications.pending_returns|default:"0" }}</strong>
+                    <span>Возвраты</span>
+                </span>
+            </a>
+            {% endif %}
+            {% if perms.shop.view_wholesalerequest %}
+            <a href="{% url 'admin:shop_wholesalerequest_changelist' %}?status=new" class="pp-manager-kpi">
+                <span class="pp-manager-kpi__icon pp-manager-kpi__icon--info"><i class="fas fa-handshake"></i></span>
+                <span class="pp-manager-kpi__body">
+                    <strong>{{ pp_notifications.new_wholesale|default:"0" }}</strong>
+                    <span>Оптовые заявки</span>
+                </span>
+            </a>
+            {% endif %}
+            {% if perms.shop.view_productreview %}
+            <a href="{% url 'admin:shop_productreview_changelist' %}?is_published__exact=0" class="pp-manager-kpi">
+                <span class="pp-manager-kpi__icon pp-manager-kpi__icon--muted"><i class="fas fa-star"></i></span>
+                <span class="pp-manager-kpi__body">
+                    <strong>{{ pp_notifications.unpublished_reviews|default:"0" }}</strong>
+                    <span>Отзывы на проверке</span>
+                </span>
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="pp-manager-workgrid">
+            {% if perms.shop.view_order %}
+            <section class="pp-manager-card">
+                <h3><i class="fas fa-file-invoice-dollar"></i> Заказы</h3>
+                <p>Обработка новых заказов, смена статуса, проверка состава и контактных данных клиента.</p>
+                <div class="pp-manager-actions">
+                    <a href="{% url 'admin:shop_order_changelist' %}?status=new">Новые</a>
+                    <a href="{% url 'admin:shop_order_changelist' %}?status=paid">Оплаченные</a>
+                    <a href="{% url 'admin:shop_order_changelist' %}">Все заказы</a>
+                </div>
+            </section>
+            {% endif %}
+            {% if perms.shop.view_returnrequest %}
+            <section class="pp-manager-card">
+                <h3><i class="fas fa-rotate-left"></i> Возвраты</h3>
+                <p>Проверка заявок, согласование решения и контроль выполнения возврата.</p>
+                <div class="pp-manager-actions">
+                    <a href="{% url 'admin:shop_returnrequest_changelist' %}?status=new">Новые</a>
+                    <a href="{% url 'admin:shop_returnrequest_changelist' %}?status=checking">На проверке</a>
+                    <a href="{% url 'admin:shop_returnrequest_changelist' %}">Все возвраты</a>
+                </div>
+            </section>
+            {% endif %}
+            {% if perms.shop.view_wholesalerequest %}
+            <section class="pp-manager-card">
+                <h3><i class="fas fa-handshake"></i> Опт</h3>
+                <p>Новые B2B-заявки, контактные данные организаций и статус обработки.</p>
+                <div class="pp-manager-actions">
+                    <a href="{% url 'admin:shop_wholesalerequest_changelist' %}?status=new">Новые заявки</a>
+                    <a href="{% url 'admin:shop_wholesalerequest_changelist' %}?status=in_progress">В работе</a>
+                    <a href="{% url 'admin:shop_wholesalerequest_changelist' %}">Все заявки</a>
+                </div>
+            </section>
+            {% endif %}
+            {% if perms.shop.view_productreview %}
+            <section class="pp-manager-card">
+                <h3><i class="fas fa-star"></i> Отзывы</h3>
+                <p>Модерация отзывов покупателей и быстрый переход к скрытым публикациям.</p>
+                <div class="pp-manager-actions">
+                    <a href="{% url 'admin:shop_productreview_changelist' %}?is_published__exact=0">Скрытые</a>
+                    <a href="{% url 'admin:shop_productreview_changelist' %}">Все отзывы</a>
+                    {% if perms.shop.view_product %}<a href="{% url 'admin:shop_product_changelist' %}">Товары</a>{% endif %}
+                </div>
+            </section>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
     <div class="col-xl-9 col-12">
         <div class="row">
             <div class="col-md-6 col-sm-12">
@@ -126,4 +227,5 @@
             </div>
         </div>
     </div>
+    {% endif %}
 {% endblock %}

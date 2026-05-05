@@ -155,6 +155,19 @@ BRAND_ASSETS = {
     "pentel": ("https://www.pentel.com/", "pentel.com"),
 }
 
+BRAND_LOGO_FILES = {
+    "berlingo": "Berlingo.png",
+    "bg": "bg.png",
+    "brauberg": "BRAUBERG.jpg",
+    "erich-krause": "Erich Krause.png",
+    "faber-castell": "Faber-Castell.jpg",
+    "hatber": "Hatber.png",
+    "kores": "kores.jpg",
+    "maped": "Maped.jpg",
+    "pentel": "Pentel.png",
+    "pilot": "pilot.png",
+}
+
 PRODUCT_IMAGE_QUERIES = {
     "NB": "notebook stationery",
     "PP": "office paper stationery",
@@ -229,6 +242,16 @@ def _remote_product_image_url(item, index):
 
 def _brand_logo_url(domain):
     return f"https://www.google.com/s2/favicons?domain={domain}&sz=256"
+
+
+def _brand_logo_file(slug):
+    filename = BRAND_LOGO_FILES.get(slug)
+    if not filename:
+        return ""
+    source = MEDIA_SRC / "brands" / filename
+    if not source.exists():
+        return ""
+    return f"brands/{filename}"
 
 
 def _category_child_name_for_product(item):
@@ -791,22 +814,23 @@ class Command(BaseCommand):
         by_slug = {}
         for slug, name, desc in brands_seed:
             website, logo_domain = BRAND_ASSETS.get(slug, ("", ""))
+            logo_file = _brand_logo_file(slug)
+            fallback_logo_url = "" if logo_file else (_brand_logo_url(logo_domain) if logo_domain else "")
             brand, _ = Brand.objects.get_or_create(
                 slug=slug,
                 defaults={
                     "name": name,
                     "description": desc,
                     "website": website,
-                    "logo_url": _brand_logo_url(logo_domain) if logo_domain else "",
+                    "logo_url": fallback_logo_url,
+                    "logo": logo_file,
                 },
             )
             brand.name = name
             brand.description = desc
             brand.website = website
-            brand.logo_url = _brand_logo_url(logo_domain) if logo_domain else brand.logo_url
-            # Для брендов важнее показывать настоящий логотип/фавикон бренда,
-            # а не старые демо-фото из media/brands.
-            brand.logo = ""
+            brand.logo = logo_file
+            brand.logo_url = fallback_logo_url
             brand.save(update_fields=["name", "description", "website", "logo_url", "logo", "updated_at"])
             by_slug[slug] = brand
         return by_slug

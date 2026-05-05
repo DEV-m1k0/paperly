@@ -185,6 +185,8 @@
 .category-card__icon {
   width: 48px;
   height: 48px;
+  aspect-ratio: 1 / 1;
+  flex: 0 0 48px;
   border-radius: 14px;
   display: grid;
   place-items: center;
@@ -247,68 +249,68 @@
 
 .slider-wrap {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.slider-btn {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--text);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  font-size: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-  z-index: 1;
-  transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, transform 0.2s ease;
-}
-
-.slider-btn:hover:not(:disabled) {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-  box-shadow: 0 8px 18px -8px rgba(14, 118, 110, 0.4);
-  transform: translateY(-1px);
-}
-
-.slider-btn:disabled {
-  opacity: 0.35;
-  cursor: default;
-  pointer-events: none;
+  display: block;
+  isolation: isolate;
 }
 
 #homePromotionsProducts {
-  flex: 1;
-  display: flex;
-  overflow-x: auto;
-  overflow-y: hidden;
-  gap: 0.85rem;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
+  display: block;
+  overflow: hidden;
+  scroll-snap-type: none;
+  scroll-behavior: auto;
   /* vertical padding reserves room for card box-shadow (hover uses 0 18px 38px + translateY -6px)
      that otherwise gets clipped by the scroll container */
   padding: 26px 6px 44px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 
-#homePromotionsProducts::-webkit-scrollbar {
-  display: none;
+#homePromotionsProducts:focus-visible {
+  outline: 3px solid rgba(14, 118, 110, 0.22);
+  outline-offset: 4px;
+  border-radius: 20px;
+}
+
+.promo-autoscroll__track {
+  display: flex;
+  gap: 0.85rem;
+  width: max-content;
+  will-change: transform;
 }
 
 #homePromotionsProducts .product {
   flex: 0 0 min(320px, 85vw);
-  scroll-snap-align: start;
 }
 
 #homePromotionsProducts .empty-state {
   min-width: 100%;
+}
+
+@media (max-width: 520px) {
+  #homePromotionsProducts {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 0.85rem;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    touch-action: pan-x pan-y;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+    cursor: grab;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  #homePromotionsProducts::-webkit-scrollbar {
+    display: none;
+  }
+
+  .promo-autoscroll__track {
+    display: contents;
+  }
+
+  #homePromotionsProducts .product {
+    scroll-snap-align: start;
+  }
 }
 
 /* ───────────── Service stripe (delivery / pickup / wholesale) ───────────── */
@@ -424,18 +426,29 @@
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #f4fafa 0%, #eef7f5 100%);
-  border: 1px solid rgba(14, 118, 110, 0.08);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(20, 163, 150, 0.12), transparent 36%),
+    linear-gradient(135deg, #f4fafa 0%, #edf7f5 100%);
+  border: 1px solid rgba(14, 118, 110, 0.1);
   display: grid;
   place-items: center;
   overflow: hidden;
+  padding: clamp(0.65rem, 1.4vw, 0.9rem);
 }
 
 .brand-card__logo img {
-  max-width: 78%;
-  max-height: 78%;
+  width: 100%;
+  height: 100%;
+  max-width: 210px;
+  max-height: 110px;
   object-fit: contain;
+  border-radius: 12px;
+  background: #fff;
+  padding: clamp(0.85rem, 1.7vw, 1.05rem);
+  box-shadow:
+    0 14px 28px -22px rgba(11, 65, 61, 0.35),
+    inset 0 0 0 1px rgba(14, 118, 110, 0.08);
   transition: transform 0.3s ease;
 }
 
@@ -512,10 +525,34 @@
 
 /* ───────────── Products grid (for non-scroll sections) ───────────── */
 
-.products {
+.home-page .products:not(.products--scroll) {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.95rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: clamp(0.9rem, 1.3vw, 1.15rem);
+  align-items: stretch;
+  justify-content: center;
+}
+
+.home-page .products:not(.products--scroll) .product {
+  width: 100%;
+}
+
+@media (min-width: 760px) {
+  .home-page .products:not(.products--scroll) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1040px) {
+  .home-page .products:not(.products--scroll) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1440px) {
+  .home-page .products:not(.products--scroll) {
+    grid-template-columns: repeat(4, minmax(0, 300px));
+  }
 }
 
 .empty-state {
@@ -610,10 +647,6 @@
   .service-card--wholesale {
     grid-column: auto;
   }
-  .slider-btn {
-    width: 38px;
-    height: 38px;
-  }
   #homePromotionsProducts .product {
     flex-basis: min(280px, 80vw);
   }
@@ -644,18 +677,31 @@
   .category-card {
     min-height: 100px;
     padding: 1.1rem 1.15rem;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-areas:
+      "icon title"
+      "icon text";
     align-items: center;
     gap: 0.85rem;
   }
   .category-card__icon {
-    margin: 0;
     width: 44px;
     height: 44px;
+    flex-basis: 44px;
+    margin: 0;
     font-size: 1.2rem;
+    grid-area: icon;
+    align-self: center;
   }
   .category-card h3 {
     font-size: 0.98rem;
+    grid-area: title;
+    align-self: end;
+  }
+  .category-card span {
+    grid-area: text;
+    align-self: start;
   }
   .products,
   .brands-grid {
@@ -676,12 +722,5 @@
 @media (max-width: 380px) {
   .home-hero h1 {
     font-size: 1.6rem;
-  }
-  .slider-wrap {
-    gap: 0.3rem;
-  }
-  .slider-btn {
-    width: 36px;
-    height: 36px;
   }
 }

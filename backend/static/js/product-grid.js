@@ -263,6 +263,7 @@
     errorText = "Ошибка загрузки товаров.",
     filter = null,
     moneySuffix = "₽",
+    minItems = 0,
   }) {
     if (!container) return [];
     container.innerHTML = `<p class="empty-state">${loadingText}</p>`;
@@ -276,13 +277,21 @@
     try {
       let rows = await fetchRows(endpoint);
       if (filter) rows = rows.filter(filter);
-      if (typeof limit === "number") rows = rows.slice(0, limit);
 
-      if (!rows.length && fallbackEndpoint) {
-        rows = await fetchRows(fallbackEndpoint);
+      const shouldUseFallback = fallbackEndpoint
+        && (!rows.length || (minItems > 0 && rows.length < minItems));
+
+      if (shouldUseFallback) {
+        const fallbackRows = await fetchRows(fallbackEndpoint);
+        const merged = new Map(rows.map((item) => [String(item.id), item]));
+        fallbackRows.forEach((item) => {
+          if (!merged.has(String(item.id))) merged.set(String(item.id), item);
+        });
+        rows = Array.from(merged.values());
         if (filter) rows = rows.filter(filter);
-        if (typeof limit === "number") rows = rows.slice(0, limit);
       }
+
+      if (typeof limit === "number") rows = rows.slice(0, limit);
 
       if (!rows.length) {
         container.innerHTML = `<p class="empty-state">${emptyText}</p>`;

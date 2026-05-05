@@ -111,26 +111,36 @@
     html += '</a>';
   }
 
-  /* — Секция: Быстрые действия — */
-  html += '<div class="dropdown-divider"></div>';
-  html += '<span class="dropdown-header pp-dropdown-header">';
-  html += '<i class="fas fa-bolt mr-1"></i> {% trans "Быстрые действия" %}';
-  html += '</span>';
-  html += '<div class="dropdown-divider"></div>';
-
   var actions = [
+    {% if perms.shop.add_product %}
     { url: '{% url "admin:shop_product_add" %}',    icon: 'fas fa-box-open',            label: '{% trans "Новый товар" %}' },
+    {% endif %}
+    {% if perms.shop.add_order %}
     { url: '{% url "admin:shop_order_add" %}',      icon: 'fas fa-file-invoice-dollar',  label: '{% trans "Новый заказ" %}' },
+    {% endif %}
+    {% if perms.shop.add_promotion %}
     { url: '{% url "admin:shop_promotion_add" %}',  icon: 'fas fa-tags',                label: '{% trans "Новая акция" %}' },
-    { url: '{% url "admin:shop_promocode_add" %}',  icon: 'fas fa-ticket',              label: '{% trans "Новый промокод" %}' }
+    {% endif %}
+    {% if perms.shop.add_promocode %}
+    { url: '{% url "admin:shop_promocode_add" %}',  icon: 'fas fa-ticket',              label: '{% trans "Новый промокод" %}' },
+    {% endif %}
   ];
 
-  for (var j = 0; j < actions.length; j++) {
-    var a = actions[j];
-    html += '<a href="' + a.url + '" class="dropdown-item pp-action-item">';
-    html += '<i class="' + a.icon + ' pp-action-icon"></i>';
-    html += '<span>' + a.label + '</span>';
-    html += '</a>';
+  if (actions.length) {
+    /* — Секция: Быстрые действия — */
+    html += '<div class="dropdown-divider"></div>';
+    html += '<span class="dropdown-header pp-dropdown-header">';
+    html += '<i class="fas fa-bolt mr-1"></i> {% trans "Быстрые действия" %}';
+    html += '</span>';
+    html += '<div class="dropdown-divider"></div>';
+
+    for (var j = 0; j < actions.length; j++) {
+      var a = actions[j];
+      html += '<a href="' + a.url + '" class="dropdown-item pp-action-item">';
+      html += '<i class="' + a.icon + ' pp-action-icon"></i>';
+      html += '<span>' + a.label + '</span>';
+      html += '</a>';
+    }
   }
 
   /* — Секция: Аккаунт — */
@@ -324,6 +334,8 @@
               </span>
               {% if request.user.is_superuser %}
                 <span class="sidebar-footer__role">{% trans 'Администратор' %}</span>
+              {% elif perms.shop.view_order %}
+                <span class="sidebar-footer__role">{% trans 'Менеджер' %}</span>
               {% elif request.user.is_staff %}
                 <span class="sidebar-footer__role">{% trans 'Персонал' %}</span>
               {% endif %}

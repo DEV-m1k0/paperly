@@ -250,21 +250,31 @@
 
 .br-card__logo {
   aspect-ratio: 3 / 2;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #f8fafc, #eef2ff);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.8rem;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 18% 16%, rgba(99, 102, 241, 0.12), transparent 34%),
+    linear-gradient(135deg, #f8fafc, #eef2ff);
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 1.4vw, 1rem);
   overflow: hidden;
   position: relative;
+  border: 1px solid rgba(99, 102, 241, 0.1);
 }
 
 .br-card__logo img {
-  max-width: 100%;
-  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  max-width: 230px;
+  max-height: 138px;
   object-fit: contain;
   display: block;
+  border-radius: 13px;
+  background: #fff;
+  padding: clamp(0.9rem, 1.8vw, 1.15rem);
+  box-shadow:
+    0 16px 30px -24px rgba(31, 41, 55, 0.35),
+    inset 0 0 0 1px rgba(99, 102, 241, 0.08);
   filter: saturate(1.05);
   transition: transform 0.28s ease;
 }

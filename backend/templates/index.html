@@ -4,8 +4,8 @@
 {% block title %}{{ site.site_name|default:"Paperly" }} — канцтовары для школы, офиса и творчества{% endblock %}
 
 {% block page_css %}
-<link rel="stylesheet" href="{% static 'css/index.css' %}">
-<link rel="stylesheet" href="{% static 'css/product-cards.css' %}">
+<link rel="stylesheet" href="{% static 'css/index.css' %}?v=20260505-promo-marquee">
+<link rel="stylesheet" href="{% static 'css/product-cards.css' %}?v=20260505-home-products">
 {% endblock %}
 
 {% block content %}
@@ -175,12 +175,10 @@
         <i class="bi bi-arrow-right" aria-hidden="true"></i>
       </a>
     </header>
-    <div class="slider-wrap">
-      <button class="slider-btn slider-btn--prev" id="promoScrollPrev" type="button" aria-label="Назад"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
-      <div class="products products--scroll" id="homePromotionsProducts" aria-live="polite">
+    <div class="slider-wrap promo-autoscroll">
+      <div class="products products--scroll" id="homePromotionsProducts" aria-live="polite" tabindex="0" aria-label="Акции и скидки">
         <p class="empty-state">Загрузка товаров...</p>
       </div>
-      <button class="slider-btn slider-btn--next" id="promoScrollNext" type="button" aria-label="Вперёд"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
     </div>
   </section>
   {% endif %}
@@ -217,7 +215,7 @@
         <i class="bi bi-arrow-right" aria-hidden="true"></i>
       </a>
     </header>
-    <div class="products" id="homeHitProducts" aria-live="polite">
+    <div class="products home-hit-products" id="homeHitProducts" aria-live="polite">
       <p class="empty-state">Загрузка товаров...</p>
     </div>
   </section>
@@ -319,5 +317,5 @@
 {% endblock %}
 
 {% block page_js %}
-<script src="{% static 'js/index.js' %}"></script>
+<script src="{% static 'js/index.js' %}?v=20260505-promo-marquee"></script>
 {% endblock %}

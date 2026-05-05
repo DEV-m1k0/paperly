@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
   reveals.forEach((block) => observer.observe(block));
 
   // --- Sections ---
-  P.renderProductGrid({
+  const promotionsReady = P.renderProductGrid({
     container: homePromotionsProducts,
     endpoint: "/api/products/?sale=true&ordering=-created_at",
     mode: "promo",
@@ -90,6 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fallbackEndpoint: "/api/products/?ordering=-created_at",
     mode: "new",
     limit: 4,
+    minItems: 4,
     emptyText: "За последние 3 дня новинок нет.",
   });
 
@@ -99,37 +100,118 @@ document.addEventListener("DOMContentLoaded", () => {
     fallbackEndpoint: "/api/products/?ordering=-sold_recent",
     mode: "hit",
     limit: 4,
+    minItems: 4,
     emptyText: "За последние 3 дня хитов продаж нет.",
   });
 
   loadBrands();
 
-  // --- Slider arrows ---
-  function initSliderArrows(scrollEl, prevBtn, nextBtn) {
-    if (!scrollEl || !prevBtn || !nextBtn) return;
+  function initPromoAutoScroll(scrollEl) {
+    if (!scrollEl) return;
 
-    function updateButtons() {
-      const atStart = scrollEl.scrollLeft <= 4;
-      const atEnd = scrollEl.scrollLeft + scrollEl.clientWidth >= scrollEl.scrollWidth - 4;
-      prevBtn.disabled = atStart;
-      nextBtn.disabled = atEnd;
+    const phoneQuery = window.matchMedia?.("(max-width: 520px)");
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    let animationFrame = null;
+    let lastFrameTime = null;
+    let offsetX = 0;
+    let loopWidth = 0;
+    let trackEl = null;
+
+    function isPhone() {
+      return Boolean(phoneQuery?.matches);
     }
 
-    function getScrollStep() {
-      const card = scrollEl.querySelector(".product");
-      return card ? card.offsetWidth + 14 : Math.round(scrollEl.clientWidth * 0.8);
+    function getOriginalCards() {
+      return Array.from(scrollEl.querySelectorAll(".product:not(.is-marquee-clone)"));
     }
 
-    prevBtn.addEventListener("click", () => scrollEl.scrollBy({ left: -getScrollStep(), behavior: "smooth" }));
-    nextBtn.addEventListener("click", () => scrollEl.scrollBy({ left: getScrollStep(), behavior: "smooth" }));
-    scrollEl.addEventListener("scroll", updateButtons, { passive: true });
-    new ResizeObserver(updateButtons).observe(scrollEl);
-    updateButtons();
+    function hasEnoughCards() {
+      return getOriginalCards().length > 1;
+    }
+
+    function resetCloneBindings(node) {
+      node.querySelectorAll("[data-bound], [data-nav-bound]").forEach((element) => {
+        delete element.dataset.bound;
+        delete element.dataset.navBound;
+      });
+      delete node.dataset.navBound;
+    }
+
+    function teardownTrack() {
+      if (!trackEl) {
+        loopWidth = 0;
+        offsetX = 0;
+        return;
+      }
+
+      const originals = Array.from(trackEl.querySelectorAll(".product:not(.is-marquee-clone)"));
+      scrollEl.innerHTML = "";
+      originals.forEach((card) => scrollEl.appendChild(card));
+      trackEl = null;
+      loopWidth = 0;
+      offsetX = 0;
+    }
+
+    function setupLoop() {
+      teardownTrack();
+      if (isPhone() || reducedMotion || !hasEnoughCards()) return;
+
+      const originals = getOriginalCards();
+      trackEl = document.createElement("div");
+      trackEl.className = "promo-autoscroll__track";
+      originals.forEach((card) => {
+        trackEl.appendChild(card);
+      });
+
+      originals.forEach((card) => {
+        const clone = card.cloneNode(true);
+        clone.classList.add("is-autoscroll-clone");
+        resetCloneBindings(clone);
+        trackEl.appendChild(clone);
+      });
+
+      scrollEl.innerHTML = "";
+      scrollEl.appendChild(trackEl);
+      P.bindProductGridActions?.(scrollEl);
+      P.syncFavoritesOnCards?.(scrollEl);
+
+      const firstClone = trackEl.querySelector(".is-autoscroll-clone");
+      loopWidth = firstClone ? firstClone.offsetLeft : 0;
+      offsetX = 0;
+      if (trackEl) trackEl.style.transform = "translate3d(0px, 0, 0)";
+    }
+
+    function tick(frameTime) {
+      if (lastFrameTime === null) lastFrameTime = frameTime;
+      const delta = frameTime - lastFrameTime;
+      lastFrameTime = frameTime;
+
+      if (!document.hidden && !isPhone() && !reducedMotion && hasEnoughCards()) {
+        if (!loopWidth) setupLoop();
+        if (loopWidth > 0 && trackEl) {
+          offsetX -= delta * 0.045;
+          if (Math.abs(offsetX) >= loopWidth) {
+            offsetX += loopWidth;
+          }
+          trackEl.style.transform = `translate3d(${offsetX}px, 0, 0)`;
+        }
+      }
+
+      animationFrame = window.requestAnimationFrame(tick);
+    }
+
+    new ResizeObserver(() => {
+      setupLoop();
+    }).observe(scrollEl);
+
+    phoneQuery?.addEventListener?.("change", () => {
+      lastFrameTime = null;
+      setupLoop();
+    });
+
+    setupLoop();
+    animationFrame = window.requestAnimationFrame(tick);
   }
 
-  initSliderArrows(
-    homePromotionsProducts,
-    document.getElementById("promoScrollPrev"),
-    document.getElementById("promoScrollNext")
-  );
+  promotionsReady.then(() => initPromoAutoScroll(homePromotionsProducts));
 });
