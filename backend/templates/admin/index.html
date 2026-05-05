@@ -119,6 +119,120 @@
             {% endif %}
         </div>
     </div>
+    {% elif request.user.is_superuser %}
+    <div class="col-12 pp-manager-dashboard pp-manager-dashboard--admin">
+        <section class="pp-manager-hero">
+            <div>
+                <p class="pp-manager-eyebrow">Рабочее место администратора</p>
+                <h2>Управление Paperly</h2>
+                <p>Быстрый доступ к продажам, каталогу, маркетингу, клиентам и настройкам сайта без длинного списка административных моделей.</p>
+            </div>
+            <a href="{% url 'admin:shop_order_changelist' %}" class="btn btn-primary">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>Открыть заказы</span>
+            </a>
+        </section>
+
+        <div class="pp-manager-kpis">
+            <a href="{% url 'admin:shop_order_changelist' %}?status=new" class="pp-manager-kpi">
+                <span class="pp-manager-kpi__icon"><i class="fas fa-file-invoice-dollar"></i></span>
+                <span class="pp-manager-kpi__body">
+                    <strong>{{ pp_notifications.new_orders|default:"0" }}</strong>
+                    <span>Новые заказы</span>
+                </span>
+            </a>
+            <a href="{% url 'admin:shop_returnrequest_changelist' %}?status=new" class="pp-manager-kpi">
+                <span class="pp-manager-kpi__icon pp-manager-kpi__icon--warn"><i class="fas fa-rotate-left"></i></span>
+                <span class="pp-manager-kpi__body">
+                    <strong>{{ pp_notifications.pending_returns|default:"0" }}</strong>
+                    <span>Возвраты</span>
+                </span>
+            </a>
+            <a href="{% url 'admin:shop_wholesalerequest_changelist' %}?status=new" class="pp-manager-kpi">
+                <span class="pp-manager-kpi__icon pp-manager-kpi__icon--info"><i class="fas fa-handshake"></i></span>
+                <span class="pp-manager-kpi__body">
+                    <strong>{{ pp_notifications.new_wholesale|default:"0" }}</strong>
+                    <span>Оптовые заявки</span>
+                </span>
+            </a>
+            <a href="{% url 'admin:shop_productreview_changelist' %}?is_published__exact=0" class="pp-manager-kpi">
+                <span class="pp-manager-kpi__icon pp-manager-kpi__icon--muted"><i class="fas fa-star"></i></span>
+                <span class="pp-manager-kpi__body">
+                    <strong>{{ pp_notifications.unpublished_reviews|default:"0" }}</strong>
+                    <span>Отзывы на проверке</span>
+                </span>
+            </a>
+        </div>
+
+        <div class="pp-manager-workgrid">
+            <section class="pp-manager-card">
+                <h3><i class="fas fa-file-invoice-dollar"></i> Заказы и продажи</h3>
+                <p>Обработка заказов, контроль статусов, промокоды и история изменений по заказам.</p>
+                <div class="pp-manager-actions">
+                    <a href="{% url 'admin:shop_order_changelist' %}?status=new">Новые заказы</a>
+                    <a href="{% url 'admin:shop_order_changelist' %}">Все заказы</a>
+                    <a href="{% url 'admin:shop_promocode_changelist' %}">Промокоды</a>
+                    <a href="{% url 'admin:shop_orderstatushistory_changelist' %}">История статусов</a>
+                </div>
+            </section>
+
+            <section class="pp-manager-card">
+                <h3><i class="fas fa-box-open"></i> Каталог</h3>
+                <p>Товары, категории, бренды и фильтры каталога для витрины интернет-магазина.</p>
+                <div class="pp-manager-actions">
+                    <a href="{% url 'admin:shop_product_changelist' %}">Товары</a>
+                    <a href="{% url 'admin:shop_product_add' %}">Добавить товар</a>
+                    <a href="{% url 'admin:shop_category_changelist' %}">Категории</a>
+                    <a href="{% url 'admin:shop_brand_changelist' %}">Бренды</a>
+                    <a href="{% url 'admin:shop_catalogfiltergroup_changelist' %}">Фильтры</a>
+                </div>
+            </section>
+
+            <section class="pp-manager-card">
+                <h3><i class="fas fa-bullhorn"></i> Маркетинг</h3>
+                <p>Акции, рассылки, отзывы и публикации, которые влияют на продажи и доверие покупателей.</p>
+                <div class="pp-manager-actions">
+                    <a href="{% url 'admin:shop_promotion_changelist' %}">Акции</a>
+                    <a href="{% url 'admin:shop_newslettercampaign_changelist' %}">Рассылки</a>
+                    <a href="{% url 'admin:shop_productreview_changelist' %}">Отзывы</a>
+                    <a href="{% url 'admin:shop_blogpost_changelist' %}">Блог</a>
+                </div>
+            </section>
+
+            <section class="pp-manager-card">
+                <h3><i class="fas fa-users"></i> Клиенты и доступ</h3>
+                <p>Пользователи, группы, профили клиентов, адреса и клиентские настройки уведомлений.</p>
+                <div class="pp-manager-actions">
+                    <a href="{% url 'admin:auth_user_changelist' %}">Пользователи</a>
+                    <a href="{% url 'admin:auth_group_changelist' %}">Группы</a>
+                    <a href="{% url 'admin:shop_customerprofile_changelist' %}">Профили клиентов</a>
+                    <a href="{% url 'admin:shop_notificationsetting_changelist' %}">Уведомления</a>
+                </div>
+            </section>
+
+            <section class="pp-manager-card">
+                <h3><i class="fas fa-truck-fast"></i> Логистика и B2B</h3>
+                <p>Пункты выдачи, тарифы доставки, возвраты, оптовые заявки и прайс-листы.</p>
+                <div class="pp-manager-actions">
+                    <a href="{% url 'admin:shop_pickuppoint_changelist' %}">Пункты выдачи</a>
+                    <a href="{% url 'admin:shop_deliverytariff_changelist' %}">Тарифы доставки</a>
+                    <a href="{% url 'admin:shop_returnrequest_changelist' %}">Возвраты</a>
+                    <a href="{% url 'admin:shop_wholesalerequest_changelist' %}">Оптовые заявки</a>
+                </div>
+            </section>
+
+            <section class="pp-manager-card">
+                <h3><i class="fas fa-sliders"></i> Сайт и контент</h3>
+                <p>Главная страница, информационные страницы, соцсети и глобальные настройки сайта.</p>
+                <div class="pp-manager-actions">
+                    <a href="{% url 'admin:shop_homepage_changelist' %}">Главная</a>
+                    <a href="{% url 'admin:shop_sitepage_changelist' %}">Инфо-страницы</a>
+                    <a href="{% url 'admin:shop_sociallink_changelist' %}">Соцсети</a>
+                    <a href="{% url 'admin:shop_sitesetting_changelist' %}">Настройки сайта</a>
+                </div>
+            </section>
+        </div>
+    </div>
     {% else %}
     <div class="col-xl-9 col-12">
         <div class="row">

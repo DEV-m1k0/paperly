@@ -1,0 +1,279 @@
+/* Scoped manager workspace styles. Loaded separately to avoid stale admin-custom.css cache. */
+.dashboard .pp-manager-dashboard {
+  --pp-manager-text: #173346;
+  --pp-manager-muted: #5f7480;
+  --pp-manager-primary: #0c8d84;
+  --pp-manager-primary-dark: #08756f;
+  --pp-manager-line: #d8e8e9;
+  --pp-manager-soft: #eef9f7;
+  --pp-manager-card: #ffffff;
+  --pp-manager-shadow: 0 14px 34px rgba(20, 73, 80, 0.08);
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 18px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.dashboard .pp-manager-dashboard *,
+.dashboard .pp-manager-dashboard *::before,
+.dashboard .pp-manager-dashboard *::after {
+  box-sizing: border-box;
+}
+
+.dashboard .pp-manager-hero,
+.dashboard .pp-manager-kpi,
+.dashboard .pp-manager-card {
+  border: 1px solid var(--pp-manager-line) !important;
+  background: var(--pp-manager-card) !important;
+  box-shadow: var(--pp-manager-shadow) !important;
+}
+
+.dashboard .pp-manager-hero {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 20px !important;
+  padding: 24px !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(255, 193, 7, 0.14), transparent 30%),
+    linear-gradient(135deg, #ffffff 0%, var(--pp-manager-soft) 100%) !important;
+}
+
+.dashboard .pp-manager-eyebrow {
+  margin: 0 0 8px !important;
+  color: var(--pp-manager-primary-dark) !important;
+  font: 800 0.78rem/1.2 Manrope, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+.dashboard .pp-manager-hero h2 {
+  margin: 0 !important;
+  color: var(--pp-manager-text) !important;
+  font: 800 clamp(1.55rem, 2.2vw, 2.15rem)/1.14 Manrope, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  letter-spacing: -0.035em !important;
+}
+
+.dashboard .pp-manager-hero p:not(.pp-manager-eyebrow) {
+  max-width: 760px !important;
+  margin: 10px 0 0 !important;
+  color: var(--pp-manager-muted) !important;
+  font: 600 0.98rem/1.55 Manrope, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+}
+
+.dashboard .pp-manager-hero .btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 9px !important;
+  min-height: 46px !important;
+  padding: 0 18px !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, var(--pp-manager-primary), var(--pp-manager-primary-dark)) !important;
+  color: #fff !important;
+  font: 800 0.94rem/1 Manrope, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  white-space: nowrap !important;
+  box-shadow: 0 12px 24px rgba(12, 141, 132, 0.22) !important;
+}
+
+.dashboard .pp-manager-kpis,
+.dashboard .pp-manager-workgrid {
+  display: grid !important;
+  gap: 14px !important;
+  min-width: 0 !important;
+}
+
+.dashboard .pp-manager-kpis {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.dashboard .pp-manager-workgrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.dashboard .pp-manager-dashboard--admin .pp-manager-workgrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.dashboard .pp-manager-kpi {
+  display: grid !important;
+  grid-template-columns: 48px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 13px !important;
+  min-height: 96px !important;
+  padding: 17px !important;
+  border-radius: 20px !important;
+  color: var(--pp-manager-text) !important;
+  text-decoration: none !important;
+  overflow: hidden !important;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.dashboard .pp-manager-kpi:hover,
+.dashboard .pp-manager-kpi:focus-visible {
+  color: var(--pp-manager-text) !important;
+  text-decoration: none !important;
+  border-color: rgba(12, 141, 132, 0.36) !important;
+  box-shadow: 0 18px 36px rgba(20, 73, 80, 0.12) !important;
+  transform: translateY(-2px) !important;
+}
+
+.dashboard .pp-manager-kpi__icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 16px !important;
+  background: #e8f7f5 !important;
+  color: var(--pp-manager-primary-dark) !important;
+  font-size: 1.12rem !important;
+}
+
+.dashboard .pp-manager-kpi__icon--warn {
+  background: #fff4df !important;
+  color: #b45309 !important;
+}
+
+.dashboard .pp-manager-kpi__icon--info {
+  background: #edf6ff !important;
+  color: #1d4ed8 !important;
+}
+
+.dashboard .pp-manager-kpi__icon--muted {
+  background: #f3f4f6 !important;
+  color: #4b5563 !important;
+}
+
+.dashboard .pp-manager-kpi__body {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+}
+
+.dashboard .pp-manager-kpi__body strong {
+  color: var(--pp-manager-text) !important;
+  font: 900 1.85rem/1 Manrope, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+}
+
+.dashboard .pp-manager-kpi__body span {
+  color: var(--pp-manager-muted) !important;
+  font: 800 0.88rem/1.25 Manrope, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  overflow-wrap: anywhere !important;
+}
+
+.dashboard .pp-manager-card {
+  min-width: 0 !important;
+  padding: 19px !important;
+  border-radius: 20px !important;
+}
+
+.dashboard .pp-manager-card h3 {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 0 9px !important;
+  color: var(--pp-manager-text) !important;
+  font: 900 1.08rem/1.3 Manrope, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  letter-spacing: -0.015em !important;
+}
+
+.dashboard .pp-manager-card h3 i {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  flex: 0 0 34px !important;
+  border-radius: 12px !important;
+  background: #e8f7f5 !important;
+  color: var(--pp-manager-primary-dark) !important;
+  font-size: 0.96rem !important;
+}
+
+.dashboard .pp-manager-card p {
+  margin: 0 0 15px !important;
+  color: var(--pp-manager-muted) !important;
+  font: 600 0.93rem/1.55 Manrope, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+}
+
+.dashboard .pp-manager-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+.dashboard .pp-manager-actions a {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 36px !important;
+  padding: 8px 13px !important;
+  border: 1px solid var(--pp-manager-line) !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  color: var(--pp-manager-primary-dark) !important;
+  font: 900 0.86rem/1.1 Manrope, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+}
+
+.dashboard .pp-manager-actions a:hover,
+.dashboard .pp-manager-actions a:focus-visible {
+  border-color: rgba(12, 141, 132, 0.34) !important;
+  background: #e8f7f5 !important;
+  color: var(--pp-manager-primary-dark) !important;
+  text-decoration: none !important;
+}
+
+@media (max-width: 1199.98px) {
+  .dashboard .pp-manager-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .dashboard .pp-manager-dashboard--admin .pp-manager-workgrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .dashboard .pp-manager-dashboard {
+    gap: 14px !important;
+  }
+
+  .dashboard .pp-manager-hero {
+    grid-template-columns: 1fr !important;
+    padding: 18px !important;
+    border-radius: 18px !important;
+  }
+
+  .dashboard .pp-manager-hero .btn {
+    width: 100% !important;
+  }
+
+  .dashboard .pp-manager-kpis,
+  .dashboard .pp-manager-workgrid,
+  .dashboard .pp-manager-dashboard--admin .pp-manager-workgrid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .dashboard .pp-manager-kpi {
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    padding: 14px !important;
+  }
+
+  .dashboard .pp-manager-kpi__icon {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .dashboard .pp-manager-actions a {
+    flex: 1 1 100% !important;
+  }
+}

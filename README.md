@@ -146,7 +146,7 @@ python manage.py sync_demo_media
 
 | Пользователь | Email | Пароль | Имя |
 |---|---|---|---|
-| `customer` | `customer@paperly.ru` | `customer12345` | Антон Князев |
+| `customer` | `customer@paperly.ru` | `customer12345` | Артем Власов |
 | `customer2` | `customer2@paperly.ru` | `customer12345` | Мария Сидорова |
 | `customer3` | `customer3@paperly.ru` | `customer12345` | Дмитрий Соколов |
 | `customer4` | `customer4@paperly.ru` | `customer12345` | Елена Иванова |
